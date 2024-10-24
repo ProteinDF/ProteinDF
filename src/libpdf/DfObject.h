@@ -157,7 +157,8 @@ protected:
     std::string getLjkMatrixPath(const std::string& dir = "", bool isTmp = false);
     std::string getLkMatrixPath(const std::string& dir = "");
     std::string getLxcMatrixPath(const std::string& dir = "");
-    std::string getLerrorsVtrPath();
+    std::string getLjkErrorsVtrPath();
+    std::string getLkErrorsVtrPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
     std::string getXEigvalVtrPath();
@@ -281,9 +282,9 @@ protected:
     void saveLxcMatrix(const MatrixType& Lxc, const std::string& dir = "");
 
     template <class VectorType>
-    VectorType loadLerrorsVector();
+    VectorType loadLjkErrorsVector();
     template <class VectorType>
-    void saveLerrorsVector(const VectorType& Lerrors);
+    void saveLjkErrorsVector(const VectorType& LjkErrors);
 
     template <class MatrixType>
     void saveGridMatrix(const int iteration, const MatrixType& gridMatrix);
@@ -785,8 +786,8 @@ void DfObject::saveLxcMatrix(const MatrixType& Lxc, const std::string& dir) {
 }
 
 template <class VectorType>
-VectorType DfObject::loadLerrorsVector() {
-    const std::string path = this->getLerrorsVtrPath();
+VectorType DfObject::loadLjkErrorsVector() {
+    const std::string path = this->getLjkErrorsVtrPath();
     VectorType Lerrors;
     Lerrors.load(path);
 
@@ -794,8 +795,8 @@ VectorType DfObject::loadLerrorsVector() {
 }
 
 template <class VectorType>
-void DfObject::saveLerrorsVector(const VectorType& Lerrors) {
-    const std::string path = this->getLerrorsVtrPath();
+void DfObject::saveLjkErrorsVector(const VectorType& Lerrors) {
+    const std::string path = this->getLjkErrorsVtrPath();
     Lerrors.save(path);
 }
 

@@ -853,7 +853,7 @@ void DfCD::getJ_S_mmap(const double inThreshold, TlDenseSymmetricMatrix_Lapack* 
     // decide numOfCVs
     index_type calcNumOfCVs = L.getNumOfCols();
     if ((this->isUpdateMethod_) && (this->m_nIteration > 1)) {
-        this->log_.info("update method applyed.");
+        this->log_.info("update method applied.");
 
         double threshold = inThreshold;
         const double diffP = (*this->pPdfParam_)["DfDiffDensityMatrix"]["max_abs"][this->m_nIteration - 1].getDouble();
@@ -866,9 +866,10 @@ void DfCD::getJ_S_mmap(const double inThreshold, TlDenseSymmetricMatrix_Lapack* 
 
         std::vector<double> errors;
         {
-            TlDenseVector_Lapack errs_vtr = DfObject::loadLerrorsVector<TlDenseVector_Lapack>();
+            TlDenseVector_Lapack errs_vtr = DfObject::loadLjkErrorsVector<TlDenseVector_Lapack>();
             errors = errs_vtr;
         }
+        this->log_.info(TlUtils::format("error vector size: %ld", errors.size()));
         std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
                                                         std::bind(std::less<double>(), std::placeholders::_1, threshold));
         calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
@@ -1451,7 +1452,6 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
     // prepare variables
     this->log_.info(TlUtils::format("Cholesky Decomposition: epsilon=%e", threshold));
     const index_type numOfPQtilde = I2PQ.size();
-    TlDenseGeneralMatrix_arrays_RowOriented L(numOfPQtilde, 1, 1, 0);
 
     double error = std::accumulate(diagonals.begin(), diagonals.end(), 0.0);
     std::vector<std::size_t> pivot(numOfPQtilde);
@@ -1463,7 +1463,14 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
 
     int progress = 0;
     const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
-    L.reserveColSize(division);
+
+    // ------------------------------------------------------------
+    index_type reserveLCols = this->m_nNumOfAOs * 5;
+    this->log_.info(TlUtils::format("resize L col: %d", reserveLCols));
+    TlDenseGeneralMatrix_arrays_RowOriented L(numOfPQtilde, 1, 1, 0);
+    // L.reserveColSize(reserveLCols);
+    L.resize(numOfPQtilde, reserveLCols);
+    // ------------------------------------------------------------
 
     index_type numOfCDVcts = 0;
     while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
@@ -1473,13 +1480,16 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
 
         // progress
         if (numOfCDVcts >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e, local mem:%8.1f MB", numOfCDVcts, error,
-                                            TlSystem::getMaxRSS()));
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e [RSS=% 8.3e MB]", numOfCDVcts, error, TlSystem::getMaxRSS()));
             ++progress;
+        }
 
-            // メモリの確保
-            this->log_.info(TlUtils::format("reserve: %d", division * progress));
-            L.reserveColSize(division * progress);
+        // memory allocation
+        if (numOfCDVcts >= reserveLCols) {
+            reserveLCols = numOfCDVcts + this->m_nNumOfAOs;
+            this->log_.info(TlUtils::format("resize L col: %d", reserveLCols));
+            // L.reserveColSize(division * progress);
+            L.resize(numOfPQtilde, reserveLCols);
         }
         L.resize(numOfPQtilde, numOfCDVcts + 1);
 
@@ -1495,10 +1505,6 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
         if (error < threshold) {
             break;
         }
-
-        const double l_m_pm = std::sqrt(diagonals[pivot_m]);
-        const double inv_l_m_pm = 1.0 / l_m_pm;
-        L.set(pivot_m, numOfCDVcts, l_m_pm);
 
         // get supermatrix elements
         std::vector<double> G_pm;
@@ -1516,6 +1522,10 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
         // CD calc
         const TlDenseVector_Lapack L_pm = L.getVector(pivot_m);
         assert(L_pm.getSize() == numOfCDVcts + 1);
+
+        const double l_m_pm = std::sqrt(diagonals[pivot_m]);
+        const double inv_l_m_pm = 1.0 / l_m_pm;
+        L.set(pivot_m, numOfCDVcts, l_m_pm); //
 
         std::vector<double> L_xm(numOf_G_cols, 0.0);
 #pragma omp parallel for schedule(runtime)
@@ -1546,11 +1556,11 @@ TlDenseGeneralMatrix_arrays_RowOriented DfCD::calcCholeskyVectorsOnTheFlyS_new(
         this->log_.info("save errors");
         errors.resize(numOfCDVcts);
         TlDenseVector_Lapack e(errors);
-        DfObject::saveLerrorsVector(e);
+        DfObject::saveLjkErrorsVector(e);
     }
 
-    L.resize(numOfPQtilde, numOfCDVcts);
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
+    L.resize(numOfPQtilde, numOfCDVcts);
 
     return L;
 }
@@ -1593,9 +1603,12 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
 
     int progress = 0;
     const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
-    index_type L_cols = this->m_nNumOfAOs * 5;
-    this->log_.info(TlUtils::format("resize L col: %d", L_cols));
-    pL->resize(numOfPQtilde, L_cols);
+
+    // ------------------------------------------------------------
+    index_type reserveLCols = this->m_nNumOfAOs * 5;
+    this->log_.info(TlUtils::format("resize L col: %d", reserveLCols));
+    pL->resize(numOfPQtilde, reserveLCols);
+    // ------------------------------------------------------------
 
     index_type numOfCDVcts = 0;
     while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
@@ -1605,15 +1618,15 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
 
         // progress
         if (numOfCDVcts >= progress * division) {
-            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e", numOfCDVcts, error));
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e [RSS=% 8.3e MB]", numOfCDVcts, error, TlSystem::getMaxRSS()));
             ++progress;
         }
 
-        // メモリの確保
-        if (numOfCDVcts >= L_cols) {
-            L_cols = numOfCDVcts + this->m_nNumOfAOs;
-            this->log_.info(TlUtils::format("resize L col: %d", L_cols));
-            pL->resize(numOfPQtilde, L_cols);
+        // memory allocation
+        if (numOfCDVcts >= reserveLCols) {
+            reserveLCols = numOfCDVcts + this->m_nNumOfAOs;
+            this->log_.info(TlUtils::format("resize L col: %d", reserveLCols));
+            pL->resize(numOfPQtilde, reserveLCols);
         }
 
         // pivot
@@ -1628,10 +1641,6 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
         if (error < threshold) {
             break;
         }
-
-        const double l_m_pm = std::sqrt(diagonals[pivot_m]);
-        const double inv_l_m_pm = 1.0 / l_m_pm;
-        // pL->set(pivot_m, numOfCDVcts, l_m_pm);
 
         // get supermatrix elements
         const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
@@ -1656,7 +1665,11 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
             assert(copyCount_m == numOfCDVcts + 1);
 
             std::valarray<double> out_L_rows(0.0, numOfPQtilde);
+            const double l_m_pm = std::sqrt(diagonals[pivot_m]);
+            const double inv_l_m_pm = 1.0 / l_m_pm;
+            // pL->set(pivot_m, numOfCDVcts, l_m_pm);
             out_L_rows[pivot_m] = l_m_pm;
+
 #pragma omp parallel
             {
                 std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
@@ -1685,7 +1698,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
         this->log_.info("save errors");
         errors.resize(numOfCDVcts);
         TlDenseVector_Lapack e(errors);
-        DfObject::saveLerrorsVector(e);
+        DfObject::saveLjkErrorsVector(e);
     }
 
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
@@ -1821,7 +1834,7 @@ void DfCD::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, cons
         this->log_.info("save errors");
         errors.resize(numOfCDVcts);
         TlDenseVector_Lapack e(errors);
-        DfObject::saveLerrorsVector(e);
+        DfObject::saveLjkErrorsVector(e);
     }
 
     pL->resize(numOfPQtilde, numOfCDVcts);

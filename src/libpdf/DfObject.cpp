@@ -335,8 +335,8 @@ void DfObject::setParam(const TlSerializeData& data) {
     if (paramFileBaseName["Lxc_matrix"].getStr().empty() == true) {
         paramFileBaseName["Lxc_matrix"] = "Lxc.mat";
     }
-    if (paramFileBaseName["L_errors_vtr"].getStr().empty() == true) {
-        paramFileBaseName["L_errors_vtr"] = "Lerrors.vtr";
+    if (paramFileBaseName["Ljk_errors_vtr"].getStr().empty() == true) {
+        paramFileBaseName["Ljk_errors_vtr"] = "Ljk_errors.vtr";
     }
     if (paramFileBaseName["X_matrix"].getStr().empty() == true) {
         paramFileBaseName["X_matrix"] = "X.mat";
@@ -534,6 +534,11 @@ void DfObject::loggerEndTitle(const std::string& stepName, const char lineChar) 
 std::string DfObject::makeFilePath(const std::string& baseFileName, const std::string& iteration,
                                    const std::string& dir, const std::string& suffix) const {
     std::string base = (*(this->pPdfParam_))["control"]["file_base_name"][baseFileName].getStr();
+    if (base.empty()) {
+        this->log_.critical("base file name is not configured.");
+        return "";
+    }
+
     if (iteration.empty() != true) {
         base = TlUtils::format(base.c_str(), iteration.c_str());
     }
@@ -611,8 +616,12 @@ std::string DfObject::getLxcMatrixPath(const std::string& dir) {
     return this->makeFilePath("Lxc_matrix", "", dir);
 }
 
-std::string DfObject::getLerrorsVtrPath() {
-    return this->makeFilePath("L_errors_vtr");
+std::string DfObject::getLjkErrorsVtrPath() {
+    return this->makeFilePath("Ljk_errors_vtr");
+}
+
+std::string DfObject::getLkErrorsVtrPath() {
+    return this->makeFilePath("Lk_errors_vtr");
 }
 
 std::string DfObject::getXMatrixPath() {
