@@ -331,9 +331,10 @@ std::vector<double> TlDenseMatrix_arrays_Object::getVector(const index_type vect
     return answer;
 }
 
-void TlDenseMatrix_arrays_Object::getVector(const index_type vectorIndex, double* pBuf, const index_type length) const {
-    const index_type vectorSize = this->sizeOfVector_;
-    const index_type copySize = std::min(length, vectorSize);
+std::size_t TlDenseMatrix_arrays_Object::getVector(const index_type vectorIndex, double* pBuf, const std::size_t length) const {
+    std::size_t copiedLength = 0;
+    const std::size_t vectorSize = this->sizeOfVector_;
+    const std::size_t copySize = std::min(length, vectorSize);
 
     int subunitId = 0;
     int localChunkId = 0;
@@ -343,9 +344,11 @@ void TlDenseMatrix_arrays_Object::getVector(const index_type vectorIndex, double
         assert(localChunkId < static_cast<int>(this->chunks_.size()));
         assert(localChunkVectorIndex < this->sizeOfChunk_);
         const std::size_t localIndex = base;
-        std::copy(this->chunks_[localChunkId] + localIndex, this->chunks_[localChunkId] + (localIndex + copySize),
-                  pBuf);
+        std::copy(this->chunks_[localChunkId] + localIndex, this->chunks_[localChunkId] + (localIndex + copySize), pBuf);
+        copiedLength = copySize;
     }
+
+    return copiedLength;
 }
 
 void TlDenseMatrix_arrays_Object::setVector(const index_type vectorIndex, const std::vector<double>& v) {
@@ -360,6 +363,15 @@ void TlDenseMatrix_arrays_Object::setVector(const index_type vectorIndex, const 
         assert(localChunkVectorIndex < this->sizeOfChunk_);
         const std::size_t localIndex = base;
         std::copy(v.begin(), v.end(), &(this->chunks_[localChunkId][localIndex]));
+    }
+}
+
+void TlDenseMatrix_arrays_Object::setAcrossMultipleVectors(index_type index, const std::valarray<double>& values) {
+    const index_type numOfVectors = this->getNumOfVectors();
+    TL_ASSERT((values.size() == static_cast<std::size_t>(numOfVectors)), TlUtils::format("%ld != %ld @%s,%d", values.size(), numOfVectors, __FILE__, __LINE__));
+
+    for (index_type vectorIndex = 0; vectorIndex < numOfVectors; ++vectorIndex) {
+        this->set_to_vm(vectorIndex, index, values[vectorIndex]);
     }
 }
 

@@ -368,8 +368,7 @@ void TlDenseMatrix_arrays_mmap_Object::setVector(const index_type vectorIndex, c
 
 void TlDenseMatrix_arrays_mmap_Object::setAcrossMultipleVectors(index_type index, const std::valarray<double>& values) {
     const index_type numOfVectors = this->getNumOfVectors();
-    TL_ASSERT((values.size() == static_cast<std::size_t>(numOfVectors)),
-              TlUtils::format("%ld != %ld @%s,%d", values.size(), numOfVectors, __FILE__, __LINE__));
+    TL_ASSERT((values.size() == static_cast<std::size_t>(numOfVectors)), TlUtils::format("%ld != %ld @%s,%d", values.size(), numOfVectors, __FILE__, __LINE__));
 
     for (index_type vectorIndex = 0; vectorIndex < numOfVectors; ++vectorIndex) {
         this->set_to_vm(vectorIndex, index, values[vectorIndex]);
