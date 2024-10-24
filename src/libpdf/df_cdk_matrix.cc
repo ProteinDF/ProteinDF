@@ -239,7 +239,7 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
 
     TempSymmetricMatrix P;
     if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1)) {
-        this->log_.info("update method is used.");
+        this->log_.info("update method is applied.");
         P = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);
 
         double threshold = 1.0E-10;
@@ -253,7 +253,7 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
 
         std::vector<double> errors;
         {
-            TlDenseVector_Lapack errs_vtr = DfObject::loadLerrorsVector<TlDenseVector_Lapack>();
+            TlDenseVector_Lapack errs_vtr = DfObject::loadLjkErrorsVector<TlDenseVector_Lapack>();
             errors = errs_vtr;
         }
         std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
