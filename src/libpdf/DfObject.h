@@ -286,6 +286,11 @@ protected:
     template <class VectorType>
     void saveLjkErrorsVector(const VectorType& LjkErrors);
 
+    template <class VectorType>
+    VectorType loadLkErrorsVector();
+    template <class VectorType>
+    void saveLkErrorsVector(const VectorType& LkErrors);
+
     template <class MatrixType>
     void saveGridMatrix(const int iteration, const MatrixType& gridMatrix);
 
@@ -797,6 +802,21 @@ VectorType DfObject::loadLjkErrorsVector() {
 template <class VectorType>
 void DfObject::saveLjkErrorsVector(const VectorType& Lerrors) {
     const std::string path = this->getLjkErrorsVtrPath();
+    Lerrors.save(path);
+}
+
+template <class VectorType>
+VectorType DfObject::loadLkErrorsVector() {
+    const std::string path = this->getLkErrorsVtrPath();
+    VectorType Lerrors;
+    Lerrors.load(path);
+
+    return Lerrors;
+}
+
+template <class VectorType>
+void DfObject::saveLkErrorsVector(const VectorType& Lerrors) {
+    const std::string path = this->getLkErrorsVtrPath();
     Lerrors.save(path);
 }
 

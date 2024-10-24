@@ -338,6 +338,9 @@ void DfObject::setParam(const TlSerializeData& data) {
     if (paramFileBaseName["Ljk_errors_vtr"].getStr().empty() == true) {
         paramFileBaseName["Ljk_errors_vtr"] = "Ljk_errors.vtr";
     }
+    if (paramFileBaseName["Lk_errors_vtr"].getStr().empty() == true) {
+        paramFileBaseName["Lk_errors_vtr"] = "Lk_errors.vtr";
+    }
     if (paramFileBaseName["X_matrix"].getStr().empty() == true) {
         paramFileBaseName["X_matrix"] = "X.mat";
     }
