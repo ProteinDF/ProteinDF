@@ -22,6 +22,7 @@
 
 #include "CnError.h"
 #include "DfCD_Parallel.h"
+#include "df_cdk_matrix_parallel.h"
 #include "DfEriX_Parallel.h"
 #include "TlCommunicate.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
@@ -80,8 +81,10 @@ void DfKMatrix_Parallel::saveKMatrix(const RUN_TYPE runType,
 }
 
 void DfKMatrix_Parallel::getK_CD_replica(const RUN_TYPE runType) {
-    DfCD_Parallel dfCD(this->pPdfParam_);
-    dfCD.getK(runType);
+    // DfCD_Parallel dfCD(this->pPdfParam_);
+    // dfCD.getK(runType);
+    DfCdkMatrix_Parallel dfCDK(this->pPdfParam_);
+    dfCDK.getK();
 }
 
 void DfKMatrix_Parallel::getK_CD_distributed(const RUN_TYPE runType) {

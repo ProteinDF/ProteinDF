@@ -18,21 +18,35 @@
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
-TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(
-    const TlDenseVectorObject::index_type nSize)
+TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(const TlDenseVectorObject::index_type nSize)
     : TlDenseScalapackObject(nSize, 1) {}
 
-TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(
-    const TlDenseVector_ImplScalapack& rhs)
+TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(const TlDenseVector_ImplScalapack& rhs)
     : TlDenseScalapackObject(rhs) {}
 
-TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(
-    const TlDenseVector_ImplLapack& rhs)
+TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(const TlDenseVector_ImplLapack& rhs)
     : TlDenseScalapackObject(rhs.getSize()) {
     TlDenseVectorObject::size_type size = rhs.getSize();
     for (TlDenseVectorObject::size_type i = 0; i < size; ++i) {
         this->set(i, rhs.get(i));
     }
+}
+
+TlDenseVector_ImplScalapack::TlDenseVector_ImplScalapack(const std::vector<double>& rhs)
+    : TlDenseScalapackObject(rhs.size()) {
+    TlDenseVectorObject::size_type size = rhs.size();
+    for (TlDenseVectorObject::size_type i = 0; i < size; ++i) {
+        this->set(i, rhs[i]);
+    }
+}
+
+TlDenseVector_ImplScalapack::operator std::vector<double>() const {
+    const std::size_t size = this->getSize();
+    std::vector<double> answer(size);
+    for (std::size_t i = 0; i < size; ++i) {
+        answer[i] = this->get(i);
+    }
+    return answer;
 }
 
 TlDenseVector_ImplScalapack::~TlDenseVector_ImplScalapack() {}

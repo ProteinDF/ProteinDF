@@ -152,9 +152,10 @@ protected:
     //         const TlOrbitalInfoObject&, const index_type,
     //         const std::vector<index_type>&, const PQ_PairArray&,
     //         std::vector<double>*));
-    virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyS_new(
+    virtual void calcCholeskyVectorsOnTheFlyS_new(
         const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path, const double threshold,
-        CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFuncP getSuperMatrixElements);
+        CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFuncP getSuperMatrixElements,
+        TlDenseGeneralMatrix_arrays_RowOriented* pL);
 
     void calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
                                       const double threshold, CalcDiagonalsFunc calcDiagonalsFunc,

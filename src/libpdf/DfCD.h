@@ -246,9 +246,10 @@ protected:
                                                      std::vector<double>*);
 
     /// calc Chokesky Vectors <pq|rs> for symmetric basis
-    virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyS_new(
+    virtual void calcCholeskyVectorsOnTheFlyS_new(
         const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path, const double epsilon,
-        CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFunc getSuperMatrixElements);
+        CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFunc getSuperMatrixElements,
+        TlDenseGeneralMatrix_arrays_RowOriented* pL);
 
     /// calc Chokesky Vectors <pq|rs> for symmetric basis (mmap)
     void calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,

@@ -1,4 +1,5 @@
 #include "tl_dense_vector_eigen.h"
+
 #include "tl_dense_vector_impl_eigen.h"
 
 #ifdef HAVE_VIENNACL
@@ -23,8 +24,7 @@ TlDenseVector_Eigen::TlDenseVector_Eigen(const std::vector<double>& rhs) {
 }
 
 TlDenseVector_Eigen::operator std::vector<double>() const {
-    return std::vector<double>(
-        *(dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)));
+    return std::vector<double>(*(dynamic_cast<TlDenseVector_ImplEigen*>(this->pImpl_)));
 }
 
 // TlDenseVector_Eigen::TlDenseVector_Eigen(const double* p, size_type size) {
