@@ -159,6 +159,7 @@ protected:
     std::string getLxcMatrixPath(const std::string& dir = "");
     std::string getLjkErrorsVtrPath();
     std::string getLkErrorsVtrPath();
+    std::string getLxcErrorsVtrPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
     std::string getXEigvalVtrPath();
@@ -303,7 +304,7 @@ protected:
 
     template <class SymmetricMatrixType>
     SymmetricMatrixType getDiffDensityMatrix(const RUN_TYPE runType,
-                                             const int iteration);
+                                             const int iteration) const;
 
     template <class SymmetricMatrixType>
     void saveSpinDensityMatrix(const RUN_TYPE runType, const int iteration,
@@ -986,7 +987,7 @@ void DfObject::saveDiffDensityMatrix(const RUN_TYPE runType,
 
 template <class SymmetricMatrixType>
 SymmetricMatrixType DfObject::getDiffDensityMatrix(const RUN_TYPE runType,
-                                                   const int iteration) {
+                                                   const int iteration) const {
     SymmetricMatrixType deltaP;
     const std::string path = this->getDiffDensityMatrixPath(runType, iteration);
 
