@@ -224,7 +224,9 @@ void DfCD::calcCholeskyVectorsForJK() {
             case CD_INTERMEDIATE_FILE_FORMAT_ARRAY: {
                 this->log_.info("L_jk build on arrays");
                 TlDenseGeneralMatrix_arrays_RowOriented Ljk(1, 1, 1, 0);
-                this->calcCholeskyVectorsOnTheFlyS_new(orbInfo, this->getI2pqVtrPath(), this->epsilon_, &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements, &Ljk);
+                this->calcCholeskyVectorsOnTheFlyS_new(orbInfo, this->getI2pqVtrPath(), this->epsilon_, &DfCD::calcDiagonals,
+                                                       &DfCD::getSuperMatrixElements,
+                                                       this->getLjkErrorsVtrPath(), &Ljk);
 
                 if (this->optCdFile_) {
                     this->log_.info("optimize L matrix.");
@@ -356,7 +358,8 @@ void DfCD::calcCholeskyVectorsForK() {
 
             TlDenseGeneralMatrix_arrays_RowOriented Lk(1, 1, 1, 0);
             this->calcCholeskyVectorsOnTheFlyS_new(orbInfo, this->getI2prVtrPath(), this->epsilon_K_, &DfCD::calcDiagonals_K_full,
-                                                   &DfCD::getSuperMatrixElements_K_full, &Lk);
+                                                   &DfCD::getSuperMatrixElements_K_full,
+                                                   this->getLkErrorsVtrPath(), &Lk);
             this->saveLk(Lk);
             // this->debugOutLk(Lk.getTlMatrixObject()); // debug
 
@@ -379,7 +382,8 @@ void DfCD::calcCholeskyVectorsForK() {
 
             TlDenseGeneralMatrix_arrays_RowOriented Lk(1, 1, 1, 0);
             this->calcCholeskyVectorsOnTheFlyS_new(orbInfo, this->getI2prVtrPath(), this->epsilon_K_, &DfCD::calcDiagonals_K_half,
-                                                   &DfCD::getSuperMatrixElements_K_half, &Lk);
+                                                   &DfCD::getSuperMatrixElements_K_half,
+                                                   this->getLkErrorsVtrPath(), &Lk);
             this->saveLk(Lk);
             // this->debugOutLk(Lk.getTlMatrixObject()); // debug
 
@@ -547,7 +551,8 @@ void DfCD::calcCholeskyVectorsForGridFree() {
 
                     TlDenseGeneralMatrix_arrays_RowOriented Lxc(1, 1, 1, 0);
                     this->calcCholeskyVectorsOnTheFlyS_new(orbInfo_p, this->getI2pqVtrXCPath(), this->epsilon_,
-                                                           &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements, &Lxc);
+                                                           &DfCD::calcDiagonals, &DfCD::getSuperMatrixElements,
+                                                           this->getLxcErrorsVtrPath(), &Lxc);
 
                     this->saveLxc(Lxc);
                     this->destroyEngines();
@@ -873,7 +878,7 @@ void DfCD::getJ_S_mmap(const double inThreshold, TlDenseSymmetricMatrix_Lapack* 
                                                         std::bind(std::less<double>(), std::placeholders::_1, threshold));
         calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
 
-        TlDenseSymmetricMatrix_Lapack dP = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
+        TlDenseSymmetricMatrix_Lapack dP = DfCD::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>();
         vP = DfCD::getScreenedDensityMatrix<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(dP, I2PQ);
     } else {
         vP = DfCD::getScreenedDensityMatrix<TlDenseSymmetricMatrix_Lapack, TlDenseVector_Lapack>(DfCD::getPMatrix<TlDenseSymmetricMatrix_Lapack>(), I2PQ);
@@ -1432,7 +1437,7 @@ void DfCD::getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricM
 void DfCD::calcCholeskyVectorsOnTheFlyS_new(
     const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path, const double threshold,
     CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFunc getSuperMatrixElements,
-    TlDenseGeneralMatrix_arrays_RowOriented* pL) {
+    const std::string& saveLErrorVectorPath, TlDenseGeneralMatrix_arrays_RowOriented* pL) {
     this->log_.info("call on-the-fly Cholesky Decomposition routine (symmetric)");
     assert(this->pEngines_ != NULL);
 
@@ -1581,7 +1586,8 @@ void DfCD::calcCholeskyVectorsOnTheFlyS_new(
         this->log_.info("save errors");
         errors.resize(numOfCDVcts);
         TlDenseVector_Lapack e(errors);
-        DfObject::saveLjkErrorsVector(e);
+        e.save(saveLErrorVectorPath);
+        // DfObject::saveLjkErrorsVector(e);
     }
 
     this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));

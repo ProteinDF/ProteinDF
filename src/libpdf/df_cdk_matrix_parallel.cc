@@ -38,6 +38,7 @@ void DfCdkMatrix_Parallel::getK() {
 #endif  // HAVE_SCALAPACK
 
         default:
+            this->log_.info("parallel CD-K matrix calculation");
             DfCdkMatrix::getK();
             break;
     }
@@ -47,8 +48,8 @@ void DfCdkMatrix_Parallel::getK() {
 // task control
 // -----------------------------------------------------------------------------
 DfTaskCtrl* DfCdkMatrix_Parallel::getDfTaskCtrlObject() const {
+    this->log_.info("task control: parallel");
     DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl_Parallel(this->pPdfParam_);
-
     return pDfTaskCtrl;
 }
 

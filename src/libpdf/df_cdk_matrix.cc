@@ -160,8 +160,8 @@ void DfCdkMatrix::getK() {
 // task control
 // -----------------------------------------------------------------------------
 DfTaskCtrl* DfCdkMatrix::getDfTaskCtrlObject() const {
+    this->log_.info("task control: serial");
     DfTaskCtrl* pDfTaskCtrl = new DfTaskCtrl(this->pPdfParam_);
-
     return pDfTaskCtrl;
 }
 
