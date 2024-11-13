@@ -704,7 +704,7 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
     const int myRank = rComm.getRank();
 
     this->log_.info("call on-the-fly Cholesky Decomposition routine (parallel; symmetric)");
-    this->log_.info("pass in: DfCD_Parallel::calcCholeskyVectorsOnTheFlyS()");
+    this->log_.info("pass in: DfCD_Parallel::calcCholeskyVectorsOnTheFlyS() array_mmap");
     assert(this->pEngines_ != NULL);
 
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();
@@ -778,20 +778,21 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
             break;
         }
 
-        // get supermatrix elements
+        // get super-matrix elements
+        std::vector<double> G_pm_local;
         const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
-        std::vector<double> G_pm(numOf_G_cols, 0.0);
         {
-            std::vector<double> G_pm_local(numOf_G_cols, 0.0);
             std::vector<index_type> G_col_list(numOf_G_cols);
             for (index_type c = 0; c < numOf_G_cols; ++c) {
                 const index_type pivot_i = pivot[(numOfCDVcts + 1) + c];  // from (m+1) to N
                 G_col_list[c] = pivot_i;
             }
             (this->*getSuperMatrixElementsFunc)(orbInfo, pivot_m, G_col_list, I2PQ, &G_pm_local);
-            assert(static_cast<index_type>(G_pm_local.size()) == numOf_G_cols);
-            rComm.iAllReduce_SUM(&(G_pm_local[0]), &(G_pm[0]), numOf_G_cols);
         }
+        assert(static_cast<index_type>(G_pm_local.size()) == numOf_G_cols);
+
+        std::vector<double> G_pm(numOf_G_cols, 0.0);
+        rComm.iAllReduce_SUM(&(G_pm_local[0]), &(G_pm[0]), numOf_G_cols);
 
         // CD calc
         // output:
@@ -807,16 +808,18 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
             rComm.broadcast(L_pm_x, PE_in_charge);
         }
 
-        std::valarray<double> out_L_rows(0.0, numOfPQtilde);
+        std::valarray<double> out_L_rows_local(0.0, numOfPQtilde);
         const double l_m_pm = std::sqrt(diagonals[pivot_m]);
         const double inv_l_m_pm = 1.0 / l_m_pm;
         // L.set(pivot_m, numOfCDVcts, l_m_pm);
         if (rComm.isMaster()) {
-            out_L_rows[pivot_m] = l_m_pm;
+            out_L_rows_local[pivot_m] = l_m_pm;
         }
 
-        std::vector<double> update_diagonals(numOfPQtilde, 0.0);
+        std::vector<double> update_diagonals_local(numOfPQtilde, 0.0);
+
         rComm.wait(&(G_pm[0]));
+
 #pragma omp parallel
         {
             std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
@@ -831,27 +834,27 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
                     const double sum_ll = (L_pm_x * L_pi_x).sum();
                     const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
 
-                    out_L_rows[pivot_i] += l_m_pi;
-                    update_diagonals[pivot_i] -= l_m_pi * l_m_pi;
+                    out_L_rows_local[pivot_i] += l_m_pi;
+
+                    update_diagonals_local[pivot_i] -= l_m_pi * l_m_pi;
                 }
             }
         }
 
         // allReduce_SUM (out_L_rows)
-        std::valarray<double> output_L_xm(0.0, numOfPQtilde);
-        rComm.iAllReduce_SUM(&(out_L_rows[0]), &(output_L_xm[0]), numOfPQtilde);
+        std::valarray<double> out_L_rows(0.0, numOfPQtilde);
+        rComm.iAllReduce_SUM(&(out_L_rows_local[0]), &(out_L_rows[0]), numOfPQtilde);
 
         // allReduce_SUM (update_diagonals)
-        std::vector<double> output_update_diagonals(numOfPQtilde, 0.0);
-        rComm.iAllReduce_SUM(&(update_diagonals[0]), &(output_update_diagonals[0]), numOfPQtilde);
+        std::vector<double> update_diagonals(numOfPQtilde, 0.0);
+        rComm.iAllReduce_SUM(&(update_diagonals_local[0]), &(update_diagonals[0]), numOfPQtilde);
 
-        rComm.wait(&(output_L_xm[0]));
-        pL->setColVector(numOfCDVcts, output_L_xm);
+        rComm.wait(&(out_L_rows[0]));
+        pL->setColVector(numOfCDVcts, out_L_rows);
 
-        rComm.wait(&(output_update_diagonals[0]));
+        rComm.wait(&(update_diagonals[0]));
         // diagonals += output_update_diagonals;
-        std::transform(diagonals.begin(), diagonals.end(), output_update_diagonals.begin(), diagonals.begin(),
-                       std::plus<double>());
+        std::transform(diagonals.begin(), diagonals.end(), update_diagonals.begin(), diagonals.begin(), std::plus<double>());
 
         // error = diagonals[pivot[numOfCDVcts]];
         ++numOfCDVcts;
@@ -875,6 +878,7 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
     this->log_.info("call on-the-fly Cholesky Decomposition routine (symmetric, parallel)");
+    this->log_.info("pass in: DfCD_Parallel::calcCholeskyVectorsOnTheFlyS() mmap");
     assert(this->pEngines_ != NULL);
 
     const index_type numOfAOs = orbInfo.getNumOfOrbitals();

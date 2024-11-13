@@ -182,6 +182,7 @@ void DfCdkMatrix::getK_runType_L(DfObject::RUN_TYPE runType) {
     }
 }
 
+// default
 template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename TempSymmetricMatrix>
 void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     this->log_.info("calc K by CD method");
@@ -266,20 +267,17 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     this->saveHFxMatrix(runType, this->m_nIteration, Kout);
 }
 
-template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector,
-          typename SparseGeneralMatrix>
+template <typename Ljk_MatrixType, typename SymmetricMatrix, typename Vector, typename SparseGeneralMatrix>
 void DfCdkMatrix::getK_byLjk_useTransMatrix(const RUN_TYPE runType) {
     this->log_.info("calc K by CD method");
     this->log_.info("transformed by trans matrix");
     SymmetricMatrix K(this->m_nNumOfAOs);
 
     const Ljk_MatrixType L(DfObject::getLjkMatrixPath());
-    this->log_.info(
-        TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
+    this->log_.info(TlUtils::format("L(K): %d x %d", L.getNumOfRows(), L.getNumOfCols()));
     const index_type numOfCBs = L.getNumOfCols();
 
-    const SymmetricMatrix P = this->getSpinDensityMatrix<SymmetricMatrix>(
-        runType, this->m_nIteration - 1);
+    const SymmetricMatrix P = this->getSpinDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration - 1);
 
     this->log_.info("start loop");
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
@@ -337,8 +335,7 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
 
     this->log_.info("start loop");
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
-    const SparseGeneralMatrix I2PQ_mat =
-        this->getTrans_I2PQ_Matrix<SparseGeneralMatrix>(I2PQ);
+    const SparseGeneralMatrix I2PQ_mat = this->getTrans_I2PQ_Matrix<SparseGeneralMatrix>(I2PQ);
 
     SparseSymmetricMatrix tmpK(this->m_nNumOfAOs);
     DfTaskCtrl* pTaskCtrl = this->getDfTaskCtrlObject();
@@ -356,10 +353,7 @@ void DfCdkMatrix::getK_byLjk_useSparseMatrix(const RUN_TYPE runType) {
         const int numOfTasks = tasks.size();
         // #pragma omp parallel for schedule(runtime)
         for (int i = 0; i < numOfTasks; ++i) {
-            const SparseSymmetricMatrix l =
-                this->convert_I2PQ<SymmetricMatrix, Vector,
-                                   SparseGeneralMatrix>(
-                    I2PQ_mat, L.getColVector(tasks[i]));
+            const SparseSymmetricMatrix l = this->convert_I2PQ<SymmetricMatrix, Vector, SparseGeneralMatrix>(I2PQ_mat, L.getColVector(tasks[i]));
             assert(l.getNumOfRows() == this->m_nNumOfAOs);
 
             SparseSymmetricMatrix X = l * P_SM * l;
