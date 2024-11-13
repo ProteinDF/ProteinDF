@@ -876,6 +876,8 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
                                                  GetSuperMatrixElementsFunc getSuperMatrixElements,
                                                  TlDenseGeneralMatrix_mmap* pL) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
+    // const int myRank = rComm.getRank();
+    // const int numOfProcs = rComm.getNumOfProcs();
 
     this->log_.info("call on-the-fly Cholesky Decomposition routine (symmetric, parallel)");
     this->log_.info("pass in: DfCD_Parallel::calcCholeskyVectorsOnTheFlyS() mmap");
@@ -887,7 +889,6 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
     this->log_.info(TlUtils::format("number of pair of orbitals: %ld", numOfPQs));
 
     // CDAM
-    assert(this->pEngines_ != NULL);
     PQ_PairArray I2PQ;
     std::vector<double> diagonals;  // 対角成分
     (this->*calcDiagonalsFunc)(orbInfo, &I2PQ, &diagonals);
@@ -913,124 +914,155 @@ void DfCD_Parallel::calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbI
         pivot[i] = i;
     }
 
+    std::vector<double> errors(numOfPQtilde);
+
     int progress = 0;
     const index_type division = std::max<index_type>(numOfPQtilde * 0.01, 100);
-    index_type L_cols = this->m_nNumOfAOs * 5;
-    this->log_.info(TlUtils::format("reservoed L col: %d", L_cols));
+
+    // ------------------------------------------------------------
+    index_type reserveLCols = this->m_nNumOfAOs * 5;
+    this->log_.info(TlUtils::format("resize L col: %d", reserveLCols));
     if (rComm.isMaster()) {
-        pL->resize(numOfPQtilde, L_cols);
+        pL->resize(numOfPQtilde, reserveLCols);
     }
+    // ------------------------------------------------------------
 
     // TlTime timeLoop;
     // TlTime timeERI;
     // TlTime timeCD;
 
     // timeLoop.start();
-    {
-        index_type numOfCDVcts = 0;
-        while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
+    index_type numOfCDVcts = 0;
+    while ((error > threshold) && (numOfCDVcts < numOfPQtilde)) {
 #ifdef DEBUG_CD
-            this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", numOfCDVcts, numOfPQtilde, error));
+        this->log_.debug(TlUtils::format("CD progress: %12d/%12d: err=% 16.10e", numOfCDVcts, numOfPQtilde, error));
 #endif  // DEBUG_CD
 
-            // progress
-            if (numOfCDVcts >= progress * division) {
-                this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e", numOfCDVcts, error));
-                ++progress;
-            }
-            // メモリの確保
-            if (numOfCDVcts >= L_cols) {
-                L_cols = numOfCDVcts + this->m_nNumOfAOs;
-                if (rComm.isMaster()) {
-                    this->log_.info(TlUtils::format("L col: %d", L_cols));
-                    pL->resize(numOfPQtilde, L_cols);
-                }
-            }
+        // progress
+        if (numOfCDVcts >= progress * division) {
+            this->log_.info(TlUtils::format("CD progress: %12d: err=% 8.3e", numOfCDVcts, error));
+            ++progress;
+        }
 
-            // pivot
-            {
-                const std::size_t argmax = this->argmax_pivot(diagonals, pivot, numOfCDVcts);
-                std::swap(pivot[numOfCDVcts], pivot[argmax]);
-            }
-
-            const index_type pivot_m = pivot[numOfCDVcts];
-            error = diagonals[pivot_m];
-            if (error < threshold) {
-                break;
-            }
-
-            const double l_m_pm = std::sqrt(diagonals[pivot_m]);
-            const double inv_l_m_pm = 1.0 / l_m_pm;
-            // if (rComm.isMaster()) {
-            //     pL->set(pivot_m, numOfCDVcts, l_m_pm);
-            // }
-
-            // get supermatrix elements
-            // timeERI.start();
-            const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
-            std::vector<double> G_pm(numOf_G_cols);
-            {
-                std::vector<index_type> G_col_list(numOf_G_cols);
-                for (index_type c = 0; c < numOf_G_cols; ++c) {
-                    const index_type pivot_i = pivot[(numOfCDVcts + 1) + c];  // from (m+1) to N
-                    G_col_list[c] = pivot_i;
-                }
-                (this->*getSuperMatrixElements)(orbInfo, pivot_m, G_col_list, I2PQ, &G_pm);
-            }
-            assert(static_cast<index_type>(G_pm.size()) == numOf_G_cols);
-            rComm.allReduce_SUM(G_pm);
-            // timeERI.stop();
-
-            // CD calc
-            // output:
-            //   out_L_rows; row elements at the column numOfCDVcts(target) in L
-            //   diagonals:
-            // timeCD.start();
+        // memory allocation
+        if (numOfCDVcts >= reserveLCols) {
+            reserveLCols = numOfCDVcts + this->m_nNumOfAOs;
             if (rComm.isMaster()) {
-                std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
-                const std::size_t copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
-                assert(copyCount_m == static_cast<std::size_t>(numOfCDVcts + 1));
-
-                std::valarray<double> out_L_rows(0.0, numOfPQtilde);
-                out_L_rows[pivot_m] = l_m_pm;
-#pragma omp parallel
-                {
-                    std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
-#pragma omp for schedule(runtime)
-                    for (index_type i = 0; i < numOf_G_cols; ++i) {
-                        const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
-
-                        const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
-                        assert(copyCount_i == static_cast<std::size_t>(numOfCDVcts + 1));
-
-                        const double sum_ll = (L_pm_x * L_pi_x).sum();
-                        const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
-
-                        out_L_rows[pivot_i] = l_m_pi;
-                        diagonals[pivot_i] -= l_m_pi * l_m_pi;
-                    }
-                }
-                pL->setColVector(numOfCDVcts, out_L_rows);
+                this->log_.info(TlUtils::format("resize L col: %d", reserveLCols));
+                pL->resize(numOfPQtilde, reserveLCols);
             }
-            // timeCD.stop();
-
-            rComm.broadcast(diagonals);
-            ++numOfCDVcts;
         }
-        // timeLoop.stop();
 
+        // pivot
+        {
+            const std::size_t argmax = this->argmax_pivot(diagonals, pivot, numOfCDVcts);
+            std::swap(pivot[numOfCDVcts], pivot[argmax]);
+        }
+
+        const index_type pivot_m = pivot[numOfCDVcts];
+        error = diagonals[pivot_m];
+        errors[numOfCDVcts] = error;
+        if (error < threshold) {
+            break;
+        }
+
+        // get super-matrix elements
+        // timeERI.start();
+        std::vector<double> G_pm_local;
+        const index_type numOf_G_cols = numOfPQtilde - (numOfCDVcts + 1);
+        {
+            std::vector<index_type> G_col_list(numOf_G_cols);
+            for (index_type c = 0; c < numOf_G_cols; ++c) {
+                const index_type pivot_i = pivot[(numOfCDVcts + 1) + c];  // from (m+1) to N
+                G_col_list[c] = pivot_i;
+            }
+            (this->*getSuperMatrixElements)(orbInfo, pivot_m, G_col_list, I2PQ, &G_pm_local);
+        }
+        assert(static_cast<index_type>(G_pm_local.size()) == numOf_G_cols);
+
+        std::vector<double> G_pm(numOf_G_cols, 0.0);
+        rComm.iAllReduce_SUM(&(G_pm_local[0]), &(G_pm[0]), numOf_G_cols);
+        // timeERI.stop();
+
+        // CD calc
+        // output:
+        //   out_L_rows; row elements at the column numOfCDVcts(target) in L
+        //   diagonals:
+
+        // timeCD.start();
+        std::valarray<double> L_pm_x(0.0, numOfCDVcts + 1);
+        {
+            if (rComm.isMaster()) {
+                const index_type copyCount_m = pL->getRowVector(pivot_m, &(L_pm_x[0]), numOfCDVcts + 1);
+                assert(copyCount_m == numOfCDVcts + 1);
+            }
+            rComm.broadcast(L_pm_x);
+        }
+
+        std::valarray<double> out_L_rows_local(0.0, numOfPQtilde);
+        const double l_m_pm = std::sqrt(diagonals[pivot_m]);
+        const double inv_l_m_pm = 1.0 / l_m_pm;
         if (rComm.isMaster()) {
-            pL->resize(numOfPQtilde, numOfCDVcts);
+            out_L_rows_local[pivot_m] = l_m_pm;
         }
-        this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
 
-        // this->log_.info(
-        //     TlUtils::format("  ERI:  %16.2f sec", timeERI.getElapseTime()));
-        // this->log_.info(
-        //     TlUtils::format("  CD:   %16.2f sec", timeCD.getElapseTime()));
-        // this->log_.info(
-        //     TlUtils::format("  LOOP: %16.2f sec", timeLoop.getElapseTime()));
+        std::vector<double> update_diagonals_local(numOfPQtilde, 0.0);
+
+        // wait (output_G_pm)
+        rComm.wait(&(G_pm[0]));
+
+        // Only the master can access L, so the master calculates it and broadcasts the result.
+        if (rComm.isMaster()) {
+#pragma omp parallel
+            {
+                std::valarray<double> L_pi_x(0.0, numOfCDVcts + 1);
+#pragma omp for schedule(runtime)
+                for (index_type i = 0; i < numOf_G_cols; ++i) {
+                    const index_type pivot_i = pivot[(numOfCDVcts + 1) + i];  // from (m+1) to N
+
+                    const std::size_t copyCount_i = pL->getRowVector(pivot_i, &(L_pi_x[0]), numOfCDVcts + 1);
+                    assert(copyCount_i == static_cast<std::size_t>(numOfCDVcts + 1));
+
+                    const double sum_ll = (L_pm_x * L_pi_x).sum();
+                    const double l_m_pi = (G_pm[i] - sum_ll) * inv_l_m_pm;
+
+                    out_L_rows_local[pivot_i] = l_m_pi;
+
+                    update_diagonals_local[pivot_i] -= l_m_pi * l_m_pi;
+                }
+            }
+
+            pL->setColVector(numOfCDVcts, out_L_rows_local);
+            std::transform(diagonals.begin(), diagonals.end(), update_diagonals_local.begin(), diagonals.begin(), std::plus<double>());
+        }
+        rComm.broadcast(&(diagonals[0]), numOfPQtilde, 0);
+
+        // timeCD.stop();
+
+        ++numOfCDVcts;
     }
+    // timeLoop.stop();
+
+    {
+        if (rComm.isMaster()) {
+            this->log_.info("save errors");
+            errors.resize(numOfCDVcts);
+            TlDenseVector_Lapack e(errors);
+            DfObject::saveLjkErrorsVector(e);
+        }
+    }
+
+    this->log_.info(TlUtils::format("Cholesky Vectors: %d", numOfCDVcts));
+    if (rComm.isMaster()) {
+        pL->resize(numOfPQtilde, numOfCDVcts);
+    }
+
+    // this->log_.info(
+    //     TlUtils::format("  ERI:  %16.2f sec", timeERI.getElapseTime()));
+    // this->log_.info(
+    //     TlUtils::format("  CD:   %16.2f sec", timeCD.getElapseTime()));
+    // this->log_.info(
+    //     TlUtils::format("  LOOP: %16.2f sec", timeLoop.getElapseTime()));
 }
 
 TlDenseGeneralMatrix_arrays_RowOriented DfCD_Parallel::calcCholeskyVectorsOnTheFlyA(
