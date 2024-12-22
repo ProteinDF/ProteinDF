@@ -157,7 +157,9 @@ protected:
     std::string getLjkMatrixPath(const std::string& dir = "", bool isTmp = false);
     std::string getLkMatrixPath(const std::string& dir = "");
     std::string getLxcMatrixPath(const std::string& dir = "");
-    std::string getLerrorsVtrPath();
+    std::string getLjkErrorsVtrPath();
+    std::string getLkErrorsVtrPath();
+    std::string getLxcErrorsVtrPath();
     std::string getXMatrixPath();
     std::string getXInvMatrixPath();
     std::string getXEigvalVtrPath();
@@ -281,9 +283,14 @@ protected:
     void saveLxcMatrix(const MatrixType& Lxc, const std::string& dir = "");
 
     template <class VectorType>
-    VectorType loadLerrorsVector();
+    VectorType loadLjkErrorsVector();
     template <class VectorType>
-    void saveLerrorsVector(const VectorType& Lerrors);
+    void saveLjkErrorsVector(const VectorType& LjkErrors);
+
+    template <class VectorType>
+    VectorType loadLkErrorsVector();
+    template <class VectorType>
+    void saveLkErrorsVector(const VectorType& LkErrors);
 
     template <class MatrixType>
     void saveGridMatrix(const int iteration, const MatrixType& gridMatrix);
@@ -297,7 +304,7 @@ protected:
 
     template <class SymmetricMatrixType>
     SymmetricMatrixType getDiffDensityMatrix(const RUN_TYPE runType,
-                                             const int iteration);
+                                             const int iteration) const;
 
     template <class SymmetricMatrixType>
     void saveSpinDensityMatrix(const RUN_TYPE runType, const int iteration,
@@ -785,8 +792,8 @@ void DfObject::saveLxcMatrix(const MatrixType& Lxc, const std::string& dir) {
 }
 
 template <class VectorType>
-VectorType DfObject::loadLerrorsVector() {
-    const std::string path = this->getLerrorsVtrPath();
+VectorType DfObject::loadLjkErrorsVector() {
+    const std::string path = this->getLjkErrorsVtrPath();
     VectorType Lerrors;
     Lerrors.load(path);
 
@@ -794,8 +801,23 @@ VectorType DfObject::loadLerrorsVector() {
 }
 
 template <class VectorType>
-void DfObject::saveLerrorsVector(const VectorType& Lerrors) {
-    const std::string path = this->getLerrorsVtrPath();
+void DfObject::saveLjkErrorsVector(const VectorType& Lerrors) {
+    const std::string path = this->getLjkErrorsVtrPath();
+    Lerrors.save(path);
+}
+
+template <class VectorType>
+VectorType DfObject::loadLkErrorsVector() {
+    const std::string path = this->getLkErrorsVtrPath();
+    VectorType Lerrors;
+    Lerrors.load(path);
+
+    return Lerrors;
+}
+
+template <class VectorType>
+void DfObject::saveLkErrorsVector(const VectorType& Lerrors) {
+    const std::string path = this->getLkErrorsVtrPath();
     Lerrors.save(path);
 }
 
@@ -965,7 +987,7 @@ void DfObject::saveDiffDensityMatrix(const RUN_TYPE runType,
 
 template <class SymmetricMatrixType>
 SymmetricMatrixType DfObject::getDiffDensityMatrix(const RUN_TYPE runType,
-                                                   const int iteration) {
+                                                   const int iteration) const {
     SymmetricMatrixType deltaP;
     const std::string path = this->getDiffDensityMatrixPath(runType, iteration);
 

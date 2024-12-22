@@ -16,17 +16,20 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlDenseVector_ImplScalapack(
-        TlDenseVectorObject::index_type size = 1);
+public:
+    explicit TlDenseVector_ImplScalapack(TlDenseVectorObject::index_type size = 1);
     TlDenseVector_ImplScalapack(const TlDenseVector_ImplScalapack& rhs);
     TlDenseVector_ImplScalapack(const TlDenseVector_ImplLapack& rhs);
+    TlDenseVector_ImplScalapack(const std::vector<double>& rhs);
+
+    operator std::vector<double>() const;
+
     virtual ~TlDenseVector_ImplScalapack();
 
     // ---------------------------------------------------------------------------
     // properties
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual TlDenseVectorObject::size_type getSize() const;
     virtual void resize(const TlDenseVectorObject::index_type newSize);
 
@@ -40,7 +43,7 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
 
     std::vector<double> getVector() const;
 
-   private:
+private:
     using TlDenseScalapackObject::add;
     using TlDenseScalapackObject::get;
     using TlDenseScalapackObject::mul;
@@ -50,7 +53,7 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseVector_ImplScalapack& operator=(
         const TlDenseVector_ImplScalapack& rhs);
 
@@ -66,7 +69,7 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual void sortByGreater();
 
     double dot(const TlDenseVector_ImplScalapack& rhs) const;
@@ -76,14 +79,14 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   public:
+public:
     bool load(const std::string& sFilePath);
     bool save(const std::string& sFilePath) const;
 
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
-   protected:
+protected:
     bool load(std::ifstream& ifs);
     //   bool save(std::ofstream& ofs) const;
     std::vector<TlVectorObject::VectorElement> getVectorElementsInLocal() const;
@@ -92,7 +95,7 @@ class TlDenseVector_ImplScalapack : public TlDenseVector_ImplObject,
         TlDenseVector_Lapack* pVector,
         const std::vector<TlVectorObject::VectorElement>& elements) const;
 
-   protected:
+protected:
     // ---------------------------------------------------------------------------
     // variables
     // ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 #define TL_DENSE_VECTOR_SCALAPACK_H
 
 #include <vector>
+
 #include "tl_dense_vector_object.h"
 
 class TlDenseGeneralMatrix_Scalapack;
@@ -12,14 +13,16 @@ class TlDenseVector_Scalapack : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // constructor & destructor
     // ---------------------------------------------------------------------------
-   public:
-    explicit TlDenseVector_Scalapack(
-        const TlDenseVectorObject::index_type size = 0);
+public:
+    explicit TlDenseVector_Scalapack(const TlDenseVectorObject::index_type size = 0);
     TlDenseVector_Scalapack(const TlDenseVector_Scalapack& rhs);
     TlDenseVector_Scalapack(const TlDenseVector_Lapack& rhs);
-    // TlDenseVector_Scalapack(const std::vector<double>& rhs);
+    TlDenseVector_Scalapack(const std::vector<double>& rhs);
     // TlDenseVector_Scalapack(const double* p,
     //                      const TlDenseVectorObject::size_type length);
+
+    operator std::vector<double>() const;
+
     virtual ~TlDenseVector_Scalapack();
 
     // ---------------------------------------------------------------------------
@@ -30,7 +33,7 @@ class TlDenseVector_Scalapack : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
-   public:
+public:
     TlDenseVector_Scalapack& operator=(const TlDenseVector_Scalapack& rhs);
 
     TlDenseVector_Scalapack& operator+=(const TlDenseVector_Scalapack& rhs);
@@ -43,18 +46,18 @@ class TlDenseVector_Scalapack : public TlDenseVectorObject {
     // ---------------------------------------------------------------------------
     // operations
     // ---------------------------------------------------------------------------
-   public:
+public:
     double dot(const TlDenseVector_Scalapack& rhs) const;
     TlDenseVector_Scalapack& dotInPlace(const TlDenseVector_Scalapack& rhs);
 
-   public:
+public:
     // double* data();
     // const double* data() const;
 
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
-   public:
+public:
     virtual bool load(const std::string& filePath);
     virtual bool save(const std::string& filePath) const;
 
