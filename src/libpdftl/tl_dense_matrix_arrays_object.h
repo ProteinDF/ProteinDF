@@ -75,8 +75,9 @@ public:
     double get_from_vm(index_type vectorIndex, index_type index) const;
 
     std::vector<double> getVector(index_type vectorIndex) const;
-    void getVector(const index_type vectorIndex, double* pBuf, const index_type length) const;
+    std::size_t getVector(const index_type vectorIndex, double* pBuf, const std::size_t length) const;
     void setVector(index_type vectorIndex, const std::vector<double>& v);
+    void setAcrossMultipleVectors(index_type index, const std::valarray<double>& values);
 
     /// copy chunk data
     ///

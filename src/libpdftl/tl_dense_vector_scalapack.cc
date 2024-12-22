@@ -1,4 +1,5 @@
 #include "tl_dense_vector_scalapack.h"
+
 #include "tl_dense_vector_impl_lapack.h"
 #include "tl_dense_vector_impl_scalapack.h"
 #include "tl_dense_vector_lapack.h"
@@ -6,21 +7,24 @@
 // ---------------------------------------------------------------------------
 // constructor & destructor
 // ---------------------------------------------------------------------------
-TlDenseVector_Scalapack::TlDenseVector_Scalapack(
-    TlDenseVectorObject::index_type size) {
+TlDenseVector_Scalapack::TlDenseVector_Scalapack(TlDenseVectorObject::index_type size) {
     this->pImpl_ = new TlDenseVector_ImplScalapack(size);
 }
 
-TlDenseVector_Scalapack::TlDenseVector_Scalapack(
-    const TlDenseVector_Scalapack& rhs) {
-    this->pImpl_ = new TlDenseVector_ImplScalapack(
-        *dynamic_cast<const TlDenseVector_ImplScalapack*>(rhs.pImpl_));
+TlDenseVector_Scalapack::TlDenseVector_Scalapack(const TlDenseVector_Scalapack& rhs) {
+    this->pImpl_ = new TlDenseVector_ImplScalapack(*dynamic_cast<const TlDenseVector_ImplScalapack*>(rhs.pImpl_));
 }
 
-TlDenseVector_Scalapack::TlDenseVector_Scalapack(
-    const TlDenseVector_Lapack& rhs) {
-    this->pImpl_ = new TlDenseVector_ImplScalapack(
-        *dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
+TlDenseVector_Scalapack::TlDenseVector_Scalapack(const TlDenseVector_Lapack& rhs) {
+    this->pImpl_ = new TlDenseVector_ImplScalapack(*dynamic_cast<const TlDenseVector_ImplLapack*>(rhs.pImpl_));
+}
+
+TlDenseVector_Scalapack::TlDenseVector_Scalapack(const std::vector<double>& rhs) {
+    this->pImpl_ = new TlDenseVector_ImplScalapack(rhs);
+}
+
+TlDenseVector_Scalapack::operator std::vector<double>() const {
+    return std::vector<double>(*(dynamic_cast<TlDenseVector_ImplScalapack*>(this->pImpl_)));
 }
 
 TlDenseVector_Scalapack::~TlDenseVector_Scalapack() {
