@@ -560,11 +560,9 @@ void DfScf::doThreeIndexIntegral() {
 }
 
 void DfScf::buildXcMatrix() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("XC_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     if ((this->isDFT_ == true) && (this->m_bIsXCFitting == false)) {
         TlTime timer(true);
@@ -601,11 +599,9 @@ void DfScf::buildXcMatrix() {
         this->matrixCache_.flush();
     }
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("XC_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfGridFreeXC* DfScf::getDfGridFreeXcObject() {
@@ -619,11 +615,9 @@ DfXCFunctional* DfScf::getDfXCFunctional() {
 }
 
 void DfScf::buildJMatrix() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("J_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     TlTime timer(true);
 
@@ -634,11 +628,9 @@ void DfScf::buildJMatrix() {
 
     (*this->pPdfParam_)["stat"]["elapsed_time"]["j_matrix"][this->m_nIteration] = timer.getElapseTime();
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("J_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfJMatrix* DfScf::getDfJMatrixObject() {
@@ -647,11 +639,9 @@ DfJMatrix* DfScf::getDfJMatrixObject() {
 }
 
 void DfScf::buildKMatrix() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("K_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     const DfXCFunctional dfXCFunctional(this->pPdfParam_);
     if (dfXCFunctional.isHybridFunctional() == true) {
@@ -665,13 +655,10 @@ void DfScf::buildKMatrix() {
         (*this->pPdfParam_)["stat"]["elapsed_time"]["k_matrix"][this->m_nIteration] = timer.getElapseTime();
     }
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("K_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
-
 
 DfKMatrix* DfScf::getDfKMatrixObject() {
     DfKMatrix* pDfKMatrix = new DfKMatrix(this->pPdfParam_);
@@ -679,11 +666,9 @@ DfKMatrix* DfScf::getDfKMatrixObject() {
 }
 
 void DfScf::buildFock() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("Fock", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     TlTime timer(true);
 
@@ -704,11 +689,9 @@ void DfScf::buildFock() {
     // flush
     this->matrixCache_.flush();
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("Fock", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfFockMatrix* DfScf::getDfFockMatrixObject() {
@@ -717,11 +700,9 @@ DfFockMatrix* DfScf::getDfFockMatrixObject() {
 }
 
 void DfScf::transformFock() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("Transform_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     // transformed to orth. A.O. based Fock matrix
     TlTime timer(true);
@@ -735,12 +716,9 @@ void DfScf::transformFock() {
     this->loggerEndTitle();
     (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_F_matrix"][this->m_nIteration] = timer.getElapseTime();
 
-
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("Transform_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfTransFmatrix* DfScf::getDfTransFmatrixObject(bool isExecDiis) {
@@ -765,11 +743,9 @@ void DfScf::doLevelShift() {
 }
 
 void DfScf::diagonal() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("Diagonal", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     // Diagonarize Fock matrix
     TlTime timer(true);
@@ -820,11 +796,9 @@ void DfScf::diagonal() {
     // flush
     this->matrixCache_.flush();
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("Diagonal", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfDiagonal* DfScf::getDfDiagonalObject() {
@@ -833,11 +807,9 @@ DfDiagonal* DfScf::getDfDiagonalObject() {
 }
 
 void DfScf::execScfLoop_EndFock_TransC() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("Transform_C", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     // transformed to original nonorth. A.O.based space
     TlTime timer(true);
@@ -851,11 +823,9 @@ void DfScf::execScfLoop_EndFock_TransC() {
 
     (*this->pPdfParam_)["stat"]["elapsed_time"]["transform_C_matrix"][this->m_nIteration] = timer.getElapseTime();
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("Transform_C", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfTransatob* DfScf::getDfTransatobObject() {
@@ -864,11 +834,9 @@ DfTransatob* DfScf::getDfTransatobObject() {
 }
 
 void DfScf::calcDensityMatrix() {
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_start("P_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 
     // density matrix generation
     TlTime timer(true);
@@ -883,11 +851,9 @@ void DfScf::calcDensityMatrix() {
     // flush
     this->matrixCache_.flush();
 
-#ifndef NDEBUG
 #ifdef __FUJITSU
     fapp_stop("P_matrix", 1, 0);
 #endif  // __FUJITSU
-#endif  // NDEBUG
 }
 
 DfDmatrix* DfScf::getDfDmatrixObject() {
