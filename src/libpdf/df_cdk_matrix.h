@@ -1,6 +1,10 @@
 #ifndef DF_CDK_MATRIX_H
 #define DF_CDK_MATRIX_H
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif  // _OPENMP
+
 #include "DfObject.h"
 #include "common.h"
 #include "datatype.h"
