@@ -29,8 +29,7 @@
 
 /// 行ベクトルで表される行列
 /// 行個数の、列個サイズのベクトルが集合したコンテナクラス
-class TlDenseGeneralMatrix_arrays_RowOriented
-    : public TlDenseMatrix_arrays_Object {
+class TlDenseGeneralMatrix_arrays_RowOriented : public TlDenseMatrix_arrays_Object {
    public:
     explicit TlDenseGeneralMatrix_arrays_RowOriented(
         index_type row = 1, index_type col = 1, int numOfSubunits = 1,
@@ -56,8 +55,9 @@ class TlDenseGeneralMatrix_arrays_RowOriented
     virtual double get(index_type row, index_type col) const;
 
     virtual std::vector<double> getRowVector(const index_type row) const;
-    virtual void getRowVector(const index_type row, double* pBuf,
-                              const index_type length) const;
+    virtual std::size_t getRowVector(const index_type row, double* pBuf, const std::size_t length) const;
+
+    virtual void setColVector(const index_type col, const std::valarray<double>& v);
 
    public:
     /// TlDenseGeneralMatrix_Lapackオブジェクトを返す(for debug)

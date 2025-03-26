@@ -1,8 +1,12 @@
-#include "tl_dense_symmetric_matrix_impl_eigen.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"  // this file created by autotools
+#endif               // HAVE_CONFIG_H
 
 #include <Eigen/Dense>
 #include <iostream>
 
+#include "tl_dense_symmetric_matrix_impl_eigen.h"
+#include "tl_dense_symmetric_matrix_impl_eigen_float.h"
 #include "tl_dense_vector_impl_eigen.h"
 #include "tl_sparse_symmetric_matrix_impl_eigen.h"
 
@@ -10,27 +14,28 @@
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #endif  // HAVE_VIENNACL
 
-TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlMatrixObject::index_type dim, double const* const pBuf)
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlMatrixObject::index_type dim, double const* const pBuf)
     : TlDenseGeneralMatrix_ImplEigen(dim, dim) {
     if (pBuf != NULL) {
         this->vtr2mat(pBuf);
     }
 }
 
-TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlDenseSymmetricMatrix_ImplEigen& rhs)
-    : TlDenseGeneralMatrix_ImplEigen(rhs) {}
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigen& rhs)
+    : TlDenseGeneralMatrix_ImplEigen(rhs) {
+}
 
-TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlDenseGeneralMatrix_ImplEigen& rhs) {
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseSymmetricMatrix_ImplEigenFloat& rhs)
+    : TlDenseGeneralMatrix_ImplEigen(rhs) {
+}
+
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlDenseGeneralMatrix_ImplEigen& rhs) {
     this->matrix_ = rhs.matrix_;
     this->resize(rhs.getNumOfRows(), rhs.getNumOfRows());
     this->matrix_ = this->matrix_.selfadjointView<Eigen::Upper>();
 }
 
-TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(
-    const TlSparseSymmetricMatrix_ImplEigen& sm)
+TlDenseSymmetricMatrix_ImplEigen::TlDenseSymmetricMatrix_ImplEigen(const TlSparseSymmetricMatrix_ImplEigen& sm)
     : TlDenseGeneralMatrix_ImplEigen(sm.getNumOfRows(), sm.getNumOfCols()) {
     // this->matrix_ = sm.matrix_.selfadjointView<Eigen::Upper>();
     this->matrix_ = sm.matrix_;

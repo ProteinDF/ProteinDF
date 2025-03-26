@@ -237,8 +237,7 @@ void DfScf_Parallel::calcDensityMatrix() {
         dfDmatrix.run();
 
         this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"]
-                           [this->m_nIteration] = timer.getElapseTime();
+        (*this->pPdfParam_)["stat"]["elapsed_time"]["density_matrix"][this->m_nIteration] = timer.getElapseTime();
 
         this->matrixCache_.flush();
         done = true;

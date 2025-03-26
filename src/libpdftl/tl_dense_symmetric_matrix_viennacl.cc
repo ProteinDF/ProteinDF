@@ -4,43 +4,43 @@
 
 #include "tl_dense_general_matrix_impl_viennacl.h"
 #include "tl_dense_general_matrix_viennacl.h"
-#include "tl_dense_symmetric_matrix_eigen.h"
-#include "tl_dense_symmetric_matrix_impl_eigen.h"
 #include "tl_dense_symmetric_matrix_impl_viennacl.h"
 #include "tl_dense_symmetric_matrix_viennacl.h"
+#include "tl_dense_symmetric_matrix_viennacl_float.h"
+#include "tl_dense_symmetric_matrix_impl_viennacl_float.h"
 #include "tl_dense_vector_impl_viennacl.h"
 #include "tl_dense_vector_viennacl.h"
 #include "tl_sparse_symmetric_matrix_impl_viennacl.h"
 #include "tl_sparse_symmetric_matrix_viennacl.h"
 
-TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(
-    const TlMatrixObject::index_type dim) {
+#ifdef HAVE_EIGEN
+#include "tl_dense_symmetric_matrix_eigen.h"
+#include "tl_dense_symmetric_matrix_impl_eigen.h"
+#endif  // HAVE_EIGEN
+
+TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(const TlMatrixObject::index_type dim) {
     this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(dim);
 }
 
-TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(
-    const TlDenseSymmetricMatrix_ViennaCL& rhs) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(*(
-        dynamic_cast<const TlDenseSymmetricMatrix_ImplViennaCL*>(rhs.pImpl_)));
+TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCL& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(*(dynamic_cast<const TlDenseSymmetricMatrix_ImplViennaCL*>(rhs.pImpl_)));
 }
 
-TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(
-    const TlDenseGeneralMatrix_ViennaCL& rhs) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(
-        *(dynamic_cast<const TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
+TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_ViennaCLFloat& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(*(dynamic_cast<const TlDenseSymmetricMatrix_ImplViennaCLFloat*>(rhs.pImpl_)));
 }
 
-TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(
-    const TlSparseSymmetricMatrix_ViennaCL& rhs) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(
-        *(dynamic_cast<TlSparseSymmetricMatrix_ImplViennaCL*>(rhs.pImpl_)));
+TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(const TlDenseGeneralMatrix_ViennaCL& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(*(dynamic_cast<const TlDenseGeneralMatrix_ImplViennaCL*>(rhs.pImpl_)));
+}
+
+TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(const TlSparseSymmetricMatrix_ViennaCL& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(*(dynamic_cast<TlSparseSymmetricMatrix_ImplViennaCL*>(rhs.pImpl_)));
 }
 
 #ifdef HAVE_EIGEN
-TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(
-    const TlDenseSymmetricMatrix_Eigen& rhs) {
-    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(
-        *dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_));
+TlDenseSymmetricMatrix_ViennaCL::TlDenseSymmetricMatrix_ViennaCL(const TlDenseSymmetricMatrix_Eigen& rhs) {
+    this->pImpl_ = new TlDenseSymmetricMatrix_ImplViennaCL(*dynamic_cast<const TlDenseSymmetricMatrix_ImplEigen*>(rhs.pImpl_));
 }
 #endif  // HAVE_EIGEN
 

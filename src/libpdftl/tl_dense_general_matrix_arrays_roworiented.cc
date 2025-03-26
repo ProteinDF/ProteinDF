@@ -26,11 +26,11 @@
 
 #if defined HAVE_EIGEN
 #include "tl_dense_general_matrix_eigen.h"
-#endif // HAVE_EIGEN
+#endif  // HAVE_EIGEN
 
 #if defined HAVE_LAPACK
 #include "tl_dense_general_matrix_lapack.h"
-#endif // HAVE_LAPACK
+#endif  // HAVE_LAPACK
 
 #include "tl_dense_general_matrix_mmap.h"
 
@@ -85,9 +85,12 @@ std::vector<double> TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(const 
     return TlDenseMatrix_arrays_Object::getVector(row);
 }
 
-void TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(const index_type row, double* pBuf,
-                                                           const index_type length) const {
-    TlDenseMatrix_arrays_Object::getVector(row, pBuf, length);
+std::size_t TlDenseGeneralMatrix_arrays_RowOriented::getRowVector(const index_type row, double* pBuf, const std::size_t length) const {
+    return TlDenseMatrix_arrays_Object::getVector(row, pBuf, length);
+}
+
+void TlDenseGeneralMatrix_arrays_RowOriented::setColVector(const index_type col, const std::valarray<double>& v) {
+    TlDenseMatrix_arrays_Object::setAcrossMultipleVectors(col, v);
 }
 
 TlDenseGeneralMatrix_Lapack TlDenseGeneralMatrix_arrays_RowOriented::getTlMatrixObject() const {
@@ -236,7 +239,7 @@ bool RowVectorMatrix2CSFD(const std::string& rvmBasePath, const std::string& csf
                 TlDenseGeneralMatrix_Lapack tmpMat(readRowChunks, numOfCols, &(transBuf[0]));
 #else
 #error "either HAVE_EIGEN or HAVE_LAPACK must be defined."
-#endif //
+#endif  //
                 fileMat.block(chunkStartRow, 0, tmpMat);
             }
 
