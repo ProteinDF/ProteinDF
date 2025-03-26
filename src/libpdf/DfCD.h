@@ -97,40 +97,6 @@ protected:
                              const int pivotBegin) const;
 
 protected:
-    // --------------------------------------------------------------------------
-    // [SCF] J
-    // --------------------------------------------------------------------------
-    void getJ_S(TlDenseSymmetricMatrix_Lapack* pJ);
-    void getJ_S_mmap(TlDenseSymmetricMatrix_Lapack* pJ);
-
-    virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType, const int iteration);
-
-    // ----------------------------------------------------------------------------
-    // [SCF] K
-    // ----------------------------------------------------------------------------
-protected:
-    [[deprecated]] virtual void getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
-
-    [[deprecated]] virtual void getK_S_woCD_mmap(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
-
-    template <class Ljk_MatrixType>
-    void getK_byLjk_defMatrix(const RUN_TYPE runType);
-
-    template <class K_MatrixType, class Ljk_MatrixType, class GeneralMatrixType, class SymmetricMatrixType>
-    void getK_byLjk(const RUN_TYPE runType);
-
-    template <class K_MatrixType>
-    void getK_byLk(const RUN_TYPE runType);
-
-    // ----------------------------------------------------------------------------
-    // [SCF] gridfree
-    // ----------------------------------------------------------------------------
-    virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
-    virtual void getM_S_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
-    virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
-    virtual void getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
-
-protected:
     class Index2 {
     public:
         explicit Index2(index_type i1 = 0, index_type i2 = 0)
@@ -267,8 +233,6 @@ protected:
     // ----------------------------------------------------------------------------
     // [SCF] Density Matrix
     // ----------------------------------------------------------------------------
-    virtual TlDenseSymmetricMatrix_Lapack getPMatrix();
-
     virtual void divideCholeskyBasis(const index_type numOfCBs, index_type* pStart, index_type* pEnd);
 
     // ----------------------------------------------------------------------------
@@ -281,38 +245,39 @@ protected:
                                                      const std::vector<index_type>&, const PQ_PairArray&,
                                                      std::vector<double>*);
 
-    /// calc Chokesky Vectors <pq|rs> for symmetric basis
-    virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyS_new(
+    /// calc Cholesky Vectors <pq|rs> for symmetric basis
+    virtual void calcCholeskyVectorsOnTheFlyS_new(
         const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path, const double epsilon,
-        CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFunc getSuperMatrixElements);
+        CalcDiagonalsFunc calcDiagonalsFunc, GetSuperMatrixElementsFunc getSuperMatrixElements,
+        const std::string& saveLErrorVectorPath, TlDenseGeneralMatrix_arrays_RowOriented* pL);
 
-    /// calc Chokesky Vectors <pq|rs> for symmetric basis (mmap)
+    /// calc Cholesky Vectors <pq|rs> for symmetric basis (mmap)
     void calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
                                       const double epsilon, CalcDiagonalsFunc calcDiagonalsFunc,
                                       GetSuperMatrixElementsFunc getSuperMatrixElements,
                                       TlDenseGeneralMatrix_arrays_mmap_RowOriented* pL);
 
-    /// calc Chokesky Vectors <pq|rs> for symmetric basis (mmap)
+    /// calc Cholesky Vectors <pq|rs> for symmetric basis (mmap)
     void calcCholeskyVectorsOnTheFlyS(const TlOrbitalInfoObject& orbInfo, const std::string& I2PQ_path,
                                       const double epsilon, CalcDiagonalsFunc calcDiagonalsFunc,
                                       GetSuperMatrixElementsFunc getSuperMatrixElements, TlDenseGeneralMatrix_mmap* pL);
 
-    /// calc Chokesky Vectors <Pq|Rs> for asymmetric basis
+    /// calc Cholesky Vectors <Pq|Rs> for asymmetric basis
     template <class EngineClass>
     TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFly(const TlOrbitalInfoObject& orbInfo_p,
                                                                         const TlOrbitalInfoObject& orbInfo_q,
                                                                         const std::string& I2PQ_path);
 
-    /// calc Chokesky Vectors <pq|rs> for asymmetric basis
+    /// calc Cholesky Vectors <pq|rs> for asymmetric basis
     virtual TlDenseGeneralMatrix_arrays_RowOriented calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p,
                                                                                  const TlOrbitalInfoObject& orbInfo_q,
                                                                                  const std::string& I2PQ_path);
-    /// calc Chokesky Vectors <pq|rs> for asymmetric basis (mmap)
+    /// calc Cholesky Vectors <pq|rs> for asymmetric basis (mmap)
     void calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
                                       const std::string& I2PQ_path, const double epsilon,
                                       TlDenseGeneralMatrix_mmap* pL);
 
-    /// calc Chokesky Vectors <pq|rs> for asymmetric basis (arrays mmap)
+    /// calc Cholesky Vectors <pq|rs> for asymmetric basis (arrays mmap)
     void calcCholeskyVectorsOnTheFlyA(const TlOrbitalInfoObject& orbInfo_p, const TlOrbitalInfoObject& orbInfo_q,
                                       const std::string& I2PQ_path, const double epsilon,
                                       TlDenseGeneralMatrix_arrays_mmap_RowOriented* pL);
@@ -584,13 +549,55 @@ protected:
     /// 2電子積分キャッシュ
     ERI_CacheType ERI_cache_;
 
+    // --------------------------------------------------------------------------
+    // [SCF] J
+    // --------------------------------------------------------------------------
 protected:
+    void getJ_S(TlDenseSymmetricMatrix_Lapack* pJ);
+    void getJ_S_mmap(double threshold, TlDenseSymmetricMatrix_Lapack* pJ);
     void getJ_S_v2(TlDenseSymmetricMatrix_Lapack* pJ);
-    TlDenseVector_Lapack getScreenedDensityMatrix(const PQ_PairArray& I2PQ);
-    TlDenseVector_Lapack getScreenedDensityMatrix(const RUN_TYPE runTyoe, const PQ_PairArray& I2PQ);
-    // TlDenseVector_Lapack getScreenedDensityMatrix2(const RUN_TYPE runTyoe,
-    // const
-    // PQ_PairArray& I2PQ);
+
+protected:
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getPMatrix() const;
+
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getDiffDensityMatrix() const;
+
+    template <class SymmetricMatrixType, class VectorType>
+    VectorType getScreenedDensityMatrix(const SymmetricMatrixType& P, const PQ_PairArray& I2PQ);
+
+    // ----------------------------------------------------------------------------
+    // [SCF] K
+    // ----------------------------------------------------------------------------
+protected:
+    virtual TlDenseSymmetricMatrix_Lapack getPMatrix(const RUN_TYPE runType, const int iteration);
+
+    [[deprecated]] virtual void getK_S_woCD(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
+
+    [[deprecated]] virtual void getK_S_woCD_mmap(const RUN_TYPE runType, TlDenseSymmetricMatrix_Lapack* pK);
+
+    template <class Ljk_MatrixType>
+    void getK_byLjk_defMatrix(const RUN_TYPE runType);
+
+    template <class K_MatrixType, class Ljk_MatrixType, class GeneralMatrixType, class SymmetricMatrixType>
+    void getK_byLjk(const RUN_TYPE runType);
+
+    template <class K_MatrixType>
+    void getK_byLk(const RUN_TYPE runType);
+
+    template <class SymmetricMatrixType, class VectorType>
+    VectorType getScreenedDensityMatrix(const RUN_TYPE runType, const PQ_PairArray& I2PQ);
+
+    // ----------------------------------------------------------------------------
+    // [SCF] gridfree
+    // ----------------------------------------------------------------------------
+    virtual void getM_S(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
+    virtual void getM_S_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
+    virtual void getM_A(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
+    virtual void getM_A_mmap(const TlDenseSymmetricMatrix_Lapack& P, TlDenseSymmetricMatrix_Lapack* pM);
+
+protected:
     void expandJMatrix(const TlDenseVector_Lapack& vJ, const PQ_PairArray& I2PQ, TlDenseSymmetricMatrix_Lapack* pJ);
     void expandKMatrix(const TlDenseVector_Lapack& vK, const PQ_PairArray& I2PR, TlDenseSymmetricMatrix_Lapack* pK);
 
@@ -850,6 +857,121 @@ SymmetricMatrixType DfCD::getCholeskyVector(const std::vector<double>& L_col, co
     SymmetricMatrixType answer(this->m_nNumOfAOs);
     for (index_type i = 0; i < numOfItilde; ++i) {
         answer.set(I2PQ[i].index1(), I2PQ[i].index2(), L_col[i]);
+    }
+
+    return answer;
+}
+
+// ----------------------------------------------------------------------------
+// [SCF] J
+// ----------------------------------------------------------------------------
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfCD::getPMatrix() const {
+    SymmetricMatrixType P;
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
+            break;
+
+        case METHOD_UKS:
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_UKS_ALPHA, this->m_nIteration);
+            P += DfObject::getPInMatrix<SymmetricMatrixType>(RUN_UKS_BETA, this->m_nIteration);
+            break;
+
+        case METHOD_ROKS:
+            P = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
+            break;
+
+        default:
+            this->log_.critical("program error");
+            break;
+    }
+    return P;
+}
+
+template <class SymmetricMatrixType>
+SymmetricMatrixType DfCD::getDiffDensityMatrix() const {
+    SymmetricMatrixType dP;
+    switch (this->m_nMethodType) {
+        case METHOD_RKS: {
+            dP = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_RKS, this->m_nIteration);
+
+        } break;
+
+        case METHOD_UKS: {
+            dP = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+            dP += DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA, this->m_nIteration);
+        } break;
+
+        case METHOD_ROKS: {
+            dP = DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED, this->m_nIteration);
+            dP += DfObject::getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN, this->m_nIteration);
+        } break;
+        default:
+            this->log_.critical("program error");
+            break;
+    }
+    return dP;
+}
+
+template <class SymmetricMatrixType, class VectorType>
+VectorType DfCD::getScreenedDensityMatrix(const SymmetricMatrixType& P, const PQ_PairArray& I2PQ) {
+    const std::size_t numOfI = I2PQ.size();
+    VectorType answer(numOfI);
+
+    for (std::size_t i = 0; i < numOfI; ++i) {
+        const Index2& pair = I2PQ[i];
+        const index_type r = pair.index1();
+        const index_type c = pair.index2();
+        const double coef = (r != c) ? 2.0 : 1.0;
+        answer.set(i, coef * P.get(r, c));
+    }
+
+    return answer;
+}
+
+// ----------------------------------------------------------------------------
+// [SCF] K
+// ----------------------------------------------------------------------------
+template <class SymmetricMatrixType, class VectorType>
+VectorType DfCD::getScreenedDensityMatrix(const RUN_TYPE runType, const PQ_PairArray& I2PR) {
+    SymmetricMatrixType P;
+    switch (runType) {
+        case RUN_RKS:
+            P = 0.5 * this->getPInMatrix<SymmetricMatrixType>(RUN_RKS, this->m_nIteration);
+            break;
+
+        case RUN_UKS_ALPHA:
+        case RUN_UKS_BETA:
+            P = this->getPInMatrix<SymmetricMatrixType>(runType, this->m_nIteration);
+            break;
+
+        case RUN_ROKS_ALPHA: {
+            P = 0.5 * this->getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+            P += this->getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
+        } break;
+
+        case RUN_ROKS_BETA: {
+            P = 0.5 * this->getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+        } break;
+
+        default:
+            this->log_.critical(TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
+            CnErr.abort();
+    }
+
+    const std::size_t numOfI = I2PR.size();
+    VectorType answer(numOfI);
+
+    for (std::size_t i = 0; i < numOfI; ++i) {
+        const Index2& pair = I2PR[i];
+        const index_type r = pair.index1();
+        const index_type c = pair.index2();
+        // const double coef = (r != c) ? 2.0 : 1.0;
+        // const double coef = (r != c) ? 1.0 : 0.5;
+        const double coef = 1.0;
+        answer.set(i, coef * P.get(r, c));
     }
 
     return answer;

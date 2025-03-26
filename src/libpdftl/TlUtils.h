@@ -27,6 +27,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 /// 文字列処理クラス
@@ -212,6 +213,10 @@ public:
     template <typename T>
     static std::string vector2str(const std::vector<T>& vtr);
 
+public:
+    template <typename T>
+    static std::string getTypeName(const T& t);
+
 private:
     template <typename T, typename F>
     static void trim_ws_t(std::basic_string<T>& s, F f);
@@ -346,6 +351,11 @@ void TlUtils::changeMemoryLayout(const T* pInput, const std::size_t axis1,
             pOutput[j * axis1 + i] = pInput[axis2 * i + j];
         }
     }
+}
+
+template <typename T>
+std::string TlUtils::getTypeName(const T& t) {
+    return typeid(t).name();
 }
 
 #endif  // TLUTILS_H

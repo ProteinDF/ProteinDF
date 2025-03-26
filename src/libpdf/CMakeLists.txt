@@ -191,6 +191,7 @@ set(LIBPDF_SOURCES
 
 
 set(LIBPPDF_HEADERS
+  df_cdk_matrix_parallel.h
   df_converge_damping_anderson_mpi_lapack.h
   df_converge_damping_anderson_mpi_template.h
   df_converge_damping_diis_mpi_lapack.h
@@ -245,6 +246,7 @@ set(LIBPPDF_HEADERS
 
 
 set(LIBPPDF_SOURCES
+  df_cdk_matrix_parallel.cc
   df_converge_damping_anderson_mpi_lapack.cc
   df_converge_damping_diis_mpi_lapack.cc
   df_converge_damping_mpi_lapack.cc
