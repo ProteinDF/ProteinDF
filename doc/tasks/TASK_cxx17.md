@@ -2,7 +2,7 @@
 
 - **Branch**: `chore/cxx17`
 - **作成**: 2026-10-03(Claude)
-- **状態**: 未着手
+- **状態**: レビュー中(収束、マージ承認待ち)
 
 > `CMakeLists.txt`は`CMAKE_CXX_STANDARD`の既定を14にしている。GoogleTest 1.13以降はC++17以上を要求するため(Ubuntu 26.04の`libgtest-dev`は1.17)、このままでは`src/unit_test`がビルドできない(`gtest-port.h:273: #error C++ versions less than C++17 are not supported.`)。既定をC++17に上げる(ユーザー承認済み、2026-10-03)。
 >
@@ -32,3 +32,16 @@ GTestとclang-formatがインストールされていること(`devtool/setup-de
 3. ビルドログの警告の総数を、C++14(`develop`、`-DCMAKE_CXX_STANDARD=14`)とC++17(このブランチ)で比べ、両方の数と、C++17で増えた警告の種類を完了報告に書く(どちらも新しいビルドディレクトリで最初からビルドすること)。
 4. `-DCMAKE_CXX_STANDARD=14`を指定すると、C++14でビルドされること(外からの指定が優先されること)を確認する(`compile_commands.json`やビルドログの`-std=`を確認する)。
 5. `AGENTS.md`の形式で完了報告を出す。
+
+## レビュー結果(1回目、2026-10-03、収束)
+
+`chore/cxx17`(`02482e3`)をレビューした。変更は`CMakeLists.txt`(既定を17に、`CMAKE_CXX_STANDARD_REQUIRED ON`・`CMAKE_CXX_EXTENSIONS OFF`を追加)と`.vscode/c_cpp_properties.json`のみ。外からの`-DCMAKE_CXX_STANDARD`は従来どおり優先される。Claudeが次を実際に確認した。
+
+- `devtool/check.sh --build-dir build-review`(新しいビルドディレクトリ): build PASS。`PDF.x`・`pdf-xtest`とも`-std=c++17`。`xtest`は314件PASS・2件FAIL(既知の`multiplication_MV`・`multiplication_VMV`、`TASK_xtest-pdf-home.md`で対応)、`xtest.mpi`はPASS。
+- 警告数はC++14・C++17ともに15件(agyの`build-cxx14/build.log`・`build-cxx17/check-build.log`を数え直して一致)。
+
+### 前提の訂正(Claudeの誤り)
+
+この指示書の冒頭に書いた「C++14のままでは`src/unit_test`がビルドできない」は、**aptで入れたGTest(1.17.0)では成り立たない**。aptのGTestはCMakeの設定(`GTestTargets.cmake`)で`INTERFACE_COMPILE_FEATURES cxx_std_17`を持つため、本体がC++14でも、GTestをリンクする`pdf-xtest`だけが自動的に`-std=c++17`でコンパイルされる(agyの`build-cxx14`で確認: `PDF.x`は`-std=c++14`、`pdf-xtest`は`-std=c++17`で、ビルドは成功)。Claudeの事前確認は、ソースからビルドしたGTestをFindGTestのモジュール方式で見つけさせたもので、この格上げが起きなかった。
+
+したがって、この変更はテストのビルドに必須ではない。効果は、本体とテストのC++規格をそろえること、およびGTestの見つけ方によらずテストがビルドできるようになること。

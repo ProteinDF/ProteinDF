@@ -28,6 +28,6 @@
 
 - GCC 15.2(Ubuntu 26.04)。GCC 14以降でビルドできない問題は`fix/gcc15-build`で修正済み。
 - GTest・clang-formatは`devtool/setup-dev-tools.sh`で入る。未インストールの間は`check.sh`のtests・clang-formatがSKIPになる。
-- GTest 1.13以降(Ubuntu 26.04の`libgtest-dev`は1.17)はC++17以上が必要だが、`CMakeLists.txt`の既定は`CMAKE_CXX_STANDARD 14`なので、そのままでは`src/unit_test`がビルドできない(`#error C++ versions less than C++17 are not supported`)。C++17では本体・テストともビルドできることを確認済み(2026-10-03)。
-- C++17でビルドした`xtest`は316件中2件が失敗する(`TlDenseSymmetricMatrix_Lapack.multiplication_MV`・`multiplication_VMV`、例外`basic_string: construction from null is not valid`)。`xtest.mpi`は成功。xtestの実行に約3分かかる。
+- GTest 1.13以降(Ubuntu 26.04の`libgtest-dev`は1.17)はC++17以上が必要。aptのGTestはCMakeの設定で`cxx_std_17`を持つので、本体がC++14でも`pdf-xtest`だけはC++17でビルドされる(ソースからビルドしたGTestをFindGTestのモジュール方式で使うと`#error C++ versions less than C++17 are not supported`になる)。既定をC++17に上げる変更は`TASK_cxx17.md`。
+- `xtest`は316件中2件が失敗する(`TlDenseSymmetricMatrix_Lapack.multiplication_MV`・`multiplication_VMV`、例外`basic_string: construction from null is not valid`)。`xtest.mpi`は成功。xtestの実行に約3分かかる。
 - miseの`ninja`シムはバージョン未設定で動かないため、`check.sh`はMakefile生成器を使う。
