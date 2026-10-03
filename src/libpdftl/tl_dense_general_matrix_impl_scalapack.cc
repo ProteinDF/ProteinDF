@@ -1,6 +1,9 @@
 #include "tl_dense_general_matrix_impl_scalapack.h"
 
+#include <stdexcept>
+
 #include "TlCommunicate.h"
+#include "TlUtils.h"
 #include "scalapack.h"
 #include "tl_dense_general_matrix_io.h"
 #include "tl_dense_general_matrix_object.h"
@@ -261,45 +264,35 @@ TlDenseGeneralMatrix_ImplScalapack TlDenseGeneralMatrix_ImplScalapack::inverse()
     int info = 0;
     const int sizeOf_IPIV = numroc_(&A.rows_, &A.blockSize_, &A.m_nMyProcRow, &zero, &A.procGridRow_) + A.blockSize_;
 
-    int* IPIV = new int[sizeOf_IPIV];
+    std::vector<int> IPIV(sizeOf_IPIV);
 
-    pdgetrf_(&M, &N, A.pData_, &IA, &JA, A.pDESC_, IPIV, &info);
+    pdgetrf_(&M, &N, A.pData_, &IA, &JA, A.pDESC_, IPIV.data(), &info);
 
     if (info == 0) {
         int LWORK = -1;
         int LIWORK = -1;
-        double* WORK_SIZE = new double[1];
-        int* IWORK_SIZE = new int[1];
-        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV, WORK_SIZE, &LWORK, IWORK_SIZE, &LIWORK, &info);
+        std::vector<double> WORK_SIZE(1);
+        std::vector<int> IWORK_SIZE(1);
+        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV.data(), WORK_SIZE.data(), &LWORK, IWORK_SIZE.data(), &LIWORK,
+                 &info);
 
         LWORK = static_cast<int>(WORK_SIZE[0]);
-        double* WORK = new double[LWORK];
+        std::vector<double> WORK(LWORK);
         LIWORK = IWORK_SIZE[0];
-        int* IWORK = new int[LIWORK];
-        delete[] WORK_SIZE;
-        WORK_SIZE = NULL;
-        delete[] IWORK_SIZE;
-        IWORK_SIZE = NULL;
+        std::vector<int> IWORK(LIWORK);
 
-        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV, WORK, &LWORK, IWORK, &LIWORK, &info);
+        pdgetri_(&M, A.pData_, &IA, &JA, A.pDESC_, IPIV.data(), WORK.data(), &LWORK, IWORK.data(), &LIWORK, &info);
 
         if (info != 0) {
             std::cout << "pdgetri_ returns " << info << std::endl;
-            throw;
+            throw std::runtime_error(
+                TlUtils::format("TlDenseGeneralMatrix_ImplScalapack::inverse(): pdgetri_ returns %d", info));
         }
-
-        delete[] IWORK;
-        IWORK = NULL;
-
-        delete[] WORK;
-        WORK = NULL;
     } else {
         std::cout << "pdgetrf_ returns " << info << std::endl;
-        throw;
+        throw std::runtime_error(
+            TlUtils::format("TlDenseGeneralMatrix_ImplScalapack::inverse(): pdgetrf_ returns %d", info));
     }
-
-    delete[] IPIV;
-    IPIV = NULL;
 
     return A;
 }
