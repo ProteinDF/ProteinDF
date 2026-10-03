@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/scalapack-throw`
 - **作成**: 2026-10-03(Claude)
-- **状態**: レビュー中(収束、マージ承認待ち)
+- **状態**: マージ済み(`f7d610f`)
 
 > `TASK_matrix-load-exception.md`と同じ問題(catch節の外の`throw;`は再送出する例外がないので`std::terminate`で強制終了する)が、ScaLAPACK版の次の3か所にある。これを理由を持った例外を投げるように直す(ユーザー依頼、2026-10-03)。
 >
@@ -51,3 +51,5 @@
 - `pdgetrf_`の`INFO`はScaLAPACKの仕様で全プロセス共通の値(global output)なので、全プロセスが同じように例外を投げる。
 
 **補足**: このマシンで`mpirun`を実行すると、GPUドライバの`HSA exception: Agent creation failed.`という警告が大量に出るが、テストとは関係ない。
+
+ユーザー承認のうえ、2026-10-03にdevelopへマージした(`f7d610f`)。
