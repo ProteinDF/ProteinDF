@@ -70,15 +70,21 @@ if ((do_build)); then
     # 3. build
     echo; echo "--- build ($build_dir)"
     log="$build_dir/check-build.log"
+    gen=()
     if [[ ! -f "$build_dir/CMakeCache.txt" ]]; then
         mkdir -p "$build_dir"
-        gen=()
         ninja --version >/dev/null 2>&1 && gen=(-G Ninja)
-        # shellcheck disable=SC2086
-        cmake -S . -B "$build_dir" "${gen[@]}" ${PDF_CMAKE_ARGS:-} >"$build_dir/check-configure.log" 2>&1 \
-            || { tail -30 "$build_dir/check-configure.log"; record configure FAIL "see $build_dir/check-configure.log"; }
     fi
-    if [[ -f "$build_dir/CMakeCache.txt" ]]; then
+    # configure every run so that newly installed packages (e.g. GTest) are picked up
+    # shellcheck disable=SC2086
+    if cmake -S . -B "$build_dir" "${gen[@]}" ${PDF_CMAKE_ARGS:-} >"$build_dir/check-configure.log" 2>&1; then
+        configured=1
+    else
+        configured=0
+        tail -30 "$build_dir/check-configure.log"
+        record configure FAIL "see $build_dir/check-configure.log"
+    fi
+    if ((configured)); then
         if cmake --build "$build_dir" -j "$(nproc)" >"$log" 2>&1; then
             record build PASS
         else
