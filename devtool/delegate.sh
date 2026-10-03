@@ -2,10 +2,12 @@
 # Hand a TASK file to an implementing agent (agy or GitHub Copilot CLI).
 # The agent works only in the branch's own worktree (created if missing).
 #
-# Usage: devtool/delegate.sh [-a agy|copilot] [-i] [-b <branch>] [-m <model>] <TASK.md> [extra instructions]
+# Usage: devtool/delegate.sh [-a agy|copilot] [-i] [-c] [-b <branch>] [-m <model>] <TASK.md> [extra instructions]
 #   -a  agent (default: $PDF_AGENT or agy)
 #   -i  interactive session (permissions are asked as usual)
 #       default is non-interactive: all tool permissions are auto-approved
+#   -c  continue the agent's most recent session in the worktree
+#       (e.g. when it stopped to ask something); extra instructions are sent as the reply
 #   -b  branch (default: the "Branch:" line in the TASK file)
 #   -m  model passed to the agent CLI
 #
@@ -15,19 +17,21 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 agent=${PDF_AGENT:-agy}
 interactive=0
+continue_session=0
 branch=""
 model=""
-while getopts "a:ib:m:h" opt; do
+while getopts "a:icb:m:h" opt; do
     case "$opt" in
         a) agent=$OPTARG ;;
         i) interactive=1 ;;
+        c) continue_session=1 ;;
         b) branch=$OPTARG ;;
         m) model=$OPTARG ;;
-        *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+        *) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
     esac
 done
 shift $((OPTIND - 1))
-(($# >= 1)) || { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+(($# >= 1)) || { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
 task=$(realpath "$1"); shift
 extra="$*"
@@ -59,9 +63,13 @@ read -r -d '' prompt <<EOF || true
 まず ${wt}/AGENTS.md を読み、次にタスク指示書を読んで、その指示に従って実装してください。
 タスク指示書の末尾に「レビュー結果」がある場合は、最新のレビュー結果の修正依頼に対応してください。
 タスク指示書と、作業ディレクトリ以外のファイルは編集しないこと。マージ・push・ブランチ削除はしないこと。
+タスク指示書の範囲内のファイル編集・コマンド実行・コミットは承認済みなので、確認を求めずに進めること。判断が必要な点があれば、完了報告の「判断が必要な点」に書くこと。
 最後に、AGENTS.md の「完了報告」の形式で報告を出力してください。
 ${extra}
 EOF
+if ((continue_session)); then
+    prompt=${extra:-続けてください。}
+fi
 
 echo "agent:    $agent ($([[ $interactive == 1 ]] && echo interactive || echo non-interactive, auto-approve))"
 echo "branch:   $branch"
@@ -71,6 +79,7 @@ echo "log:      $log"
 echo
 
 cmd=("$agent" --add-dir "$(dirname "$task")")
+((continue_session)) && cmd+=(--continue)
 [[ -n "$model" ]] && cmd+=(--model "$model")
 case "$agent" in
     agy) auto_approve=--dangerously-skip-permissions ;;
