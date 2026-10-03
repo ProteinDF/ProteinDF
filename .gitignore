@@ -37,3 +37,6 @@ doc/api/*
 *.srctrlprj
 *.srctrldb
 *.srctrlbm
+
+# devtool/check.sh build directories
+/build-check/
