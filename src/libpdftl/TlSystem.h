@@ -29,6 +29,7 @@ class TlSystem {
    public:
     static int getPID();
     static int getPPID();
+    /// 環境変数の値を取得する。未設定の場合は空文字列を返す。
     static std::string getEnv(const std::string& key);
 
     /// ホスト名を返す
