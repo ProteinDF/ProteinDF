@@ -280,13 +280,13 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
             }
         } else {
             this->log_.critical(TlUtils::format("cannot open matrix file: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
-            return false;
+            throw;
         }
 
         fs.close();
     } else {
         this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
-        return false;
+        throw;
     }
 
     return answer;
