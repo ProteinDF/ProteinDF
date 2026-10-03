@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/matrix-load-exception`
 - **作成**: 2026-10-03(Claude)
-- **状態**: レビュー中(収束、マージ承認待ち)
+- **状態**: マージ済み(`8d72b3b`)
 
 > `TlDenseGeneralMatrixObject::load`(`src/libpdftl/tl_dense_general_matrix_object.cc`、3か所)と`TlDenseSymmetricMatrixObject::load`(`src/libpdftl/tl_dense_symmetric_matrix_object.cc`、2か所)は、ファイルが開けない・形式が不正・未対応の形式の場合に、ログを出したあと**catch節の外で`throw;`**している。catch節の外の`throw;`は再送出する例外がないので、`std::terminate`が呼ばれてプログラムが強制終了する(例外は投げられない)。これを、理由を持った例外を投げるように直す(ユーザー依頼、2026-10-03)。
 >
@@ -48,3 +48,5 @@
 1. `TlDenseSymmetricMatrixObject::load`の`default:`(RLHD以外の形式)は、例外を投げず、**`resize(row)`で0埋めされた行列のまま`false`を返す**(もともとある経路で、今回の対象外)。戻り値を確認しない呼び出し元では、0の行列で計算が黙って続く。同じ関数の`row != col`の場合も、ログを出すだけで処理を続ける。
 2. 存在しないファイルを読むと、メッセージは「cannot open matrix file」ではなく「illegal matrix format」になる(ヘッダーの読み取りで先に失敗するため)。誤解を招くが、止まること自体は正しい。
 3. `pdf-xtest`をリポジトリのルートで直接実行すると、`TlLogging`の既定のログファイル`output.log`がそこに作られる(このブランチのworktreeにも残っていた)。
+
+ユーザー承認のうえ、2026-10-03にdevelopへマージした(`8d72b3b`)。
