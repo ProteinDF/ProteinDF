@@ -1,6 +1,9 @@
 #include "tl_dense_symmetric_matrix_impl_scalapack.h"
 
+#include <stdexcept>
+
 #include "TlCommunicate.h"
+#include "TlUtils.h"
 #include "scalapack.h"
 #include "tl_dense_symmetric_matrix_io.h"
 #include "tl_dense_vector_impl_lapack.h"
@@ -29,7 +32,9 @@ TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(
     if (rhs.getNumOfRows() != rhs.getNumOfCols()) {
         this->log_.critical(
             TlUtils::format("dims are not consistent: %d != %d", rhs.getNumOfRows(), rhs.getNumOfCols()));
-        throw;
+        throw std::runtime_error(TlUtils::format(
+            "TlDenseSymmetricMatrix_ImplScalapack::TlDenseSymmetricMatrix_ImplScalapack(): dims are not consistent: %d != %d",
+            rhs.getNumOfRows(), rhs.getNumOfCols()));
     }
     assert(rhs.getNumOfRows() == rhs.getNumOfCols());
     // コピーされたバッファの下半分しか使わない

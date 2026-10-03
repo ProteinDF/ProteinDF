@@ -1,6 +1,7 @@
 #include "tl_dense_general_matrix_scalapack.h"
 
 #include <cstdlib>
+#include <stdexcept>
 
 #include "TlCommunicate.h"
 #include "TlFile.h"
@@ -445,4 +446,10 @@ TEST(TlDenseGeneralMatrix_Scalapack, inverse) {
             EXPECT_NEAR(refB.get(i, j), B.get(i, j), EPS);
         }
     }
+}
+
+TEST(TlDenseGeneralMatrix_Scalapack, throwsOnSingularMatrixInverse) {
+    const int dim = 10;
+    TlDenseGeneralMatrix_Scalapack A(dim, dim);
+    EXPECT_THROW(A.inverse(), std::runtime_error);
 }
