@@ -59,8 +59,8 @@ class TlDenseSymmetricMatrixObject : public TlMatrixObject {
     /// 指定されたパスから行列データを読み込む。
     ///
     /// @param[in] filePath 行列ファイルのパス
-    /// @return 成功時は true を返す。未対応の形式（matrixType が RLHD 以外）の場合はログを出力して false を返す。
-    /// @throw std::runtime_error ファイルが開けない場合、または形式が不正な場合
+    /// @return 成功時は true を返す。失敗時は例外を投げるため、false を返す経路はない。
+    /// @throw std::runtime_error ファイルが開けない場合、形式が不正な場合、または未対応の形式の場合
     virtual bool load(const std::string& filePath);
     virtual bool save(const std::string& filePath) const;
 
