@@ -254,7 +254,10 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
         const TlMatrixObject::index_type col = headerInfo.numOfCols;
 
         if (row != col) {
-            this->log_.critical(TlUtils::format("illegal format: @%s.%d", __FILE__, __LINE__));
+            this->log_.critical(TlUtils::format("matrix is not square: %s (row=%d, col=%d) @%s:%d", filePath.c_str(),
+                                                row, col, __FILE__, __LINE__));
+            throw std::runtime_error(
+                TlUtils::format("matrix is not square: %s (row=%d, col=%d)", filePath.c_str(), row, col));
         }
         this->resize(row);
 
@@ -276,7 +279,10 @@ bool TlDenseSymmetricMatrixObject::load(const std::string& filePath) {
                 } break;
 
                 default:
-                    this->log_.critical(TlUtils::format("not supported format: @%s:%d", __FILE__, __LINE__));
+                    this->log_.critical(TlUtils::format("not supported format: %s(%d) @%s:%d", filePath.c_str(),
+                                                        static_cast<int>(headerInfo.matrixType), __FILE__, __LINE__));
+                    throw std::runtime_error(TlUtils::format("not supported format: %s(%d)", filePath.c_str(),
+                                                             static_cast<int>(headerInfo.matrixType)));
                     break;
             }
         } else {
