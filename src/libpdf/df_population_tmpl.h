@@ -22,11 +22,18 @@ public:
     void getAtomPopulation(const int iteration);
 
 protected:
+    void setNucleiCharges();
+
     std::valarray<double> getAtomPopulation_runtype(const RUN_TYPE runType,
                                                     const int iteration);
+    virtual void calcPop(const int iteration);
     std::valarray<double> getGrossOrbPop(const DfObject::RUN_TYPE runType,
                                          const int iteration);
     std::valarray<double> getPS(const SymmetricMatrix& P);
+    std::valarray<double> getGrossAtomPop(
+        const std::valarray<double>& grossOrbPop);
+
+    double getSumOfNucleiCharges() const;
 
     template <typename T>
     void getReport(const int iteration, T& out);
@@ -56,10 +63,23 @@ protected:
 template <class SymmetricMatrix, class Vector>
 DfPopulation_tmpl<SymmetricMatrix, Vector>::DfPopulation_tmpl(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam), orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
+    this->setNucleiCharges();
 }
 
 template <class SymmetricMatrix, class Vector>
 DfPopulation_tmpl<SymmetricMatrix, Vector>::~DfPopulation_tmpl() {
+}
+
+template <class SymmetricMatrix, class Vector>
+void DfPopulation_tmpl<SymmetricMatrix, Vector>::setNucleiCharges() {
+    const Fl_Geometry geom((*(this->pPdfParam_))["coordinates"]);
+
+    const index_type numOfAtoms = this->m_nNumOfAtoms;
+    this->nucleiCharges_.resize(numOfAtoms);
+
+    for (index_type i = 0; i < numOfAtoms; ++i) {
+        this->nucleiCharges_[i] = geom.getCharge(i);
+    }
 }
 
 template <class SymmetricMatrix, class Vector>
@@ -145,6 +165,68 @@ std::valarray<double> DfPopulation_tmpl<SymmetricMatrix, Vector>::getPS(
     }
 
     return answer;
+}
+
+template <class SymmetricMatrix, class Vector>
+void DfPopulation_tmpl<SymmetricMatrix, Vector>::calcPop(const int iteration) {
+    switch (this->m_nMethodType) {
+        case METHOD_RKS: {
+            this->grossOrbPopA_ =
+                this->getGrossOrbPop(DfObject::RUN_RKS, iteration);
+            this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
+        } break;
+
+        case METHOD_UKS: {
+            this->grossOrbPopA_ =
+                this->getGrossOrbPop(DfObject::RUN_UKS_ALPHA, iteration);
+            this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
+
+            this->grossOrbPopB_ =
+                this->getGrossOrbPop(DfObject::RUN_UKS_BETA, iteration);
+            this->grossAtomPopB_ = this->getGrossAtomPop(this->grossOrbPopB_);
+        } break;
+
+        case METHOD_ROKS: {
+            this->grossOrbPopA_ =
+                this->getGrossOrbPop(DfObject::RUN_ROKS_CLOSED, iteration);
+            this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
+
+            this->grossOrbPopB_ =
+                this->getGrossOrbPop(DfObject::RUN_ROKS_OPEN, iteration);
+            this->grossAtomPopB_ = this->getGrossAtomPop(this->grossOrbPopB_);
+        } break;
+
+        default:
+            // programer error
+            std::abort();
+            break;
+    }
+}
+
+template <class SymmetricMatrix, class Vector>
+std::valarray<double>
+DfPopulation_tmpl<SymmetricMatrix, Vector>::getGrossAtomPop(
+    const std::valarray<double>& grossOrbPop) {
+    const index_type numOfAtoms = this->m_nNumOfAtoms;
+    const index_type numOfAOs = this->m_nNumOfAOs;
+
+    std::valarray<double> answer(0.0, numOfAtoms);
+
+#pragma omp parallel for
+    for (index_type aoIndex = 0; aoIndex < numOfAOs; ++aoIndex) {
+        const index_type atomIndex = this->orbitalInfo_.getAtomIndex(aoIndex);
+
+#pragma omp critical(DfPopulation_tmpl__getGrossAtomPop)
+        { answer[atomIndex] += grossOrbPop[aoIndex]; }
+    }
+
+    return answer;
+}
+
+template <class SymmetricMatrix, class Vector>
+double DfPopulation_tmpl<SymmetricMatrix, Vector>::getSumOfNucleiCharges()
+    const {
+    return this->nucleiCharges_.sum();
 }
 
 // -----------------------------------------------------------------------------
