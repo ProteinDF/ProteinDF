@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/gcc15-build`
 - **作成**: 2026-10-03(Claude)
-- **状態**: レビュー中(収束、マージ承認待ち)
+- **状態**: マージ済み(`0e6357a`)
 
 > `develop`(`2025.3.0`)は、GCC 15.2(Ubuntu 15.2.0-16ubuntu1)で`libpdf`のビルドに失敗し、`pdf`本体までビルドできない。原因は`src/libpdf/df_population_tmpl.h`のクラステンプレート`DfPopulation_tmpl`が、自分(と基底クラス`DfObject`)にないメンバ関数を呼んでいること。GCC 14から、インスタンス化されないテンプレート本体のこの種のエラーが`-Wtemplate-body`として既定でエラーになった。同名の関数は非テンプレート版の`src/libpdf/DfPopulation.h`にあり、テンプレート化の途中で移し忘れたものと思われる。
 
@@ -53,3 +53,5 @@ src/libpdf/df_population_tmpl.h:159:39: error: 'class DfPopulation_tmpl<Symmetri
 **残っている軽微な点(対応不要)**:
 1. `calcPop`は`virtual`だが、テンプレート版の派生クラスで上書きしているものはない(`DfPopulation`との一貫性のためで、害はない)。
 2. 今回コンパイルされるようになった`getReport`・`getAtomPopulation`は、現時点でテンプレート版からは呼ばれていない。テストがないため、これらの数値は未検証である。テンプレート版を実際に使うようになったときに、`DfPopulation`の出力と比較すること。
+
+ユーザー承認のうえ、2026-10-03にdevelopへマージした(`0e6357a`)。
