@@ -112,6 +112,11 @@ class TlDenseGeneralMatrixObject : public TlMatrixObject {
     // ---------------------------------------------------------------------------
     // I/O
     // ---------------------------------------------------------------------------
+    /// 指定されたパスから行列データを読み込む。
+    ///
+    /// @param[in] filePath 行列ファイルのパス
+    /// @return 成功時は true を返す。失敗時は例外を投げるため、false を返す経路はない。
+    /// @throw std::runtime_error ファイルが開けない場合、形式が不正な場合、または未対応の形式の場合
     virtual bool load(const std::string& filePath);
     virtual bool save(const std::string& filePath) const;
 
