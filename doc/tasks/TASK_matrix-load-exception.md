@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/matrix-load-exception`
 - **作成**: 2026-10-03(Claude)
-- **状態**: 未着手
+- **状態**: レビュー中(収束、マージ承認待ち)
 
 > `TlDenseGeneralMatrixObject::load`(`src/libpdftl/tl_dense_general_matrix_object.cc`、3か所)と`TlDenseSymmetricMatrixObject::load`(`src/libpdftl/tl_dense_symmetric_matrix_object.cc`、2か所)は、ファイルが開けない・形式が不正・未対応の形式の場合に、ログを出したあと**catch節の外で`throw;`**している。catch節の外の`throw;`は再送出する例外がないので、`std::terminate`が呼ばれてプログラムが強制終了する(例外は投げられない)。これを、理由を持った例外を投げるように直す(ユーザー依頼、2026-10-03)。
 >
@@ -35,3 +35,16 @@
 3. 存在しないファイルを`load`する小さなプログラム(またはテストの外での実行)で、プログラムが`terminate`するときに理由のメッセージが表示されることを確認し、その出力を完了報告に貼る(テスト用のコードはコミットしなくてよい)。
 4. `devtool/check.sh`が通る(clang-formatを含む)。
 5. `AGENTS.md`の形式で完了報告を出す。
+
+## レビュー結果(1回目、2026-10-03、収束)
+
+`fix/matrix-load-exception`(`592fca5`・`5ad74a1`)をレビューした。対象の5か所の`throw;`だけが`std::runtime_error`(パスと理由を含む)に置き換わっており、`return false`にはなっていない。scalapackの3か所は変更されていない。派生クラスを作らない判断も妥当。Claudeが次を実際に確認した。
+
+- `env -u PDF_HOME devtool/check.sh --build-dir build-review`(新しいビルドディレクトリ): whitespace・clang-format・build・warnings・testsすべてPASS(ctestの`xtest`・`xtest.mpi`とも100%)。
+- 追加テスト(`throwsOnNonExistentFile`・`throwsOnCorruptedFile`)はtyped testのテンプレートに追加され、Lapack・Eigen・Eigen_FP32の一般行列・対称行列すべてで実行される。形式不正のテストは一時ファイルを作り、終わったら消している。
+- 呼び出し元の調査結果のうち`TlMatrixCache.h:235`(事前に`isExistFile`で確認)を読んで確かめた。
+
+**残っている点(別タスクの候補)**:
+1. `TlDenseSymmetricMatrixObject::load`の`default:`(RLHD以外の形式)は、例外を投げず、**`resize(row)`で0埋めされた行列のまま`false`を返す**(もともとある経路で、今回の対象外)。戻り値を確認しない呼び出し元では、0の行列で計算が黙って続く。同じ関数の`row != col`の場合も、ログを出すだけで処理を続ける。
+2. 存在しないファイルを読むと、メッセージは「cannot open matrix file」ではなく「illegal matrix format」になる(ヘッダーの読み取りで先に失敗するため)。誤解を招くが、止まること自体は正しい。
+3. `pdf-xtest`をリポジトリのルートで直接実行すると、`TlLogging`の既定のログファイル`output.log`がそこに作られる(このブランチのworktreeにも残っていた)。
