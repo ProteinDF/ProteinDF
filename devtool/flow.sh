@@ -112,7 +112,14 @@ cmd_finish() {
     git show-ref --verify --quiet "refs/heads/$branch" || die "no branch '$branch'"
     type=$(branch_type "$branch"); name=${branch#*/}
     wt=$(wt_of_branch "$branch")
-    [[ -n "$wt" ]] && require_clean "$wt"
+    if [[ -n "$wt" ]]; then
+        require_clean "$wt"
+        # git worktree remove refuses untracked files; check before merging
+        if ((!keep)) && [[ -n "$(git -C "$wt" status --porcelain)" ]]; then
+            git -C "$wt" status --short
+            die "worktree $wt has untracked files; remove them (or use --keep) and re-run finish"
+        fi
+    fi
 
     case "$type" in
         feature|fix|chore)
