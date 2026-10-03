@@ -2,7 +2,7 @@
 
 - **Branch**: `chore/cxx17`
 - **作成**: 2026-10-03(Claude)
-- **状態**: レビュー中(収束、マージ承認待ち)
+- **状態**: マージ済み(`9a986db`)
 
 > `CMakeLists.txt`は`CMAKE_CXX_STANDARD`の既定を14にしている。GoogleTest 1.13以降はC++17以上を要求するため(Ubuntu 26.04の`libgtest-dev`は1.17)、このままでは`src/unit_test`がビルドできない(`gtest-port.h:273: #error C++ versions less than C++17 are not supported.`)。既定をC++17に上げる(ユーザー承認済み、2026-10-03)。
 >
@@ -45,3 +45,5 @@ GTestとclang-formatがインストールされていること(`devtool/setup-de
 この指示書の冒頭に書いた「C++14のままでは`src/unit_test`がビルドできない」は、**aptで入れたGTest(1.17.0)では成り立たない**。aptのGTestはCMakeの設定(`GTestTargets.cmake`)で`INTERFACE_COMPILE_FEATURES cxx_std_17`を持つため、本体がC++14でも、GTestをリンクする`pdf-xtest`だけが自動的に`-std=c++17`でコンパイルされる(agyの`build-cxx14`で確認: `PDF.x`は`-std=c++14`、`pdf-xtest`は`-std=c++17`で、ビルドは成功)。Claudeの事前確認は、ソースからビルドしたGTestをFindGTestのモジュール方式で見つけさせたもので、この格上げが起きなかった。
 
 したがって、この変更はテストのビルドに必須ではない。効果は、本体とテストのC++規格をそろえること、およびGTestの見つけ方によらずテストがビルドできるようになること。
+
+ユーザー承認のうえ(前提の訂正を伝えたうえで)、2026-10-03にdevelopへマージした(`9a986db`)。
