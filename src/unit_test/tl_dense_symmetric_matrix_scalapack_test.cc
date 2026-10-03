@@ -1,4 +1,7 @@
+#include "tl_dense_symmetric_matrix_scalapack.h"
+
 #include <cstdlib>
+#include <stdexcept>
 
 #include "TlCommunicate.h"
 #include "config.h"
@@ -6,7 +9,6 @@
 #include "tl_dense_general_matrix_lapack.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_lapack.h"
-#include "tl_dense_symmetric_matrix_scalapack.h"
 
 static const double EPS = 1.0E-5;
 static const std::string mat_save_path = "temp.sym.scalapack.save.mat";
@@ -465,3 +467,8 @@ TEST(TlDenseSymmetricMatrix_Scalapack, load) {
 //         }
 //     }
 // }
+
+TEST(TlDenseSymmetricMatrix_Scalapack, throwsOnNonSquareMatrixConstructor) {
+    TlDenseGeneralMatrix_Scalapack A(10, 20);
+    EXPECT_THROW(TlDenseSymmetricMatrix_Scalapack S(A), std::runtime_error);
+}
