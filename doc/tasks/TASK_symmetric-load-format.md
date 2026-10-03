@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/symmetric-load-format`
 - **作成**: 2026-10-03(Claude)
-- **状態**: 未着手
+- **状態**: レビュー中(収束、マージ承認待ち)
 
 > `TlDenseSymmetricMatrixObject::load`(`src/libpdftl/tl_dense_symmetric_matrix_object.cc`)には、失敗しても止まらない経路が2つ残っている(`TASK_matrix-load-exception.md`のレビュー結果1回目で発見、ユーザー依頼 2026-10-03)。
 >
@@ -41,3 +41,13 @@
 2. 既存の対称行列の`save` → `load`のテスト(`doesSaveAndLoad`など)が従来どおりPASSする。
 3. `devtool/check.sh`が通る(clang-formatを含む)。
 4. `AGENTS.md`の形式で完了報告を出す。
+
+## レビュー結果(1回目、2026-10-04、収束)
+
+`fix/symmetric-load-format`(`1d492da`・`6187c3b`)をレビューした(agyは利用上限で一度中断し、2026-10-04 02:15に`delegate.sh -c`で再開した)。`row != col`は`resize`の前に、`RLHD`以外の形式は`default:`で、それぞれパスと値を含む`std::runtime_error`を投げるようになり、`false`を返す経路はなくなった。docコメントも一般行列と同じ書き方になった。Claudeが次を実際に確認した。
+
+- `env -u PDF_HOME devtool/check.sh --build-dir build-review`(新しいビルドディレクトリ): whitespace・clang-format・build・warnings・testsすべてPASS(ctestの`xtest`・`xtest.mpi`とも100%)。
+- 追加テスト(`throwsOnGeneralSquareMatrixFile`・`throwsOnGeneralNonSquareMatrixFile`)はLapack・Eigen・Eigen_FP32の対称行列すべてで実行される。
+- 回帰の調査(一般行列として保存したパスを対称行列で読む箇所は0件)のうち、`src/tools/main_mat_show.cpp`がヘッダーの`matrixType`で対称行列・一般行列を振り分けてから`load`していることを読んで確かめた。
+
+**残っている軽微な点(対応不要)**: 正方の一般行列のファイルを読んだ場合は、`resize(row)`のあとで例外を投げるので、行列のサイズは`load`前から変わる(既存の要素は保持され、広がった部分は0)。正方でない場合は`resize`の前に投げるので変わらない。例外で止まるので黙って計算が続くことはないが、失敗時に状態を変えないようにしたい場合は、形式の確認を`resize`の前に移せばよい。
