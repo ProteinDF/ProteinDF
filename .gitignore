@@ -38,5 +38,5 @@ doc/api/*
 *.srctrldb
 *.srctrlbm
 
-# devtool/check.sh build directories
-/build-check/
+# build directories (devtool/check.sh, agents)
+/build-*/
