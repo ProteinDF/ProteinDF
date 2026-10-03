@@ -11,6 +11,10 @@ info() { echo "==> $*"; }
 case "$(uname -s)" in
     Linux)
         command -v apt-get >/dev/null || { echo "error: apt-get not found; install googletest and clang-format manually" >&2; exit 1; }
+        if [[ $EUID -ne 0 ]] && ! sudo -n true 2>/dev/null && [[ ! -t 0 ]]; then
+            echo "error: sudo needs a password but there is no terminal; run this script in your own terminal" >&2
+            exit 1
+        fi
         info "installing libgtest-dev clang-format (sudo)"
         sudo apt-get update
         sudo apt-get install -y libgtest-dev clang-format
