@@ -30,6 +30,7 @@ set(PDF_XTEST_SOURCES
   TlSerializeDataTest.cpp
   TlStlUtilsTest.cpp
   TlStringTokenizerTest.cpp
+  TlSystemTest.cpp
   TlUtilsTest.cpp
 
   dense_general_matrix_test_template.h
