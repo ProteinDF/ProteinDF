@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/xtest-pdf-home`
 - **作成**: 2026-10-03(Claude)
-- **状態**: 未着手
+- **状態**: レビュー中(要修正)
 
 > C++17でビルドした`xtest`は316件中2件が失敗する。
 >
@@ -36,3 +36,21 @@
 3. `TlSystem::getEnv`の未設定時の挙動を確認するテストを`src/unit_test`に追加する(既存のテストファイルの置き方に合わせる)。
 4. `devtool/check.sh`が通る(clang-formatを含む)。
 5. `AGENTS.md`の形式で完了報告を出す。
+
+## レビュー結果(1回目、2026-10-03、要修正)
+
+`fix/xtest-pdf-home`(`aef2ac5`・`5f7e677`・`588b718`・`0032e54`)をレビューした。`TlSystem::getEnv`の修正(`aef2ac5`)、`TlSystem::getEnv`のテスト(`588b718`)、ctestへの`PDF_HOME`の設定とテストの読み込み・サイズの確認(`0032e54`)は妥当である。ユーザーが設定した`PDF_HOME`を優先する設計も、`data/unit_test`がインストール先にも置かれる(`data/unit_test/CMakeLists.txt`)ので問題ない。
+
+### 修正依頼
+
+1. **【実バグ・スコープ外】`5f7e677`(`TlDenseSymmetricMatrixObject::load`・`TlDenseGeneralMatrixObject::load`の`throw;`を`return false;`に変更)を取り消す。** 変更前は、行列ファイルが開けない・形式が不正な場合にプログラムが異常終了していた(catch節の外の`throw;`による`std::terminate`)。変更後は`false`が返るが、本体(`src/libpdf`・`src/pdf`・`src/tools`)で`load`を呼んでいる箇所のうち、戻り値を確認しているのは約13か所で、約269か所は戻り値を無視している(Claudeがgrepで数えた。行列以外の`load`も含む概数)。たとえば`DfTotalEnergy.h:389`の`rho.load(...)`や`DfObject::getPInMatrix`の`P.load(path)`は、ファイルが読めなくても空の行列のまま計算を続けることになる。これは`AGENTS.md`の「エラーを握りつぶさない」に反し、「エラーで止まる」から「黙って誤った結果を出す」への悪化である。また、ライブラリの挙動変更はこのタスクの対象外である。
+   - `git revert 5f7e677`で取り消す(履歴を書き換えない)。
+   - テスト側は、`load`の前に`ASSERT_TRUE(TlFile::isExistFile(path))`でファイルの存在を確認する。これで`PDF_HOME`が誤っている場合は、異常終了せずに読み込み失敗としてFAILになる。`ASSERT_TRUE(M.load(...))`とサイズの確認はそのまま残してよい。
+   - 形式が不正なファイルの場合は(変更前と同じく)異常終了するが、それでよい。`throw;`を適切な例外に置き換える改善は、必要なら別のタスクにする(本体の多数の呼び出し元に影響するため)。
+
+### 完了の定義(修正後)
+
+1. 上記に対応し、同じブランチに追加コミットする。
+2. `env -u PDF_HOME devtool/check.sh`でbuild・testsがPASSする(`[  PASSED  ]`の行を貼る)。
+3. `PDF_HOME=/nonexistent`で`pdf-xtest --gtest_filter='TlDenseSymmetricMatrix_Lapack.multiplication_*'`を直接実行し、2件が異常終了せずにFAILすることを確認し、出力を貼る。
+4. `git diff develop...HEAD -- src/libpdftl/tl_dense_symmetric_matrix_object.cc src/libpdftl/tl_dense_general_matrix_object.cc`の出力が空であること(本体の`load`が変わっていないこと)を貼る。
