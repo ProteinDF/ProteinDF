@@ -257,16 +257,20 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
 
     TlDenseSymmetricMatrix_Lapack M;
     TlDenseGeneralMatrix_Lapack V;
-    M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
-    V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str())));
+    ASSERT_TRUE(V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str())));
+    ASSERT_GT(M.getNumOfRows(), 0);
+    ASSERT_GT(V.getNumOfCols(), 0);
 
     TlDenseGeneralMatrix_Lapack mv = M * V;
 
     TlDenseGeneralMatrix_Lapack MV;
-    MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str())));
 
     const int rows = M.getNumOfRows();
     const int cols = V.getNumOfCols();
+    ASSERT_EQ(MV.getNumOfRows(), rows);
+    ASSERT_EQ(MV.getNumOfCols(), cols);
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             EXPECT_NEAR(MV.get(i, j), mv.get(i, j), 1.0E-5);
@@ -279,8 +283,10 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
 
     TlDenseSymmetricMatrix_Lapack M;
     TlDenseGeneralMatrix_Lapack V;
-    M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
-    V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str())));
+    ASSERT_TRUE(V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str())));
+    ASSERT_GT(M.getNumOfRows(), 0);
+    ASSERT_GT(V.getNumOfCols(), 0);
 
     TlDenseGeneralMatrix_Lapack tV = V;
     tV.transposeInPlace();
@@ -288,9 +294,11 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
     TlDenseGeneralMatrix_Lapack vmv = tV * M * V;
 
     TlDenseSymmetricMatrix_Lapack VMV;
-    VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str())));
 
     const int dim = V.getNumOfCols();
+    ASSERT_EQ(VMV.getNumOfRows(), dim);
+    ASSERT_EQ(VMV.getNumOfCols(), dim);
     for (int i = 0; i < dim; ++i) {
         for (int j = 0; j < dim; ++j) {
             EXPECT_NEAR(VMV.get(i, j), vmv.get(i, j), 1.0E-5);
