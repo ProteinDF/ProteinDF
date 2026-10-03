@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/xtest-pdf-home`
 - **作成**: 2026-10-03(Claude)
-- **状態**: レビュー中(収束、マージ承認待ち)
+- **状態**: マージ済み(`2677f1b`)
 
 > C++17でビルドした`xtest`は316件中2件が失敗する。
 >
@@ -64,3 +64,5 @@
 - `PDF_HOME=/nonexistent`で`pdf-xtest --gtest_filter='TlDenseSymmetricMatrix_Lapack.multiplication_*'`を実行すると、2件が異常終了せずに`TlFile::isExistFile`のアサーションでFAILする。
 
 **残っている点(別タスクの候補)**: `TlDenseSymmetricMatrixObject::load`・`TlDenseGeneralMatrixObject::load`は、ファイルが開けない・形式が不正な場合にcatch節の外の`throw;`で`std::terminate`する。エラーで止まるという点では安全だが、適切な例外に置き換えるかどうかは、本体の多数の呼び出し元に関わるので別途判断する。
+
+ユーザー承認のうえ、2026-10-03にdevelopへマージした(`2677f1b`)。
