@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "TlFile.h"
 #include "TlSystem.h"
 #include "TlUtils.h"
 #include "config.h"
@@ -255,17 +256,25 @@ TEST(TlDenseSymmetricMatrix_Lapack, mul_gen_sym) {
 TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
     const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
 
+    const std::string mPath = TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str());
+    const std::string vPath = TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str());
+    const std::string mvPath = TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str());
+
+    ASSERT_TRUE(TlFile::isExistFile(mPath));
+    ASSERT_TRUE(TlFile::isExistFile(vPath));
+    ASSERT_TRUE(TlFile::isExistFile(mvPath));
+
     TlDenseSymmetricMatrix_Lapack M;
     TlDenseGeneralMatrix_Lapack V;
-    ASSERT_TRUE(M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str())));
-    ASSERT_TRUE(V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str())));
+    ASSERT_TRUE(M.load(mPath));
+    ASSERT_TRUE(V.load(vPath));
     ASSERT_GT(M.getNumOfRows(), 0);
     ASSERT_GT(V.getNumOfCols(), 0);
 
     TlDenseGeneralMatrix_Lapack mv = M * V;
 
     TlDenseGeneralMatrix_Lapack MV;
-    ASSERT_TRUE(MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str())));
+    ASSERT_TRUE(MV.load(mvPath));
 
     const int rows = M.getNumOfRows();
     const int cols = V.getNumOfCols();
@@ -281,10 +290,18 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
 TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
     const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
 
+    const std::string mPath = TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str());
+    const std::string vPath = TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str());
+    const std::string vmvPath = TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str());
+
+    ASSERT_TRUE(TlFile::isExistFile(mPath));
+    ASSERT_TRUE(TlFile::isExistFile(vPath));
+    ASSERT_TRUE(TlFile::isExistFile(vmvPath));
+
     TlDenseSymmetricMatrix_Lapack M;
     TlDenseGeneralMatrix_Lapack V;
-    ASSERT_TRUE(M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str())));
-    ASSERT_TRUE(V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str())));
+    ASSERT_TRUE(M.load(mPath));
+    ASSERT_TRUE(V.load(vPath));
     ASSERT_GT(M.getNumOfRows(), 0);
     ASSERT_GT(V.getNumOfCols(), 0);
 
@@ -294,7 +311,7 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
     TlDenseGeneralMatrix_Lapack vmv = tV * M * V;
 
     TlDenseSymmetricMatrix_Lapack VMV;
-    ASSERT_TRUE(VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str())));
+    ASSERT_TRUE(VMV.load(vmvPath));
 
     const int dim = V.getNumOfCols();
     ASSERT_EQ(VMV.getNumOfRows(), dim);
