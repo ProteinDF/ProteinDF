@@ -26,7 +26,8 @@
 
 ## ビルド環境についての注意(2026-10-03時点)
 
-- GCC 15.2(Ubuntu)。`develop`(`2025.3.0`)はGCC 14以降でビルドできない(`src/libpdf/df_population_tmpl.h`の`-Wtemplate-body`エラー)。→ `doc/tasks/TASK_gcc15-build.md`
-- GTestが未インストールのため、`src/unit_test`はビルドされず`ctest`のテストは0件になる。
-- clang-formatが未インストールのため、`check.sh`の整形チェックはSKIPになる。
+- GCC 15.2(Ubuntu 26.04)。GCC 14以降でビルドできない問題は`fix/gcc15-build`で修正済み。
+- GTest・clang-formatは`devtool/setup-dev-tools.sh`で入る。未インストールの間は`check.sh`のtests・clang-formatがSKIPになる。
+- GTest 1.13以降(Ubuntu 26.04の`libgtest-dev`は1.17)はC++17以上が必要だが、`CMakeLists.txt`の既定は`CMAKE_CXX_STANDARD 14`なので、そのままでは`src/unit_test`がビルドできない(`#error C++ versions less than C++17 are not supported`)。C++17では本体・テストともビルドできることを確認済み(2026-10-03)。
+- C++17でビルドした`xtest`は316件中2件が失敗する(`TlDenseSymmetricMatrix_Lapack.multiplication_MV`・`multiplication_VMV`、例外`basic_string: construction from null is not valid`)。`xtest.mpi`は成功。xtestの実行に約3分かかる。
 - miseの`ninja`シムはバージョン未設定で動かないため、`check.sh`はMakefile生成器を使う。

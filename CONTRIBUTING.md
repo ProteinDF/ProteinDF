@@ -48,6 +48,12 @@ Claudeと実装担当はworktreeを分けるので、同じ作業ディレクト
 
 ## 完了の確認
 
+テストと整形チェックには GoogleTest と clang-format が必要。初回に次を実行する(Linuxはapt+sudo、macOSはHomebrew)。
+
+```bash
+devtool/setup-dev-tools.sh
+```
+
 ```bash
 devtool/check.sh   # 差分の空白エラー、変更行のclang-format、ビルド、ctest
 ```
