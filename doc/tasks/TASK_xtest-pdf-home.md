@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/xtest-pdf-home`
 - **作成**: 2026-10-03(Claude)
-- **状態**: レビュー中(要修正)
+- **状態**: レビュー中(収束、マージ承認待ち)
 
 > C++17でビルドした`xtest`は316件中2件が失敗する。
 >
@@ -54,3 +54,13 @@
 2. `env -u PDF_HOME devtool/check.sh`でbuild・testsがPASSする(`[  PASSED  ]`の行を貼る)。
 3. `PDF_HOME=/nonexistent`で`pdf-xtest --gtest_filter='TlDenseSymmetricMatrix_Lapack.multiplication_*'`を直接実行し、2件が異常終了せずにFAILすることを確認し、出力を貼る。
 4. `git diff develop...HEAD -- src/libpdftl/tl_dense_symmetric_matrix_object.cc src/libpdftl/tl_dense_general_matrix_object.cc`の出力が空であること(本体の`load`が変わっていないこと)を貼る。
+
+## レビュー結果(2回目、2026-10-03、収束)
+
+修正コミット`aeb9019`(`5f7e677`のrevert)・`fe5b294`(読み込み前のファイル存在確認)を確認した。修正依頼1に対応済み。Claudeが次を実際に確認した。
+
+- `git diff develop...HEAD -- src/libpdftl/tl_dense_symmetric_matrix_object.cc src/libpdftl/tl_dense_general_matrix_object.cc`が空(本体の`load`は変わっていない)。
+- `env -u PDF_HOME devtool/check.sh --build-dir build-review`(新しいビルドディレクトリ): whitespace・clang-format・build・warnings・testsすべてPASS(ctestの`xtest`・`xtest.mpi`とも100%)。
+- `PDF_HOME=/nonexistent`で`pdf-xtest --gtest_filter='TlDenseSymmetricMatrix_Lapack.multiplication_*'`を実行すると、2件が異常終了せずに`TlFile::isExistFile`のアサーションでFAILする。
+
+**残っている点(別タスクの候補)**: `TlDenseSymmetricMatrixObject::load`・`TlDenseGeneralMatrixObject::load`は、ファイルが開けない・形式が不正な場合にcatch節の外の`throw;`で`std::terminate`する。エラーで止まるという点では安全だが、適切な例外に置き換えるかどうかは、本体の多数の呼び出し元に関わるので別途判断する。
