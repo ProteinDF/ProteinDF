@@ -2,7 +2,7 @@
 
 - **Branch**: `fix/scalapack-throw`
 - **作成**: 2026-10-03(Claude)
-- **状態**: 未着手
+- **状態**: レビュー中(収束、マージ承認待ち)
 
 > `TASK_matrix-load-exception.md`と同じ問題(catch節の外の`throw;`は再送出する例外がないので`std::terminate`で強制終了する)が、ScaLAPACK版の次の3か所にある。これを理由を持った例外を投げるように直す(ユーザー依頼、2026-10-03)。
 >
@@ -40,3 +40,14 @@
 3. `xtest.mpi`を、既定のプロセス数(4)で実行してPASSする。テストの途中で一部のプロセスだけが止まる(ハングする)ことがないことを確認する。
 4. `devtool/check.sh`が通る(clang-formatを含む)。
 5. `AGENTS.md`の形式で完了報告を出す。
+
+## レビュー結果(1回目、2026-10-03、収束)
+
+`fix/scalapack-throw`(`df2e8be`・`90484d3`)をレビューした。対象の3か所だけが`std::runtime_error`(関数名と`info`の値、または行数・列数を含む)に置き換わり、`inverse()`の作業配列はすべて`std::vector`になった。計算の手順(`pdgetrf_` → ワークサイズの問い合わせ → `pdgetri_`)は変わっていない。catch節の中の`throw;`は変更されていない。Claudeが次を実際に確認した。
+
+- `env -u PDF_HOME devtool/check.sh --build-dir build-review`(新しいビルドディレクトリ): whitespace・clang-format・build・warnings・testsすべてPASS(ctestの`xtest`・`xtest.mpi`とも100%)。
+- `mpirun -np 4 pdf-xtest.MPI --gtest_filter='*throws*:TlDenseGeneralMatrix_Scalapack.inverse'`: `mpirun`の終了コード0。4プロセスすべてで3件ともOK(`[  PASSED  ] 3 tests`が4回、FAILEDは0件)。一部のプロセスだけが止まることはなかった。
+- `main_MPI.cpp`は各プロセスが`RUN_ALL_TESTS()`の結果をそれぞれ返すので、0番以外のプロセスの失敗も`mpirun`の終了コードに現れる(ctestで検出される)。
+- `pdgetrf_`の`INFO`はScaLAPACKの仕様で全プロセス共通の値(global output)なので、全プロセスが同じように例外を投げる。
+
+**補足**: このマシンで`mpirun`を実行すると、GPUドライバの`HSA exception: Agent creation failed.`という警告が大量に出るが、テストとは関係ない。
