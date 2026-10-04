@@ -11,13 +11,17 @@
 #   -j, --jobs <N>        Parallel build jobs (default: nproc)
 #   -h, --help            Show this help message
 #
-# Environment variables:
-#   PDF_CMAKE_ARGS        Extra options passed to cmake configure
-#   PROTEINDF_TEST_DIR    Path to ProteinDF_test (default: ~/work/dev/pdf-dev/ProteinDF_test)
-#   PROTEINDF_PYTOOLS_DIR Path to ProteinDF_pytools (default: ~/work/dev/pdf-dev/ProteinDF_pytools)
-#   PROTEINDF_BRIDGE_DIR  Path to ProteinDF_bridge (default: ~/work/dev/pdf-dev/ProteinDF_bridge)
-#   REGRESS_VENV_DIR      Path to shared python venv (default: $(git rev-parse --git-common-dir)/regress-venv)
-#   REGRESS_LOGS_DIR      Path to log directory (default: $(git rev-parse --git-common-dir)/regress-logs)
+# Configuration:
+#   Repository paths must be configured via environment variables or in
+#   $(git rev-parse --git-common-dir)/regress.conf (KEY="value" format).
+#   Environment variables take precedence over regress.conf.
+#
+#   PROTEINDF_TEST_DIR    Path to ProteinDF_test (required)
+#   PROTEINDF_PYTOOLS_DIR Path to ProteinDF_pytools (required)
+#   PROTEINDF_BRIDGE_DIR  Path to ProteinDF_bridge (required)
+#   PDF_CMAKE_ARGS        Extra options passed to cmake configure (optional)
+#   REGRESS_VENV_DIR      Path to shared python venv (default: <git-common-dir>/regress-venv)
+#   REGRESS_LOGS_DIR      Path to log directory (default: <git-common-dir>/regress-logs)
 #
 # Python Environment Compatibility Patches (sitecustomize.py in venv):
 #   - PdfArchive alias:
@@ -34,7 +38,7 @@
 set -uo pipefail
 
 show_help() {
-    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,/^# Python Environment Compatibility Patches/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
     exit 0
 }
 
@@ -80,11 +84,40 @@ if [[ -z "$install_dir" ]]; then
     fi
 fi
 
-test_repo="${PROTEINDF_TEST_DIR:-$HOME/work/dev/pdf-dev/ProteinDF_test}"
-pytools_repo="${PROTEINDF_PYTOOLS_DIR:-$HOME/work/dev/pdf-dev/ProteinDF_pytools}"
-bridge_repo="${PROTEINDF_BRIDGE_DIR:-$HOME/work/dev/pdf-dev/ProteinDF_bridge}"
-venv_dir="${REGRESS_VENV_DIR:-$common_dir/regress-venv}"
-logs_dir="${REGRESS_LOGS_DIR:-$common_dir/regress-logs}"
+# Save environment variables to give them precedence over regress.conf
+env_test_dir="${PROTEINDF_TEST_DIR:-}"
+env_pytools_dir="${PROTEINDF_PYTOOLS_DIR:-}"
+env_bridge_dir="${PROTEINDF_BRIDGE_DIR:-}"
+env_venv_dir="${REGRESS_VENV_DIR:-}"
+env_logs_dir="${REGRESS_LOGS_DIR:-}"
+
+conf_file="$common_dir/regress.conf"
+if [[ -f "$conf_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$conf_file"
+fi
+
+test_repo="${env_test_dir:-${PROTEINDF_TEST_DIR:-}}"
+pytools_repo="${env_pytools_dir:-${PROTEINDF_PYTOOLS_DIR:-}}"
+bridge_repo="${env_bridge_dir:-${PROTEINDF_BRIDGE_DIR:-}}"
+venv_dir="${env_venv_dir:-${REGRESS_VENV_DIR:-$common_dir/regress-venv}}"
+logs_dir="${env_logs_dir:-${REGRESS_LOGS_DIR:-$common_dir/regress-logs}}"
+
+missing_vars=()
+[[ -z "$test_repo" ]] && missing_vars+=("PROTEINDF_TEST_DIR")
+[[ -z "$pytools_repo" ]] && missing_vars+=("PROTEINDF_PYTOOLS_DIR")
+[[ -z "$bridge_repo" ]] && missing_vars+=("PROTEINDF_BRIDGE_DIR")
+
+if ((${#missing_vars[@]} > 0)); then
+    echo "ERROR: Missing required configuration variables: ${missing_vars[*]}" >&2
+    echo >&2
+    echo "Please set them via environment variables or in $conf_file." >&2
+    echo "Example $conf_file:" >&2
+    echo "  PROTEINDF_TEST_DIR=\"/path/to/ProteinDF_test\"" >&2
+    echo "  PROTEINDF_PYTOOLS_DIR=\"/path/to/ProteinDF_pytools\"" >&2
+    echo "  PROTEINDF_BRIDGE_DIR=\"/path/to/ProteinDF_bridge\"" >&2
+    exit 1
+fi
 
 mkdir -p "$logs_dir"
 
