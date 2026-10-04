@@ -35,12 +35,12 @@ Claudeと実装担当はworktreeを分けるので、同じ作業ディレクト
 
 ### 流れ
 
-1. **指示書**: ユーザーとClaudeが相談し、Claudeが`doc/tasks/TASK_<name>.md`を書く。指示書は非公開で、`develop`のworktreeにだけ置き、コミットしない(`.gitignore`で除外)。指示書には作業ブランチ名(`**Branch**:`の行)、対象、完了の定義を書く。
+1. **指示書**: ユーザーとClaudeが相談し、Claudeが指示書(`TASK_<name>.md`、`doc/tasks/TEMPLATE.md`から作る)を書く。指示書は非公開で、このリポジトリとは別に管理し、developのworktreeの`private/`から参照する(`.gitignore`で除外)。指示書には作業ブランチ名(`**Branch**:`の行)、対象、完了の定義を書く。
 2. **実装**: 実装担当に指示書を渡す。
    ```bash
-   devtool/delegate.sh doc/tasks/TASK_<name>.md            # agy(非対話、権限は自動承認)
-   devtool/delegate.sh -a copilot doc/tasks/TASK_<name>.md # GitHub Copilot CLI
-   devtool/delegate.sh -i doc/tasks/TASK_<name>.md         # 対話モード(権限は都度確認)
+   devtool/delegate.sh private/tasks/TASK_<name>.md            # agy(非対話、権限は自動承認)
+   devtool/delegate.sh -a copilot private/tasks/TASK_<name>.md # GitHub Copilot CLI
+   devtool/delegate.sh -i private/tasks/TASK_<name>.md         # 対話モード(権限は都度確認)
    ```
    ブランチとworktreeがなければ作る。非対話モードの出力は`.git/agent-logs/`に保存される。
    agyが利用上限で止まると終了コード75で終わる。`-c`で続きから再開でき、`-W`を付けると上限のリセットを待って自動的に再開する。
