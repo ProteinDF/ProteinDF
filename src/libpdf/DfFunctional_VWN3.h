@@ -34,7 +34,7 @@ class DfFunctional_VWN3 : public DfFunctional_VWN {
     virtual double epsilonCPrime_PARA(double x);
     virtual double epsilonCPrime_FERR(double x);
 
-   protected:
+protected:
     // unhide the base class's epsilonC(A, b, c, x0, x) overload
     using DfFunctional_VWN::epsilonC;
 
@@ -50,7 +50,7 @@ class DfFunctional_VWN3 : public DfFunctional_VWN {
     double f_zeta(const double zeta);
     double f_zeta_prime(const double zeta);
 
-   protected:
+protected:
     static const double VWN3_A_PARA;
     static const double VWN3_B_PARA;
     static const double VWN3_C_PARA;
