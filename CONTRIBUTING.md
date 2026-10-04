@@ -10,7 +10,7 @@
 
 バージョンは`YYYY.M.PATCH`(例: `2025.3.0`)で、`CMakeLists.txt`の`PROJECT_VERSION_MAJOR/MINOR/REVISION`に書く。
 
-git-flowのCLIは使わず、`devtool/flow.sh`で操作する。**作業ブランチごとに専用のgit worktreeを作る**(`develop`のworktreeの隣。例: `~/orca/workspaces/ProteinDF/feature-foo`)。
+git-flowのCLIは使わず、`devtool/flow.sh`で操作する。**作業ブランチごとに専用のgit worktreeを作る**(`develop`のworktreeの隣。例: `/path/to/workspaces/ProteinDF/feature-foo`)。
 
 ```bash
 devtool/flow.sh start feature/foo        # developから切ってworktreeを作る
@@ -59,4 +59,8 @@ devtool/setup-dev-tools.sh
 
 ```bash
 devtool/check.sh   # 差分の空白エラー、変更行のclang-format、ビルド、ctest
+devtool/regress.sh # 計算結果の回帰テスト(ProteinDF_testのserial_devスイート)
 ```
+
+`regress.sh`の実行には隣接リポジトリ(`ProteinDF_test`・`ProteinDF_pytools`・`ProteinDF_bridge`)が必要。`$(git rev-parse --git-common-dir)/regress.conf`(または環境変数)で場所を指定する。
+特定のテストのみを実行する場合は `--entries` を指定する(例: `devtool/regress.sh --entries O2_UB3LYP,N2_UB3LYP`)。
