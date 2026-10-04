@@ -30,17 +30,33 @@ class TlDenseSymmetricMatrix_ImplLapack
     virtual void resize(TlMatrixObject::index_type row,
                         TlMatrixObject::index_type col);
 
+    virtual TlMatrixObject::index_type getRowVector(const TlMatrixObject::index_type row,
+                                                    const TlMatrixObject::index_type length, double* pBuf) const;
+    virtual TlMatrixObject::index_type getColVector(const TlMatrixObject::index_type col,
+                                                    const TlMatrixObject::index_type length, double* pBuf) const;
+    virtual std::vector<double> getRowVector(const TlMatrixObject::index_type row) const;
+    virtual std::vector<double> getColVector(const TlMatrixObject::index_type col) const;
+
+    virtual TlMatrixObject::index_type setRowVector(const TlMatrixObject::index_type row,
+                                                    const TlMatrixObject::index_type length, const double* pBuf);
+    virtual TlMatrixObject::index_type setColVector(const TlMatrixObject::index_type col,
+                                                    const TlMatrixObject::index_type length, const double* pBuf);
+    virtual void setRowVector(const TlMatrixObject::index_type row, const std::vector<double>& v);
+    virtual void setColVector(const TlMatrixObject::index_type col, const std::vector<double>& v);
+
     // ---------------------------------------------------------------------------
     // operators
     // ---------------------------------------------------------------------------
    public:
-    TlDenseSymmetricMatrix_ImplLapack& operator*=(const double coef);
-    // const TlDenseGeneralMatrix_ImplLapack operator*=(
-    //   const TlDenseSymmetricMatrix_ImplLapack& rhs);
+       TlDenseSymmetricMatrix_ImplLapack& operator=(
+           const TlDenseSymmetricMatrix_ImplLapack& rhs);
+       TlDenseSymmetricMatrix_ImplLapack& operator*=(const double coef);
+       // const TlDenseGeneralMatrix_ImplLapack operator*=(
+       //   const TlDenseSymmetricMatrix_ImplLapack& rhs);
 
-    // ---------------------------------------------------------------------------
-    // operations
-    // ---------------------------------------------------------------------------
+       // ---------------------------------------------------------------------------
+       // operations
+       // ---------------------------------------------------------------------------
    public:
     // virtual double sum() const;
     // virtual double getRMS() const;
@@ -51,6 +67,7 @@ class TlDenseSymmetricMatrix_ImplLapack
     // const TlDenseGeneralMatrix_ImplLapack& dotInPlace(
     //     const TlDenseGeneralMatrix_ImplLapack& rhs);
     TlDenseSymmetricMatrix_ImplLapack transpose() const;
+    virtual void transposeInPlace();
     TlDenseSymmetricMatrix_ImplLapack inverse() const;
 
     bool eig(TlDenseVector_ImplLapack* pEigVal,

@@ -131,6 +131,7 @@ bool TlDenseSymmetricMatrix_Lapack::eig(
 
 TlDenseSymmetricMatrix_Lapack TlDenseSymmetricMatrix_Lapack::inverse() const {
     TlDenseSymmetricMatrix_Lapack answer;
+    delete answer.pImpl_;
     answer.pImpl_ = new TlDenseSymmetricMatrix_ImplLapack(
         dynamic_cast<const TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
             ->inverse());
@@ -145,6 +146,11 @@ double* TlDenseSymmetricMatrix_Lapack::data() {
 const double* TlDenseSymmetricMatrix_Lapack::data() const {
     return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
         ->data();
+}
+
+std::size_t TlDenseSymmetricMatrix_Lapack::getAllocatedSize() const {
+    return dynamic_cast<TlDenseSymmetricMatrix_ImplLapack*>(this->pImpl_)
+        ->getAllocatedSize();
 }
 
 // ---------------------------------------------------------------------------

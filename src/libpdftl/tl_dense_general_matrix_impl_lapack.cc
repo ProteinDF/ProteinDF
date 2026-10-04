@@ -16,7 +16,7 @@
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(const TlMatrixObject::index_type row,
                                                                  const TlMatrixObject::index_type col,
                                                                  double const* const pBuf)
-    : row_(row), col_(col), matrix_(NULL) {
+    : row_(row), col_(col), matrix_(NULL), allocatedSize_(0) {
     this->initialize();
 
     if (pBuf != NULL) {
@@ -24,14 +24,23 @@ TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(const TlMatrixO
     }
 };
 
+TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(const TlMatrixObject::index_type row,
+                                                                 const TlMatrixObject::index_type col,
+                                                                 bool allocate)
+    : row_(row), col_(col), matrix_(NULL), allocatedSize_(0) {
+    if (allocate) {
+        this->initialize();
+    }
+}
+
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(const TlDenseGeneralMatrix_ImplLapack& rhs)
-    : row_(rhs.getNumOfRows()), col_(rhs.getNumOfCols()), matrix_(NULL) {
+    : row_(rhs.getNumOfRows()), col_(rhs.getNumOfCols()), matrix_(NULL), allocatedSize_(0) {
     this->initialize(false);
     std::copy(rhs.matrix_, rhs.matrix_ + this->getNumOfElements(), this->matrix_);
 }
 
 TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(const TlDenseSymmetricMatrix_ImplLapack& rhs)
-    : row_(rhs.getNumOfRows()), col_(rhs.getNumOfCols()), matrix_(NULL) {
+    : row_(rhs.getNumOfRows()), col_(rhs.getNumOfCols()), matrix_(NULL), allocatedSize_(0) {
     this->initialize();
 
     const TlMatrixObject::index_type dim = rhs.getNumOfRows();
@@ -55,6 +64,7 @@ TlDenseGeneralMatrix_ImplLapack::TlDenseGeneralMatrix_ImplLapack(const TlDenseSy
 TlDenseGeneralMatrix_ImplLapack::~TlDenseGeneralMatrix_ImplLapack() {
     delete[] this->matrix_;
     this->matrix_ = NULL;
+    this->allocatedSize_ = 0;
 }
 
 TlDenseGeneralMatrix_ImplLapack::operator std::vector<double>() const {
@@ -86,6 +96,10 @@ TlMatrixObject::index_type TlDenseGeneralMatrix_ImplLapack::getNumOfCols() const
     return this->col_;
 }
 
+std::size_t TlDenseGeneralMatrix_ImplLapack::getAllocatedSize() const {
+    return this->allocatedSize_;
+}
+
 void TlDenseGeneralMatrix_ImplLapack::resize(const TlMatrixObject::index_type newRow,
                                              const TlMatrixObject::index_type newCol) {
     assert((newRow > 0) && (newCol > 0));
@@ -94,6 +108,7 @@ void TlDenseGeneralMatrix_ImplLapack::resize(const TlMatrixObject::index_type ne
     // destroy object
     delete[] this->matrix_;
     this->matrix_ = NULL;
+    this->allocatedSize_ = 0;
 
     // initialize
     this->row_ = newRow;
@@ -237,6 +252,7 @@ TlDenseGeneralMatrix_ImplLapack& TlDenseGeneralMatrix_ImplLapack::operator=(
     if (this != &rhs) {
         delete[] this->matrix_;
         this->matrix_ = NULL;
+        this->allocatedSize_ = 0;
 
         this->row_ = rhs.getNumOfRows();
         this->col_ = rhs.getNumOfCols();
@@ -507,6 +523,7 @@ void TlDenseGeneralMatrix_ImplLapack::initialize(bool clearIfNeeded) {
     if (size > 0) {
         try {
             this->matrix_ = new double[size];
+            this->allocatedSize_ = size;
         } catch (std::bad_alloc& ba) {
             this->log_.critical(
                 TlUtils::format("bad_alloc caught: %s: row=%d, col=%d, size=%ld", ba.what(), row, col, size));
