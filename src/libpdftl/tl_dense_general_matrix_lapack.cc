@@ -110,6 +110,10 @@ TlDenseGeneralMatrix_Lapack& TlDenseGeneralMatrix_Lapack::operator*=(const TlDen
     return *this;
 }
 
+std::size_t TlDenseGeneralMatrix_Lapack::getAllocatedSize() const {
+    return dynamic_cast<TlDenseGeneralMatrix_ImplLapack*>(this->pImpl_)->getAllocatedSize();
+}
+
 TlMatrixObject::index_type TlDenseGeneralMatrix_Lapack::getRowVector(const TlMatrixObject::index_type row,
                                                                      const TlMatrixObject::index_type length,
                                                                      double* pBuf) const {
