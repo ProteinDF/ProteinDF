@@ -10,7 +10,7 @@
 #   devtool/flow.sh list
 #
 # Worktrees are created next to the worktree that has `develop` checked out
-# (e.g. ~/orca/workspaces/ProteinDF/feature-foo). Override with PDF_WORKTREE_ROOT.
+# (named after the branch, e.g. feature-foo). Override with PDF_WORKTREE_ROOT.
 # Nothing is pushed; push manually when the user says so.
 set -euo pipefail
 
