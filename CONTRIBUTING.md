@@ -10,7 +10,7 @@
 
 バージョンは`YYYY.M.PATCH`(例: `2025.3.0`)で、`CMakeLists.txt`の`PROJECT_VERSION_MAJOR/MINOR/REVISION`に書く。
 
-git-flowのCLIは使わず、`devtool/flow.sh`で操作する。**作業ブランチごとに専用のgit worktreeを作る**(`develop`のworktreeの隣。例: `~/orca/workspaces/ProteinDF/feature-foo`)。
+git-flowのCLIは使わず、`devtool/flow.sh`で操作する。**作業ブランチごとに専用のgit worktreeを作る**(`develop`のworktreeの隣に、ブランチ名の`/`を`-`にした名前で作る。例: `feature-foo`)。
 
 ```bash
 devtool/flow.sh start feature/foo        # developから切ってworktreeを作る
