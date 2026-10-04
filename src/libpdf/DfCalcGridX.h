@@ -282,7 +282,8 @@ class DfCalcGridX : public DfObject {
                          const double roundF_roundGammaAA,
                          const double roundF_roundGammaAB,
                          const double gradRhoAX, const double gradRhoAY,
-                         const double gradRhoAZ,
+                         const double gradRhoAZ, const double gradRhoBX,
+                         const double gradRhoBY, const double gradRhoBZ,
                          const std::vector<double>& AO_values,
                          const std::vector<double>& dAO_dx_values,
                          const std::vector<double>& dAO_dy_values,
@@ -290,7 +291,7 @@ class DfCalcGridX : public DfObject {
                          DfFunctional_GGA* pFunctional, const double weight,
                          TlMatrixObject* pF_A);
 
-   protected:
+protected:
     double energyGradient_part(const TlDenseSymmetricMatrix_Lapack& P_A,
                                DfFunctional_LDA* pFunctional,
                                const int startAtomIndex, const int endAtomIndex,
