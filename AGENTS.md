@@ -5,7 +5,7 @@
 
 ## 作業場所とブランチ(MUST)
 
-- 作業はタスク指示書(`doc/tasks/TASK_*.md`)で指定されたブランチの**専用worktree**で行う。
+- 作業はタスク指示書(`devtool/delegate.sh`が渡すパスの`TASK_*.md`)で指定されたブランチの**専用worktree**で行う。
   worktreeは`devtool/flow.sh start <branch>`(または`devtool/delegate.sh`)が作る
   (例: `~/orca/workspaces/ProteinDF/fix-gcc15-build`)。
 - **`develop`のworktree(Claudeの作業場所)や他のworktreeのファイルを編集しない。** タスク指示書も読むだけにする(レビュー結果はClaudeが書き足す)。

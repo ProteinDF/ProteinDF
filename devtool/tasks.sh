@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Summarize the task files (doc/tasks/TASK_*.md, private: only in the develop worktree)
-# and the working branches.
+# Summarize the task files and the working branches.
+# Task files are private: <develop worktree>/private/tasks/TASK_*.md, where private/ is a
+# symlink to the private notes repository (override the directory with PDF_TASK_DIR).
 #
 # Usage: devtool/tasks.sh [--all]
 #   default: tasks that are not merged yet, then the working branches
@@ -8,14 +9,14 @@
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-# task files are not committed, so read them from the develop worktree
-top=$("$here/flow.sh" path develop)
+task_dir=${PDF_TASK_DIR:-$("$here/flow.sh" path develop)/private/tasks}
+[[ -d "$task_dir" ]] || { echo "error: no task directory $task_dir" >&2; exit 1; }
 all=0
 [[ "${1:-}" == --all ]] && all=1
 
 printf '| %s | %s | %s | %s |\n' TASK Branch 状態 レビュー回数
 printf '|---|---|---|---|\n'
-for f in "$top"/doc/tasks/TASK_*.md; do
+for f in "$task_dir"/TASK_*.md; do
     [[ -e "$f" ]] || continue
     state=$(grep -m1 -oP '^- \*\*状態\*\*:\s*\K.*' "$f" || echo "?")
     ((all)) || [[ "$state" != マージ済み* ]] || continue
