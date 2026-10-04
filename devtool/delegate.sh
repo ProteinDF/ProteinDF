@@ -2,36 +2,41 @@
 # Hand a TASK file to an implementing agent (agy or GitHub Copilot CLI).
 # The agent works only in the branch's own worktree (created if missing).
 #
-# Usage: devtool/delegate.sh [-a agy|copilot] [-i] [-c] [-b <branch>] [-m <model>] <TASK.md> [extra instructions]
+# Usage: devtool/delegate.sh [-a agy|copilot] [-i] [-c] [-W] [-b <branch>] [-m <model>] <TASK.md> [extra instructions]
 #   -a  agent (default: $PDF_AGENT or agy)
 #   -i  interactive session (permissions are asked as usual)
 #       default is non-interactive: all tool permissions are auto-approved
 #   -c  continue the agent's most recent session in the worktree
 #       (e.g. when it stopped to ask something); extra instructions are sent as the reply
+#   -W  if the agent stops on its usage limit, wait until the limit resets and
+#       continue the session once (-c). Without -W the script exits with 75.
 #   -b  branch (default: the "Branch:" line in the TASK file)
 #   -m  model passed to the agent CLI
 #
 # Output is saved under <git-common-dir>/agent-logs/.
+# Exit status: the agent's status, or 75 when it stopped on its usage limit.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 agent=${PDF_AGENT:-agy}
 interactive=0
 continue_session=0
+wait_quota=0
 branch=""
 model=""
-while getopts "a:icb:m:h" opt; do
+while getopts "a:icWb:m:h" opt; do
     case "$opt" in
         a) agent=$OPTARG ;;
         i) interactive=1 ;;
         c) continue_session=1 ;;
+        W) wait_quota=1 ;;
         b) branch=$OPTARG ;;
         m) model=$OPTARG ;;
-        *) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+        *) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
     esac
 done
 shift $((OPTIND - 1))
-(($# >= 1)) || { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+(($# >= 1)) || { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
 task=$(realpath "$1"); shift
 extra="$*"
@@ -104,5 +109,26 @@ echo "=== $branch after the agent run (exit $status)"
 git -C "$wt" log --oneline "develop..$branch"
 git -C "$wt" status --short
 echo
+
+# usage limit (agy: "RESOURCE_EXHAUSTED ... Resets in 2h46m23s")
+if ((!interactive)) && grep -qE 'RESOURCE_EXHAUSTED|quota reached' "$log"; then
+    reset=$(grep -m1 -oP 'Resets in \K[0-9hms]+' "$log" || true)
+    secs=0
+    [[ "$reset" =~ ([0-9]+)h ]] && secs=$((secs + BASH_REMATCH[1] * 3600))
+    [[ "$reset" =~ ([0-9]+)m ]] && secs=$((secs + BASH_REMATCH[1] * 60))
+    [[ "$reset" =~ ([0-9]+)s ]] && secs=$((secs + BASH_REMATCH[1]))
+    echo "usage limit reached (resets in ${reset:-unknown}, at $(date -d "+${secs} sec" +%H:%M))"
+    resume_msg="利用上限のエラーで中断したので再開してください。worktreeのコミット・未コミットの変更を引き継いで、タスク指示書の残りの作業を行い、AGENTS.md の「完了報告」の形式で報告してください。"
+    if ((wait_quota)) && [[ -n "$reset" ]]; then
+        echo "waiting $((secs + 60))s, then continuing the session"
+        sleep $((secs + 60))
+        resume=("$0" -a "$agent" -c -b "$branch")
+        [[ -n "$model" ]] && resume+=(-m "$model")
+        exec "${resume[@]}" "$task" "$resume_msg"
+    fi
+    echo "resume later: devtool/delegate.sh -c $task  (or switch: -a copilot)"
+    exit 75
+fi
+
 echo "next: ask Claude to review, e.g. \"$branch をレビューして\" (log: $log)"
 exit "$status"
