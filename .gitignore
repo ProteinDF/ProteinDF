@@ -40,3 +40,6 @@ doc/api/*
 
 # build directories (devtool/check.sh, agents)
 /build-*/
+
+# task files are private (kept only in the develop worktree, never committed)
+/doc/tasks/TASK_*.md
