@@ -64,6 +64,7 @@ class TlDenseSymmetricMatrix_Lapack : public TlDenseSymmetricMatrixObject {
    public:
     double* data();
     const double* data() const;
+    std::size_t getAllocatedSize() const;
 
     // ---------------------------------------------------------------------------
     // I/O
