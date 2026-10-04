@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Summarize the task files (doc/tasks/TASK_*.md) and the working branches.
+# Summarize the task files (doc/tasks/TASK_*.md, private: only in the develop worktree)
+# and the working branches.
 #
 # Usage: devtool/tasks.sh [--all]
 #   default: tasks that are not merged yet, then the working branches
@@ -7,7 +8,8 @@
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-top=$(git rev-parse --show-toplevel)
+# task files are not committed, so read them from the develop worktree
+top=$("$here/flow.sh" path develop)
 all=0
 [[ "${1:-}" == --all ]] && all=1
 

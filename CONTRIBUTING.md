@@ -35,7 +35,7 @@ Claudeと実装担当はworktreeを分けるので、同じ作業ディレクト
 
 ### 流れ
 
-1. **指示書**: ユーザーとClaudeが相談し、Claudeが`doc/tasks/TASK_<name>.md`を書いて`develop`にコミットする。指示書には作業ブランチ名(`**Branch**:`の行)、対象、完了の定義を書く。
+1. **指示書**: ユーザーとClaudeが相談し、Claudeが`doc/tasks/TASK_<name>.md`を書く。指示書は非公開で、`develop`のworktreeにだけ置き、コミットしない(`.gitignore`で除外)。指示書には作業ブランチ名(`**Branch**:`の行)、対象、完了の定義を書く。
 2. **実装**: 実装担当に指示書を渡す。
    ```bash
    devtool/delegate.sh doc/tasks/TASK_<name>.md            # agy(非対話、権限は自動承認)
