@@ -13,7 +13,8 @@
 // ---------------------------------------------------------------------------
 TlDenseSymmetricMatrix_ImplLapack::TlDenseSymmetricMatrix_ImplLapack(
     const TlMatrixObject::index_type dim, double const* const pBuf)
-    : TlDenseGeneralMatrix_ImplLapack(dim, dim) {
+    : TlDenseGeneralMatrix_ImplLapack(dim, dim, false) {
+    this->initialize(true);
     if (pBuf != NULL) {
         this->vtr2mat(pBuf);
     }
@@ -21,14 +22,16 @@ TlDenseSymmetricMatrix_ImplLapack::TlDenseSymmetricMatrix_ImplLapack(
 
 TlDenseSymmetricMatrix_ImplLapack::TlDenseSymmetricMatrix_ImplLapack(
     const TlDenseSymmetricMatrix_ImplLapack& rhs)
-    : TlDenseGeneralMatrix_ImplLapack(rhs.getNumOfRows(), rhs.getNumOfCols()) {
+    : TlDenseGeneralMatrix_ImplLapack(rhs.getNumOfRows(), rhs.getNumOfCols(), false) {
+    this->initialize(false);
     std::copy(rhs.matrix_, rhs.matrix_ + rhs.getNumOfElements(), this->matrix_);
 }
 
 // dim = rows
 TlDenseSymmetricMatrix_ImplLapack::TlDenseSymmetricMatrix_ImplLapack(
     const TlDenseGeneralMatrix_ImplLapack& rhs)
-    : TlDenseGeneralMatrix_ImplLapack(rhs.getNumOfRows(), rhs.getNumOfRows()) {
+    : TlDenseGeneralMatrix_ImplLapack(rhs.getNumOfRows(), rhs.getNumOfRows(), false) {
+    this->initialize(true);
     const TlMatrixObject::index_type dim = rhs.getNumOfRows();
 
     const char UPLO = 'U';
@@ -61,6 +64,10 @@ void TlDenseSymmetricMatrix_ImplLapack::resize(TlMatrixObject::index_type row,
 
     TlDenseSymmetricMatrix_ImplLapack oldMatrix(*this);
 
+    delete[] this->matrix_;
+    this->matrix_ = NULL;
+    this->allocatedSize_ = 0;
+
     this->row_ = row;
     this->col_ = col;
     this->initialize(true);
@@ -76,9 +83,99 @@ void TlDenseSymmetricMatrix_ImplLapack::resize(TlMatrixObject::index_type row,
     }
 }
 
+TlMatrixObject::index_type TlDenseSymmetricMatrix_ImplLapack::getRowVector(
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type length, double* pBuf) const {
+    const TlMatrixObject::index_type copiedLength = std::min(length, this->getNumOfCols());
+    for (TlMatrixObject::index_type c = 0; c < copiedLength; ++c) {
+        pBuf[c] = this->get(row, c);
+    }
+    return copiedLength;
+}
+
+std::vector<double> TlDenseSymmetricMatrix_ImplLapack::getRowVector(
+    const TlMatrixObject::index_type row) const {
+    const TlMatrixObject::index_type numOfCols = this->getNumOfCols();
+    std::vector<double> v(numOfCols);
+    for (TlMatrixObject::index_type c = 0; c < numOfCols; ++c) {
+        v[c] = this->get(row, c);
+    }
+    return v;
+}
+
+TlMatrixObject::index_type TlDenseSymmetricMatrix_ImplLapack::getColVector(
+    const TlMatrixObject::index_type col, const TlMatrixObject::index_type length, double* pBuf) const {
+    const TlMatrixObject::index_type copiedLength = std::min(length, this->getNumOfRows());
+    for (TlMatrixObject::index_type r = 0; r < copiedLength; ++r) {
+        pBuf[r] = this->get(r, col);
+    }
+    return copiedLength;
+}
+
+std::vector<double> TlDenseSymmetricMatrix_ImplLapack::getColVector(
+    const TlMatrixObject::index_type col) const {
+    const TlMatrixObject::index_type numOfRows = this->getNumOfRows();
+    std::vector<double> v(numOfRows);
+    for (TlMatrixObject::index_type r = 0; r < numOfRows; ++r) {
+        v[r] = this->get(r, col);
+    }
+    return v;
+}
+
+TlMatrixObject::index_type TlDenseSymmetricMatrix_ImplLapack::setRowVector(
+    const TlMatrixObject::index_type row, const TlMatrixObject::index_type length, const double* pBuf) {
+    const TlMatrixObject::index_type copiedLength = std::min(length, this->getNumOfCols());
+    for (TlMatrixObject::index_type c = 0; c < copiedLength; ++c) {
+        this->set(row, c, pBuf[c]);
+    }
+    return copiedLength;
+}
+
+void TlDenseSymmetricMatrix_ImplLapack::setRowVector(
+    const TlMatrixObject::index_type row, const std::vector<double>& v) {
+    const TlMatrixObject::index_type copiedLength =
+        std::min(static_cast<TlMatrixObject::index_type>(v.size()), this->getNumOfCols());
+    for (TlMatrixObject::index_type c = 0; c < copiedLength; ++c) {
+        this->set(row, c, v[c]);
+    }
+}
+
+TlMatrixObject::index_type TlDenseSymmetricMatrix_ImplLapack::setColVector(
+    const TlMatrixObject::index_type col, const TlMatrixObject::index_type length, const double* pBuf) {
+    const TlMatrixObject::index_type copiedLength = std::min(length, this->getNumOfRows());
+    for (TlMatrixObject::index_type r = 0; r < copiedLength; ++r) {
+        this->set(r, col, pBuf[r]);
+    }
+    return copiedLength;
+}
+
+void TlDenseSymmetricMatrix_ImplLapack::setColVector(
+    const TlMatrixObject::index_type col, const std::vector<double>& v) {
+    const TlMatrixObject::index_type copiedLength =
+        std::min(static_cast<TlMatrixObject::index_type>(v.size()), this->getNumOfRows());
+    for (TlMatrixObject::index_type r = 0; r < copiedLength; ++r) {
+        this->set(r, col, v[r]);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // operators
 // ---------------------------------------------------------------------------
+TlDenseSymmetricMatrix_ImplLapack& TlDenseSymmetricMatrix_ImplLapack::operator=(
+    const TlDenseSymmetricMatrix_ImplLapack& rhs) {
+    if (this != &rhs) {
+        delete[] this->matrix_;
+        this->matrix_ = NULL;
+        this->allocatedSize_ = 0;
+
+        this->row_ = rhs.getNumOfRows();
+        this->col_ = rhs.getNumOfCols();
+        this->initialize(false);
+        const std::size_t size = this->getNumOfElements();
+        std::copy(rhs.matrix_, rhs.matrix_ + size, this->matrix_);
+    }
+    return *this;
+}
+
 TlDenseSymmetricMatrix_ImplLapack& TlDenseSymmetricMatrix_ImplLapack::
 operator*=(const double coef) {
     const int n = this->getNumOfElements();
@@ -147,6 +244,10 @@ TlDenseSymmetricMatrix_ImplLapack TlDenseSymmetricMatrix_ImplLapack::transpose()
     const {
     // do nothing
     return *this;
+}
+
+void TlDenseSymmetricMatrix_ImplLapack::transposeInPlace() {
+    // A symmetric matrix is identical to its transpose; no-op.
 }
 
 TlDenseSymmetricMatrix_ImplLapack TlDenseSymmetricMatrix_ImplLapack::inverse()

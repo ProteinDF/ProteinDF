@@ -33,6 +33,7 @@ public:
 public:
     virtual TlMatrixObject::index_type getNumOfRows() const;
     virtual TlMatrixObject::index_type getNumOfCols() const;
+    virtual std::size_t getAllocatedSize() const;
 
     virtual void resize(TlMatrixObject::index_type row, TlMatrixObject::index_type col);
 
@@ -110,6 +111,10 @@ public:
     // ---------------------------------------------------------------------------
     // protected
     // ---------------------------------------------------------------------------
+protected:
+    TlDenseGeneralMatrix_ImplLapack(const TlMatrixObject::index_type row, const TlMatrixObject::index_type col,
+                                    bool allocate);
+
     virtual void initialize(bool clearIfNeeded = true);
     virtual TlMatrixObject::size_type getNumOfElements() const;
     virtual TlMatrixObject::size_type index(TlMatrixObject::index_type row, TlMatrixObject::index_type col) const;
@@ -122,10 +127,12 @@ protected:
     TlMatrixObject::index_type row_;
     TlMatrixObject::index_type col_;
     double* matrix_;  /// 行列要素
+    std::size_t allocatedSize_;
 
     // ---------------------------------------------------------------------------
     // friends
     // ---------------------------------------------------------------------------
+    friend class TlDenseGeneralMatrix_Lapack;
     friend class TlDenseSymmetricMatrix_ImplLapack;
 
     friend TlDenseGeneralMatrix_ImplLapack operator*(const TlDenseSymmetricMatrix_ImplLapack& rhs1,
