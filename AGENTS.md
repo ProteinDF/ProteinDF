@@ -9,6 +9,7 @@
   worktreeは`devtool/flow.sh start <branch>`(または`devtool/delegate.sh`)が作る
   (例: `~/orca/workspaces/ProteinDF/fix-gcc15-build`)。
 - **`develop`のworktree(Claudeの作業場所)や他のworktreeのファイルを編集しない。** タスク指示書も読むだけにする(レビュー結果はClaudeが書き足す)。
+- タスク指示書は非公開である。指示書の文章(不具合の分析など)を、コミットメッセージやコードのコメントにそのまま書き写さない。
 - そのブランチ以外にコミットしない。`develop`・`main`へのマージ、push、ブランチやworktreeの削除、`git stash`はしない。
 - `git status`と`git branch --show-current`で、作業前に場所とブランチを確認する。
 
