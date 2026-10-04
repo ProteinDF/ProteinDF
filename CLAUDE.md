@@ -4,7 +4,7 @@
 
 ## Claudeがやること
 
-1. **タスク指示書を書く**: ユーザーと相談して`private/tasks/TASK_<name>.md`を`doc/tasks/TEMPLATE.md`から作る。**タスク指示書・`TODO.md`・`SPEC.md`は非公開**で、非公開リポジトリ`~/work/dev/pdf-dev/ProteinDF_private`で管理する(developのworktreeの`private/`はそこへのシンボリックリンク、`TODO.md`・`SPEC.md`も`private/`へのリンク)。書いたら非公開リポジトリにコミットする(`git -C private commit`)。ProteinDF本体にはコミットしない。不具合の分析などを含むため、内容をコミットメッセージや公開されるファイルに書き写さない。設計判断が必要な点は書く前にユーザーに確認する。
+1. **タスク指示書を書く**: ユーザーと相談して`private/tasks/TASK_<name>.md`を`doc/tasks/TEMPLATE.md`から作る。**タスク指示書・`TODO.md`・`SPEC.md`は非公開**で、ProteinDF本体とは別の非公開リポジトリで管理する(developのworktreeの`private/`はそこへのシンボリックリンク、`TODO.md`・`SPEC.md`も`private/`へのリンク)。書いたら非公開リポジトリにコミットする(`git -C private commit`)。ProteinDF本体にはコミットしない。不具合の分析などを含むため、内容をコミットメッセージや公開されるファイルに書き写さない。設計判断が必要な点は書く前にユーザーに確認する。
 2. **実装を依頼する**: ユーザーの指示があれば`devtool/delegate.sh private/tasks/TASK_<name>.md`を実行する(時間がかかるのでバックグラウンドで実行する)。ユーザー自身がagy / Copilotに渡す場合もある。
    - agyが利用上限で止まると`delegate.sh`は終了コード75で終わる。再開の方法(上限のリセットを待って`-c`で続ける、`-W`で自動的に待つ、`-a copilot`に切り替える)はユーザーに確認する。
 3. **レビューする**: ブランチのworktree(`devtool/flow.sh path <branch>`)で`/code-review`を使い、あわせて次を行う。
@@ -18,13 +18,14 @@
 
 ## Claudeがやらないこと
 
+- 公開されるファイル(このリポジトリに追跡されるファイル、コミットメッセージ)に、ローカルのディレクトリのパスを書くこと。ローカルの場所は環境変数や、git管理外の設定ファイル・非公開リポジトリに置く。
 - 機能の実装やバグ修正のコードを書くこと(タスク指示書・ドキュメント・`devtool/`の開発用スクリプトは除く)。レビューで見つけた問題は修正依頼として書く。
 - 実装担当のworktreeのファイルを編集すること、そこでコミットすること。
 - タスク指示書、`TODO.md`、`SPEC.md`をProteinDF本体にコミット・pushすること(いずれも非公開)。非公開リポジトリをリモートにpushするのは、ユーザーの指示があったときだけ。
 
 ## Claudeの作業場所
 
-- Claudeの作業場所は`develop`のworktree(`~/orca/workspaces/ProteinDF/develop`)である。実装担当は別のworktreeで作業するので、`develop`でのコミットが実装担当の作業と衝突することはない。
+- Claudeの作業場所は`develop`のworktreeである。実装担当は別のworktreeで作業するので、`develop`でのコミットが実装担当の作業と衝突することはない。
 - ただし、コミット前に`git status`と`git branch --show-current`を確認し、`develop`以外にいないこと、自分のもの以外の変更がステージされていないことを確かめる。
 
 ## ビルド環境についての注意(2026-10-04時点)
