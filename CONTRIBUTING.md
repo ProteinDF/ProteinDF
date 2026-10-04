@@ -43,8 +43,11 @@ Claudeと実装担当はworktreeを分けるので、同じ作業ディレクト
    devtool/delegate.sh -i doc/tasks/TASK_<name>.md         # 対話モード(権限は都度確認)
    ```
    ブランチとworktreeがなければ作る。非対話モードの出力は`.git/agent-logs/`に保存される。
-3. **レビュー**: Claudeがworktreeで`/code-review`と`devtool/check.sh`を実行し、結果を指示書の末尾に追記する。要修正なら手順2に戻る(同じコマンドで、実装担当は最新のレビュー結果に対応する)。
+   agyが利用上限で止まると終了コード75で終わる。`-c`で続きから再開でき、`-W`を付けると上限のリセットを待って自動的に再開する。
+3. **レビュー**: Claudeがworktreeで`/code-review`と`devtool/review.sh <branch>`(新しいビルドでの`check.sh`、必要ならMPIのテスト)を実行し、結果を指示書の末尾に追記する。要修正なら手順2に戻る(同じコマンドで、実装担当は最新のレビュー結果に対応する)。
 4. **マージ**: 収束したらユーザーが承認し、Claudeが`devtool/flow.sh finish <branch>`を実行する。
+
+TASKと作業ブランチの状況は`devtool/tasks.sh`(`--all`でマージ済みも)で一覧できる。
 
 ## 完了の確認
 
