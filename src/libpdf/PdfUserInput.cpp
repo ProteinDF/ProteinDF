@@ -827,7 +827,7 @@ bool PdfUserInput::check() {
     {
         std::string sXcPotential = this->data_["xc_functional"].getStr();
         std::string sTilde = "";
-        if (sXcPotential[sXcPotential.length() - 1] == '~') {
+        if (!sXcPotential.empty() && sXcPotential.back() == '~') {
             sTilde = "~";
             sXcPotential = sXcPotential.substr(0, sXcPotential.length() - 1);
         }
