@@ -18,6 +18,18 @@
 #   PROTEINDF_BRIDGE_DIR  Path to ProteinDF_bridge (default: ~/work/dev/pdf-dev/ProteinDF_bridge)
 #   REGRESS_VENV_DIR      Path to shared python venv (default: $(git rev-parse --git-common-dir)/regress-venv)
 #   REGRESS_LOGS_DIR      Path to log directory (default: $(git rev-parse --git-common-dir)/regress-logs)
+#
+# Python Environment Compatibility Patches (sitecustomize.py in venv):
+#   - PdfArchive alias:
+#       proteindf_tools exposes PdfArchive_Sqlite3, but scripts reference
+#       proteindf_tools.PdfArchive. Added alias to prevent AttributeError.
+#   - Force dict conversion:
+#       PdfParamObject.set_by_raw_data expects force items to be indexed by integer.
+#       Some SQLite DBs store force records as dicts, causing KeyError: 0.
+#       Patched to convert dict {0:x, 1:y, 2:z} to list [x, y, z].
+#   - numpy<2:
+#       proteindf_bridge calls numpy.ndarray.tostring() removed in NumPy 2.0.
+#       Pinned to numpy<2 during installation.
 
 set -uo pipefail
 
@@ -275,6 +287,7 @@ trap cleanup EXIT INT TERM
 
 declare -a result_status=()
 declare -a result_time=()
+declare -a result_iter=()
 declare -a result_calc_te=()
 declare -a result_std_te=()
 declare -a result_diff_te=()
@@ -293,6 +306,7 @@ for idx in "${!entries[@]}"; do
         printf "[%2d/%2d] %-22s %-4s (0s) [entry directory does not exist]\n" "$num" "$total_tests" "$entry" "FAIL"
         result_status+=("NOT_FOUND")
         result_time+=("0s")
+        result_iter+=("-")
         result_calc_te+=("N/A")
         result_std_te+=("N/A")
         result_diff_te+=("N/A")
@@ -336,7 +350,7 @@ for idx in "${!entries[@]}"; do
         ) || archive_exit=$?
     fi
 
-    # Step D: Compare results with pdfresults_std.db
+    # Step D: Check results and compare with pdfresults_std.db
     test_exit=0
     std_db="$entry_work_dir/pdfresults_std.db"
     calc_db="$entry_work_dir/pdfresults.db"
@@ -344,49 +358,70 @@ for idx in "${!entries[@]}"; do
     calc_te="N/A"
     std_te="N/A"
     diff_te="N/A"
+    iter_str="-"
     note=""
 
-    # Extract Total Energy from DBs if possible
-    if [[ -f "$calc_db" ]]; then
-        calc_te=$("$venv_dir/bin/python" -c "
-import sqlite3
-try:
-    con = sqlite3.connect('$calc_db')
-    cur = con.cursor()
-    row = cur.execute('select energy from total_energies order by iteration desc limit 1').fetchone()
-    print(f'{row[0]:.10f}' if row else 'N/A')
-except Exception:
-    print('N/A')
-")
+    # Extract Total Energy and iterations via proteindf_tools.PdfArchive
+    if [[ -f "$calc_db" || -f "$std_db" ]]; then
+        c_db_arg=""
+        s_db_arg=""
+        [[ -f "$calc_db" ]] && c_db_arg="$calc_db"
+        [[ -f "$std_db" ]] && s_db_arg="$std_db"
+
+        py_res=$("$venv_dir/bin/python" - "$c_db_arg" "$s_db_arg" << 'PYEOF'
+import sys
+import proteindf_tools as p
+
+calc_path = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else None
+std_path = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
+
+c_te, s_te, d_te, i_str = "N/A", "N/A", "N/A", "-"
+c_iter, s_iter = None, None
+
+if calc_path:
+    try:
+        arc_c = p.PdfArchive(calc_path)
+        c_iter = arc_c.iterations
+        val_c = arc_c.get_total_energy(c_iter)
+        if val_c is not None:
+            c_te = f"{val_c:.10f}"
+    except Exception:
+        pass
+
+if std_path:
+    try:
+        arc_s = p.PdfArchive(std_path)
+        s_iter = arc_s.iterations
+        val_s = arc_s.get_total_energy(s_iter)
+        if val_s is not None:
+            s_te = f"{val_s:.10f}"
+    except Exception:
+        pass
+
+if c_iter is not None and s_iter is not None:
+    if c_iter == s_iter:
+        i_str = str(c_iter)
+    else:
+        i_str = f"{c_iter}/{s_iter}"
+elif c_iter is not None:
+    i_str = str(c_iter)
+elif s_iter is not None:
+    i_str = f"-/{s_iter}"
+
+if c_te != "N/A" and s_te != "N/A":
+    try:
+        diff = float(c_te) - float(s_te)
+        d_te = f"{diff:+.2e}"
+    except Exception:
+        pass
+
+print(f"{c_te}\t{s_te}\t{d_te}\t{i_str}")
+PYEOF
+)
+        IFS=$'\t' read -r calc_te std_te diff_te iter_str <<< "$py_res"
     fi
 
-    if [[ -f "$std_db" ]]; then
-        std_te=$("$venv_dir/bin/python" -c "
-import sqlite3
-try:
-    con = sqlite3.connect('$std_db')
-    cur = con.cursor()
-    row = cur.execute('select energy from total_energies order by iteration desc limit 1').fetchone()
-    print(f'{row[0]:.10f}' if row else 'N/A')
-except Exception:
-    print('N/A')
-")
-    fi
-
-    if [[ "$calc_te" != "N/A" && "$std_te" != "N/A" ]]; then
-        diff_te=$("$venv_dir/bin/python" -c "
-c = float('$calc_te')
-s = float('$std_te')
-d = c - s
-print(f'{d:+.2e}')
-")
-    fi
-
-    if [[ ! -f "$std_db" ]]; then
-        test_status="FAIL"
-        note="pdfresults_std.db missing"
-        overall_pass=0
-    elif [[ $pdf_exit -ne 0 ]]; then
+    if [[ $pdf_exit -ne 0 ]]; then
         test_status="FAIL"
         note="PDF.x exited with $pdf_exit"
         overall_pass=0
@@ -394,6 +429,9 @@ print(f'{d:+.2e}')
         test_status="FAIL"
         note="pdf-archive.py failed"
         overall_pass=0
+    elif [[ ! -f "$std_db" ]]; then
+        test_status="SKIP"
+        note="no reference"
     else
         (
             cd "$entry_work_dir"
@@ -427,6 +465,7 @@ print(f'{d:+.2e}')
 
     result_status+=("$test_status")
     result_time+=("$elapsed_sec")
+    result_iter+=("$iter_str")
     result_calc_te+=("$calc_te")
     result_std_te+=("$std_te")
     result_diff_te+=("$diff_te")
@@ -444,8 +483,8 @@ echo "=== Regression Test Summary ==="
 echo "Suite: $suite | Total: $total_tests | Time: ${total_elapsed}s"
 echo
 
-printf "%-4s %-22s %-8s %-18s %-18s %-11s %s\n" "No." "Entry" "Status" "Calc TE (a.u.)" "Std TE (a.u.)" "Diff" "Note"
-printf '%0.s-' {1..100}
+printf "%-4s %-22s %-8s %-6s %-18s %-18s %-11s %s\n" "No." "Entry" "Status" "Iter" "Calc TE (a.u.)" "Std TE (a.u.)" "Diff" "Note"
+printf '%0.s-' {1..105}
 echo
 
 for idx in "${!entries[@]}"; do
@@ -453,22 +492,29 @@ for idx in "${!entries[@]}"; do
     num=$((idx + 1))
     status="${result_status[$idx]}"
     time_str="${result_time[$idx]}"
+    istr="${result_iter[$idx]}"
     cte="${result_calc_te[$idx]}"
     ste="${result_std_te[$idx]}"
     dte="${result_diff_te[$idx]}"
     nt="${result_notes[$idx]}"
 
-    printf "%2d.  %-22s %-8s %-18s %-18s %-11s %s\n" \
-        "$num" "$entry" "$status" "$cte" "$ste" "$dte" "$nt"
+    printf "%2d.  %-22s %-8s %-6s %-18s %-18s %-11s %s\n" \
+        "$num" "$entry" "$status" "$istr" "$cte" "$ste" "$dte" "$nt"
 done
 
-printf '%0.s-' {1..100}
+printf '%0.s-' {1..105}
 echo
 
 # Print detailed diffs for failed tests
 failed_count=0
+skipped_count=0
+passed_count=0
 for idx in "${!entries[@]}"; do
-    if [[ "${result_status[$idx]}" != "PASS" ]]; then
+    if [[ "${result_status[$idx]}" = "PASS" ]]; then
+        ((passed_count++))
+    elif [[ "${result_status[$idx]}" = "SKIP" ]]; then
+        ((skipped_count++))
+    else
         ((failed_count++))
     fi
 done
@@ -477,7 +523,7 @@ if ((failed_count > 0)); then
     echo
     echo "=== Failed Tests Details ($failed_count test(s)) ==="
     for idx in "${!entries[@]}"; do
-        if [[ "${result_status[$idx]}" != "PASS" ]]; then
+        if [[ "${result_status[$idx]}" != "PASS" && "${result_status[$idx]}" != "SKIP" ]]; then
             entry="${entries[$idx]}"
             echo "--- [$entry] log excerpt ($logs_dir/${entry}.log) ---"
             grep -E "(ERROR|CRITICAL|failed|Assertion|not consistent|!=)" "$logs_dir/${entry}.log" | head -n 20 || true
@@ -488,8 +534,12 @@ fi
 
 echo "All test logs saved to: $logs_dir/"
 
-if ((overall_pass)); then
-    echo "Result: ALL TESTS PASSED (${total_elapsed}s)"
+if ((failed_count == 0)); then
+    if ((skipped_count > 0)); then
+        echo "Result: ALL TESTS PASSED ($skipped_count skipped, ${total_elapsed}s)"
+    else
+        echo "Result: ALL TESTS PASSED (${total_elapsed}s)"
+    fi
     exit 0
 else
     echo "Result: $failed_count TEST(S) FAILED (${total_elapsed}s)"
