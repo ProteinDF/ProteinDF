@@ -59,4 +59,7 @@ devtool/setup-dev-tools.sh
 
 ```bash
 devtool/check.sh   # 差分の空白エラー、変更行のclang-format、ビルド、ctest
+devtool/regress.sh # 計算結果の回帰テスト(ProteinDF_testのserial_devスイート)
 ```
+
+特定のテストのみを実行する場合は `--entries` を指定する(例: `devtool/regress.sh --entries O2_UB3LYP,N2_UB3LYP`)。
