@@ -53,7 +53,9 @@ class DfFunctional_VWN : public DfFunctional_LDA {
 
     // get epsilon C
     // for UKS
-    double epsilonC(const double x, const double zeta);
+    // VWN3 overrides this to use the RPA + linear (von Barth-Hedin)
+    // spin interpolation instead of VWN's eq.A11.
+    virtual double epsilonC(const double x, const double zeta);
 
     // get epsilon C
     // for RKS
@@ -75,9 +77,10 @@ class DfFunctional_VWN : public DfFunctional_LDA {
 
     double g_prime(const double zeta);
 
-    void roundVWN_roundRho(const double dRhoA, const double dRhoB,
-                           double* pRoundF_roundRhoA,
-                           double* pRoundF_roundRhoB);
+    // for UKS; VWN3 overrides this together with epsilonC(x, zeta) above.
+    virtual void roundVWN_roundRho(const double dRhoA, const double dRhoB,
+                                   double* pRoundF_roundRhoA,
+                                   double* pRoundF_roundRhoB);
     void roundVWN_roundRho(const double dRhoA, double* pRoundF_roundRhoA);
 
    protected:

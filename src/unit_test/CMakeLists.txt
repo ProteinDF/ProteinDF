@@ -7,6 +7,7 @@ set(PDF_XTEST_SOURCES
   DfFunctional_LYPTest.cpp
   DfFunctional_SlaterTest.cpp
   DfFunctional_VWNTest.cpp
+  DfFunctional_VWN3Test.cpp
   TlFileTest.cpp
   TlMemManagerTest.cpp
 
