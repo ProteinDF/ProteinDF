@@ -193,7 +193,7 @@ TlDenseGeneralMatrix_Lapack DfFunctional_Becke88::getDerivativeFunctionalCore(
     assert(this->getNumOfFunctionalTerms() == 1);
 
     const double gA = this->g(xA);
-    const double gB = this->g(xA);
+    const double gB = this->g(xB);
     const double g_primeA = this->g_prime(xA);
     const double g_primeB = this->g_prime(xB);
 
