@@ -12,6 +12,11 @@
 #                           auto: use reference.h5 if present, else pdfresults_std.db
 #                           h5:   require reference.h5 (SKIP if missing)
 #                           db:   require pdfresults_std.db (SKIP if missing)
+#   --keep-work-dir <dir> Copy each entry's work directory (fl_Userinput,
+#                           pdfresults.h5/.db, logs, ...) into <dir>/<entry>/
+#                           after the run, instead of discarding it with the
+#                           temporary workspace. Useful for inspecting a run
+#                           or harvesting pdfresults.h5 as a new reference.h5.
 #   -j, --jobs <N>        Parallel build jobs (default: nproc)
 #   -h, --help            Show this help message
 #
@@ -53,6 +58,7 @@ install_dir=""
 do_build=1
 jobs=$(nproc 2>/dev/null || echo 4)
 ref_format="auto"
+keep_work_dir=""
 
 while (($#)); do
     case "$1" in
@@ -68,6 +74,8 @@ while (($#)); do
             do_build=0; shift ;;
         --format)
             ref_format="$2"; shift 2 ;;
+        --keep-work-dir)
+            keep_work_dir="$2"; shift 2 ;;
         -j|--jobs)
             jobs="$2"; shift 2 ;;
         -h|--help)
@@ -134,6 +142,11 @@ if ((${#missing_vars[@]} > 0)); then
 fi
 
 mkdir -p "$logs_dir"
+
+if [[ -n "$keep_work_dir" ]]; then
+    mkdir -p "$keep_work_dir"
+    keep_work_dir=$(cd "$keep_work_dir" && pwd)
+fi
 
 echo "=== ProteinDF Regression Test ==="
 echo "Worktree:    $top"
@@ -562,6 +575,12 @@ PYEOF
             fi
             overall_pass=0
         fi
+    fi
+
+    if [[ -n "$keep_work_dir" ]]; then
+        rm -rf "${keep_work_dir:?}/${entry:?}"
+        mkdir -p "$keep_work_dir/$entry"
+        cp -a "$entry_work_dir/." "$keep_work_dir/$entry/"
     fi
 
     t1=$(date +%s%N 2>/dev/null || date +%s)
