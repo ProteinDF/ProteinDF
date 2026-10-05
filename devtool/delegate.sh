@@ -84,6 +84,24 @@ echo "log:      $log"
 echo
 
 cmd=("$agent" --add-dir "$(dirname "$task")")
+# Directories the checks in a task may need besides the worktree (some agents, e.g.
+# Copilot, refuse to touch anything else in non-interactive mode): the git common
+# dir (regress venv/logs, regress.conf) and the locations set in regress.conf.
+common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
+cmd+=(--add-dir "$common_dir")
+if [[ -f "$common_dir/regress.conf" ]]; then
+    while IFS= read -r d; do
+        [[ -d "$d" ]] && cmd+=(--add-dir "$d")
+    done < <(
+        # shellcheck disable=SC1091
+        source "$common_dir/regress.conf"
+        for v in "${PROTEINDF_TEST_DIR:-}" "${PROTEINDF_PYTOOLS_DIR:-}" "${PROTEINDF_BRIDGE_DIR:-}"; do
+            [[ -n "$v" ]] && echo "$v"
+        done
+        # PYSCF_PYTHON is <venv>/bin/python; add the venv root
+        [[ -n "${PYSCF_PYTHON:-}" ]] && dirname "$(dirname "$PYSCF_PYTHON")"
+    )
+fi
 ((continue_session)) && cmd+=(--continue)
 [[ -n "$model" ]] && cmd+=(--model "$model")
 case "$agent" in
