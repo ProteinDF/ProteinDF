@@ -1454,3 +1454,213 @@ TEST(DfFunctional_Becke88, pointwise22) {
     EXPECT_NEAR(vGammaAB, dRoundF_roundGammaAB, EPS);
     EXPECT_NEAR(vGammaBB, dRoundF_roundGammaBB, EPS);
 }
+
+// =====================================================================
+// Grid-Free (getFunctionalCore / getDerivativeFunctionalCore)
+//
+// `x` is protected, so expose it to the tests via a thin subclass.
+class DfFunctional_Becke88_GFTest : public DfFunctional_Becke88 {
+public:
+    using DfFunctional_Becke88::x;
+};
+
+namespace {
+    // DfGridFreeXC::getFxc_DF()/getExc_DF() (src/libpdf/DfGridFreeXC.h) build the
+    // pointwise roundF_roundRho* / roundF_roundGamma* (and F itself) from the
+    // grid-free Core matrices by summing, over the functional terms, the product
+    // of the "R" (rho/gamma dependent) and "X" (g(x) dependent) columns, e.g.
+    // roundF_roundRhoA = sum_term RA_R(term) * RA_X(term). This mirrors
+    // DfFunctional_GGA::getFunctional()/getDerivativeFunctional(), which combine
+    // the same R/X pair for a single term.
+    double sumTermProduct(const TlDenseGeneralMatrix_Lapack& m, int rowR,
+                          int rowX) {
+        double answer = 0.0;
+        const int numOfTerms = m.getNumOfCols();
+        for (int term = 0; term < numOfTerms; ++term) {
+            answer += m.get(rowR, term) * m.get(rowX, term);
+        }
+        return answer;
+    }
+}  // namespace
+
+// rhoA != rhoB, gammaAA != gammaBB (same input as pointwise17)
+TEST(DfFunctional_Becke88, gridFree_consistentWithGrid_UKS1) {
+    const double dRhoA = 0.13E+00;
+    const double dRhoB = 0.95E-01;
+    const double dGammaAA = 0.15E+00;
+    const double dGammaAB = 0.18E+00;
+    const double dGammaBB = 0.22E+00;
+
+    DfFunctional_Becke88_GFTest f;
+    const double xA = f.x(dRhoA, dGammaAA);
+    const double xB = f.x(dRhoB, dGammaBB);
+
+    // getFunctional() vs. getFunctionalCore()
+    {
+        const double zk =
+            f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack fs =
+            f.getFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double zk_GF = sumTermProduct(fs, FA_R, FA_X) +
+                             sumTermProduct(fs, FB_R, FB_X);
+        EXPECT_NEAR(zk, zk_GF, EPS);
+    }
+
+    // getDerivativeFunctional() vs. getDerivativeFunctionalCore()
+    {
+        double vRhoA, vRhoB, vGammaAA, vGammaAB, vGammaBB;
+        f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                                  &vRhoA, &vRhoB, &vGammaAA, &vGammaAB,
+                                  &vGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack dfs =
+            f.getDerivativeFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double vRhoA_GF = sumTermProduct(dfs, RA_R, RA_X);
+        const double vRhoB_GF = sumTermProduct(dfs, RB_R, RB_X);
+        const double vGammaAA_GF = sumTermProduct(dfs, GAA_R, GAA_X);
+        const double vGammaAB_GF = sumTermProduct(dfs, GAB_R, GAB_X);
+        const double vGammaBB_GF = sumTermProduct(dfs, GBB_R, GBB_X);
+
+        EXPECT_NEAR(vRhoA, vRhoA_GF, EPS);
+        EXPECT_NEAR(vRhoB, vRhoB_GF, EPS);
+        EXPECT_NEAR(vGammaAA, vGammaAA_GF, EPS);
+        EXPECT_NEAR(vGammaAB, vGammaAB_GF, EPS);
+        EXPECT_NEAR(vGammaBB, vGammaBB_GF, EPS);
+    }
+}
+
+// rhoA != rhoB, gammaAA != gammaBB (same input as pointwise18)
+TEST(DfFunctional_Becke88, gridFree_consistentWithGrid_UKS2) {
+    const double dRhoA = 0.78E-01;
+    const double dRhoB = 0.31E-01;
+    const double dGammaAA = 0.41E-02;
+    const double dGammaAB = 0.38E-02;
+    const double dGammaBB = 0.36E-02;
+
+    DfFunctional_Becke88_GFTest f;
+    const double xA = f.x(dRhoA, dGammaAA);
+    const double xB = f.x(dRhoB, dGammaBB);
+
+    {
+        const double zk =
+            f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack fs =
+            f.getFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double zk_GF = sumTermProduct(fs, FA_R, FA_X) +
+                             sumTermProduct(fs, FB_R, FB_X);
+        EXPECT_NEAR(zk, zk_GF, EPS);
+    }
+
+    {
+        double vRhoA, vRhoB, vGammaAA, vGammaAB, vGammaBB;
+        f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                                  &vRhoA, &vRhoB, &vGammaAA, &vGammaAB,
+                                  &vGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack dfs =
+            f.getDerivativeFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double vRhoA_GF = sumTermProduct(dfs, RA_R, RA_X);
+        const double vRhoB_GF = sumTermProduct(dfs, RB_R, RB_X);
+        const double vGammaAA_GF = sumTermProduct(dfs, GAA_R, GAA_X);
+        const double vGammaAB_GF = sumTermProduct(dfs, GAB_R, GAB_X);
+        const double vGammaBB_GF = sumTermProduct(dfs, GBB_R, GBB_X);
+
+        EXPECT_NEAR(vRhoA, vRhoA_GF, EPS);
+        EXPECT_NEAR(vRhoB, vRhoB_GF, EPS);
+        EXPECT_NEAR(vGammaAA, vGammaAA_GF, EPS);
+        EXPECT_NEAR(vGammaAB, vGammaAB_GF, EPS);
+        EXPECT_NEAR(vGammaBB, vGammaBB_GF, EPS);
+    }
+}
+
+// rhoA != rhoB, gammaAA != gammaBB (same input as pointwise21)
+TEST(DfFunctional_Becke88, gridFree_consistentWithGrid_UKS3) {
+    const double dRhoA = 0.12E+00;
+    const double dRhoB = 0.10E+00;
+    const double dGammaAA = 0.12E+00;
+    const double dGammaAB = 0.13E+00;
+    const double dGammaBB = 0.14E+00;
+
+    DfFunctional_Becke88_GFTest f;
+    const double xA = f.x(dRhoA, dGammaAA);
+    const double xB = f.x(dRhoB, dGammaBB);
+
+    {
+        const double zk =
+            f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack fs =
+            f.getFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double zk_GF = sumTermProduct(fs, FA_R, FA_X) +
+                             sumTermProduct(fs, FB_R, FB_X);
+        EXPECT_NEAR(zk, zk_GF, EPS);
+    }
+
+    {
+        double vRhoA, vRhoB, vGammaAA, vGammaAB, vGammaBB;
+        f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                                  &vRhoA, &vRhoB, &vGammaAA, &vGammaAB,
+                                  &vGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack dfs =
+            f.getDerivativeFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double vRhoA_GF = sumTermProduct(dfs, RA_R, RA_X);
+        const double vRhoB_GF = sumTermProduct(dfs, RB_R, RB_X);
+        const double vGammaAA_GF = sumTermProduct(dfs, GAA_R, GAA_X);
+        const double vGammaAB_GF = sumTermProduct(dfs, GAB_R, GAB_X);
+        const double vGammaBB_GF = sumTermProduct(dfs, GBB_R, GBB_X);
+
+        EXPECT_NEAR(vRhoA, vRhoA_GF, EPS);
+        EXPECT_NEAR(vRhoB, vRhoB_GF, EPS);
+        EXPECT_NEAR(vGammaAA, vGammaAA_GF, EPS);
+        EXPECT_NEAR(vGammaAB, vGammaAB_GF, EPS);
+        EXPECT_NEAR(vGammaBB, vGammaBB_GF, EPS);
+    }
+}
+
+// rhoA != rhoB, gammaAA != gammaBB (same input as pointwise22)
+TEST(DfFunctional_Becke88, gridFree_consistentWithGrid_UKS4) {
+    const double dRhoA = 0.48E-01;
+    const double dRhoB = 0.25E-01;
+    const double dGammaAA = 0.46E-02;
+    const double dGammaAB = 0.44E-02;
+    const double dGammaBB = 0.41E-02;
+
+    DfFunctional_Becke88_GFTest f;
+    const double xA = f.x(dRhoA, dGammaAA);
+    const double xB = f.x(dRhoB, dGammaBB);
+
+    {
+        const double zk =
+            f.getFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack fs =
+            f.getFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double zk_GF = sumTermProduct(fs, FA_R, FA_X) +
+                             sumTermProduct(fs, FB_R, FB_X);
+        EXPECT_NEAR(zk, zk_GF, EPS);
+    }
+
+    {
+        double vRhoA, vRhoB, vGammaAA, vGammaAB, vGammaBB;
+        f.getDerivativeFunctional(dRhoA, dRhoB, dGammaAA, dGammaAB, dGammaBB,
+                                  &vRhoA, &vRhoB, &vGammaAA, &vGammaAB,
+                                  &vGammaBB);
+
+        const TlDenseGeneralMatrix_Lapack dfs =
+            f.getDerivativeFunctionalCore(dRhoA, dRhoB, xA, xB);
+        const double vRhoA_GF = sumTermProduct(dfs, RA_R, RA_X);
+        const double vRhoB_GF = sumTermProduct(dfs, RB_R, RB_X);
+        const double vGammaAA_GF = sumTermProduct(dfs, GAA_R, GAA_X);
+        const double vGammaAB_GF = sumTermProduct(dfs, GAB_R, GAB_X);
+        const double vGammaBB_GF = sumTermProduct(dfs, GBB_R, GBB_X);
+
+        EXPECT_NEAR(vRhoA, vRhoA_GF, EPS);
+        EXPECT_NEAR(vRhoB, vRhoB_GF, EPS);
+        EXPECT_NEAR(vGammaAA, vGammaAA_GF, EPS);
+        EXPECT_NEAR(vGammaAB, vGammaAB_GF, EPS);
+        EXPECT_NEAR(vGammaBB, vGammaBB_GF, EPS);
+    }
+}
