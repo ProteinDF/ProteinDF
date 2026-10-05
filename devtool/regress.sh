@@ -8,6 +8,10 @@
 #   --build-dir <dir>     CMake build directory (default: build-regress)
 #   --install-dir <dir>   Install prefix (default: <build-dir>/install)
 #   --no-build            Skip build and install (use existing binaries)
+#   --format <fmt>        Reference format: auto|h5|db (default: auto)
+#                           auto: use reference.h5 if present, else pdfresults_std.db
+#                           h5:   require reference.h5 (SKIP if missing)
+#                           db:   require pdfresults_std.db (SKIP if missing)
 #   -j, --jobs <N>        Parallel build jobs (default: nproc)
 #   -h, --help            Show this help message
 #
@@ -48,6 +52,7 @@ build_dir="build-regress"
 install_dir=""
 do_build=1
 jobs=$(nproc 2>/dev/null || echo 4)
+ref_format="auto"
 
 while (($#)); do
     case "$1" in
@@ -61,6 +66,8 @@ while (($#)); do
             install_dir="$2"; shift 2 ;;
         --no-build)
             do_build=0; shift ;;
+        --format)
+            ref_format="$2"; shift 2 ;;
         -j|--jobs)
             jobs="$2"; shift 2 ;;
         -h|--help)
@@ -70,6 +77,13 @@ while (($#)); do
             show_help ;;
     esac
 done
+
+case "$ref_format" in
+    auto|h5|db) ;;
+    *)
+        echo "ERROR: --format must be one of: auto, h5, db" >&2
+        exit 1 ;;
+esac
 
 top=$(git rev-parse --show-toplevel) || exit 1
 cd "$top"
@@ -194,8 +208,9 @@ echo "--- 2. Setting up Python environment ---"
 t_py_start=$(date +%s)
 
 venv_ready=0
-if [[ -x "$venv_dir/bin/python" && -x "$venv_dir/bin/pdf-archive.py" && -x "$venv_dir/bin/pdf-test.py" ]]; then
-    if "$venv_dir/bin/python" -c "import proteindf_tools as p; import proteindf_bridge as b; import numpy as np; assert hasattr(p, 'PdfArchive'); assert hasattr(np.ndarray, 'tostring')" >/dev/null 2>&1; then
+if [[ -x "$venv_dir/bin/python" && -x "$venv_dir/bin/pdf-archive.py" && -x "$venv_dir/bin/pdf-test.py" \
+        && -x "$venv_dir/bin/pdf-archive-h5.py" && -x "$venv_dir/bin/pdf-test-h5.py" ]]; then
+    if "$venv_dir/bin/python" -c "import proteindf_tools as p; import proteindf_bridge as b; import numpy as np; import h5py; assert hasattr(p, 'PdfArchive'); assert hasattr(np.ndarray, 'tostring')" >/dev/null 2>&1; then
         venv_ready=1
     fi
 fi
@@ -320,6 +335,7 @@ trap cleanup EXIT INT TERM
 
 declare -a result_status=()
 declare -a result_time=()
+declare -a result_fmt=()
 declare -a result_iter=()
 declare -a result_calc_te=()
 declare -a result_std_te=()
@@ -339,6 +355,7 @@ for idx in "${!entries[@]}"; do
         printf "[%2d/%2d] %-22s %-4s (0s) [entry directory does not exist]\n" "$num" "$total_tests" "$entry" "FAIL"
         result_status+=("NOT_FOUND")
         result_time+=("0s")
+        result_fmt+=("-")
         result_iter+=("-")
         result_calc_te+=("N/A")
         result_std_te+=("N/A")
@@ -374,19 +391,63 @@ for idx in "${!entries[@]}"; do
         PDF.x >> "$log_file" 2>&1
     ) || pdf_exit=$?
 
-    # Step C: Archive results to SQLite db
+    # Determine reference format for this entry (per --format option)
+    ref_h5="$entry_work_dir/reference.h5"
+    ref_db="$entry_work_dir/pdfresults_std.db"
+    ref_format_used=""
+    case "$ref_format" in
+        h5)
+            [[ -f "$ref_h5" ]] && ref_format_used="h5"
+            ;;
+        db)
+            [[ -f "$ref_db" ]] && ref_format_used="db"
+            ;;
+        auto)
+            if [[ -f "$ref_h5" ]]; then
+                ref_format_used="h5"
+            elif [[ -f "$ref_db" ]]; then
+                ref_format_used="db"
+            fi
+            ;;
+    esac
+
+    # Format used to archive calc results: follow the reference format when
+    # one was found; otherwise fall back to the explicit --format (or h5 for auto).
+    if [[ -n "$ref_format_used" ]]; then
+        archive_format="$ref_format_used"
+    elif [[ "$ref_format" = "db" ]]; then
+        archive_format="db"
+    else
+        archive_format="h5"
+    fi
+
+    # Step C: Archive results (HDF5 or SQLite db, depending on archive_format)
     archive_exit=0
+    if [[ "$archive_format" = "h5" ]]; then
+        calc_file="$entry_work_dir/pdfresults.h5"
+    else
+        calc_file="$entry_work_dir/pdfresults.db"
+    fi
     if [[ $pdf_exit -eq 0 ]]; then
         (
             cd "$entry_work_dir"
-            pdf-archive.py >> "$log_file" 2>&1
+            if [[ "$archive_format" = "h5" ]]; then
+                pdf-archive-h5.py >> "$log_file" 2>&1
+            else
+                pdf-archive.py >> "$log_file" 2>&1
+            fi
         ) || archive_exit=$?
     fi
 
-    # Step D: Check results and compare with pdfresults_std.db
+    # Step D: Check results and compare with the reference file
     test_exit=0
-    std_db="$entry_work_dir/pdfresults_std.db"
-    calc_db="$entry_work_dir/pdfresults.db"
+    if [[ "$ref_format_used" = "h5" ]]; then
+        ref_file="$ref_h5"
+    elif [[ "$ref_format_used" = "db" ]]; then
+        ref_file="$ref_db"
+    else
+        ref_file=""
+    fi
 
     calc_te="N/A"
     std_te="N/A"
@@ -394,28 +455,39 @@ for idx in "${!entries[@]}"; do
     iter_str="-"
     note=""
 
-    # Extract Total Energy and iterations via proteindf_tools.PdfArchive
-    if [[ -f "$calc_db" || -f "$std_db" ]]; then
-        c_db_arg=""
-        s_db_arg=""
-        [[ -f "$calc_db" ]] && c_db_arg="$calc_db"
-        [[ -f "$std_db" ]] && s_db_arg="$std_db"
+    # Extract Total Energy and iterations via proteindf_tools
+    # (PdfParam_H5 for h5, PdfArchive for db), same quantity pdf-test(-h5).py compares.
+    if [[ -f "$calc_file" || -f "$ref_file" ]]; then
+        c_file_arg=""
+        s_file_arg=""
+        [[ -f "$calc_file" ]] && c_file_arg="$calc_file"
+        [[ -f "$ref_file" ]] && s_file_arg="$ref_file"
 
-        py_res=$("$venv_dir/bin/python" - "$c_db_arg" "$s_db_arg" << 'PYEOF'
+        py_res=$("$venv_dir/bin/python" - "$archive_format" "$c_file_arg" "$s_file_arg" << 'PYEOF'
 import sys
 import proteindf_tools as p
 
-calc_path = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else None
-std_path = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
+fmt = sys.argv[1]
+calc_path = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
+std_path = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else None
 
 c_te, s_te, d_te, i_str = "N/A", "N/A", "N/A", "-"
 c_iter, s_iter = None, None
 
+
+def load(path):
+    if fmt == "h5":
+        obj = p.PdfParam_H5()
+        obj.open(path)
+    else:
+        obj = p.PdfArchive(path)
+    itr = obj.iterations
+    return itr, obj.get_total_energy(itr)
+
+
 if calc_path:
     try:
-        arc_c = p.PdfArchive(calc_path)
-        c_iter = arc_c.iterations
-        val_c = arc_c.get_total_energy(c_iter)
+        c_iter, val_c = load(calc_path)
         if val_c is not None:
             c_te = f"{val_c:.10f}"
     except Exception:
@@ -423,9 +495,7 @@ if calc_path:
 
 if std_path:
     try:
-        arc_s = p.PdfArchive(std_path)
-        s_iter = arc_s.iterations
-        val_s = arc_s.get_total_energy(s_iter)
+        s_iter, val_s = load(std_path)
         if val_s is not None:
             s_te = f"{val_s:.10f}"
     except Exception:
@@ -458,17 +528,25 @@ PYEOF
         test_status="FAIL"
         note="PDF.x exited with $pdf_exit"
         overall_pass=0
-    elif [[ $archive_exit -ne 0 || ! -f "$calc_db" ]]; then
+    elif [[ $archive_exit -ne 0 || ! -f "$calc_file" ]]; then
         test_status="FAIL"
-        note="pdf-archive.py failed"
+        if [[ "$archive_format" = "h5" ]]; then
+            note="pdf-archive-h5.py failed"
+        else
+            note="pdf-archive.py failed"
+        fi
         overall_pass=0
-    elif [[ ! -f "$std_db" ]]; then
+    elif [[ -z "$ref_format_used" ]]; then
         test_status="SKIP"
         note="no reference"
     else
         (
             cd "$entry_work_dir"
-            pdf-test.py "$calc_db" "$std_db" >> "$log_file" 2>&1
+            if [[ "$ref_format_used" = "h5" ]]; then
+                pdf-test-h5.py -v "$calc_file" "$ref_file" >> "$log_file" 2>&1
+            else
+                pdf-test.py "$calc_file" "$ref_file" >> "$log_file" 2>&1
+            fi
         ) || test_exit=$?
 
         if [[ $test_exit -eq 0 ]]; then
@@ -494,10 +572,13 @@ PYEOF
         elapsed_sec="$((t1 - t0))s"
     fi
 
+    fmt_str="${ref_format_used:--}"
+
     printf "[%2d/%2d] %-22s %-4s (%s)%s\n" "$num" "$total_tests" "$entry" "$test_status" "$elapsed_sec" "${note:+ [$note]}"
 
     result_status+=("$test_status")
     result_time+=("$elapsed_sec")
+    result_fmt+=("$fmt_str")
     result_iter+=("$iter_str")
     result_calc_te+=("$calc_te")
     result_std_te+=("$std_te")
@@ -516,8 +597,8 @@ echo "=== Regression Test Summary ==="
 echo "Suite: $suite | Total: $total_tests | Time: ${total_elapsed}s"
 echo
 
-printf "%-4s %-22s %-8s %-6s %-18s %-18s %-11s %s\n" "No." "Entry" "Status" "Iter" "Calc TE (a.u.)" "Std TE (a.u.)" "Diff" "Note"
-printf '%0.s-' {1..105}
+printf "%-4s %-22s %-8s %-4s %-6s %-18s %-18s %-11s %s\n" "No." "Entry" "Status" "Fmt" "Iter" "Calc TE (a.u.)" "Std TE (a.u.)" "Diff" "Note"
+printf '%0.s-' {1..110}
 echo
 
 for idx in "${!entries[@]}"; do
@@ -525,17 +606,18 @@ for idx in "${!entries[@]}"; do
     num=$((idx + 1))
     status="${result_status[$idx]}"
     time_str="${result_time[$idx]}"
+    fmt="${result_fmt[$idx]}"
     istr="${result_iter[$idx]}"
     cte="${result_calc_te[$idx]}"
     ste="${result_std_te[$idx]}"
     dte="${result_diff_te[$idx]}"
     nt="${result_notes[$idx]}"
 
-    printf "%2d.  %-22s %-8s %-6s %-18s %-18s %-11s %s\n" \
-        "$num" "$entry" "$status" "$istr" "$cte" "$ste" "$dte" "$nt"
+    printf "%2d.  %-22s %-8s %-4s %-6s %-18s %-18s %-11s %s\n" \
+        "$num" "$entry" "$status" "$fmt" "$istr" "$cte" "$ste" "$dte" "$nt"
 done
 
-printf '%0.s-' {1..105}
+printf '%0.s-' {1..110}
 echo
 
 # Print detailed diffs for failed tests
