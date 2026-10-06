@@ -12,8 +12,10 @@
 #       continue the session once (-c). Without -W the script exits with 75.
 #   -b  branch (default: the "Branch:" line in the TASK file)
 #   -m  model passed to the agent CLI
+#   -v  stream the agent's whole output (default: only the last 80 lines, with
+#       consecutive duplicate lines collapsed, are shown after the run)
 #
-# Output is saved under <git-common-dir>/agent-logs/.
+# Output is saved in full under <git-common-dir>/agent-logs/.
 # Exit status: the agent's status, or 75 when it stopped on its usage limit.
 set -euo pipefail
 
@@ -24,7 +26,8 @@ continue_session=0
 wait_quota=0
 branch=""
 model=""
-while getopts "a:icWb:m:h" opt; do
+verbose=0
+while getopts "a:icWb:m:vh" opt; do
     case "$opt" in
         a) agent=$OPTARG ;;
         i) interactive=1 ;;
@@ -32,11 +35,12 @@ while getopts "a:icWb:m:h" opt; do
         W) wait_quota=1 ;;
         b) branch=$OPTARG ;;
         m) model=$OPTARG ;;
-        *) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+        v) verbose=1 ;;
+        *) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
     esac
 done
 shift $((OPTIND - 1))
-(($# >= 1)) || { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+(($# >= 1)) || { sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
 task=$(realpath "$1"); shift
 extra="$*"
@@ -117,8 +121,15 @@ if ((interactive)); then
     (cd "$wt" && exec "${cmd[@]}" -i "$prompt")
     status=$?
 else
-    (cd "$wt" && exec "${cmd[@]}" -p "$prompt" "$auto_approve") 2>&1 | tee "$log"
-    status=${PIPESTATUS[0]}
+    if ((verbose)); then
+        (cd "$wt" && exec "${cmd[@]}" -p "$prompt" "$auto_approve") 2>&1 | tee "$log"
+        status=${PIPESTATUS[0]}
+    else
+        (cd "$wt" && exec "${cmd[@]}" -p "$prompt" "$auto_approve") >"$log" 2>&1
+        status=$?
+        echo "--- last lines of the agent output (full log: $log)"
+        uniq "$log" | tail -n 80
+    fi
 fi
 set -e
 
