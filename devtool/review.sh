@@ -3,29 +3,32 @@
 # Rebuilds the branch from scratch, runs check.sh with PDF_HOME unset, optionally
 # runs MPI tests on 4 processes, and saves the full output for the review record.
 #
-# Usage: devtool/review.sh [--keep-build] [--mpi <gtest filter>] [--np <n>] <branch>
+# Usage: devtool/review.sh [--keep-build] [--verbose] [--mpi <gtest filter>] [--np <n>] <branch>
 #   --keep-build  keep <worktree>/build-review afterwards (default: removed)
 #   --mpi         also run pdf-xtest.MPI with this --gtest_filter on --np processes
 #                 and count the per-process results
 #   --np          number of MPI processes (default: 4)
+#   --verbose     print the whole output (default: header, then the summary only)
 #
-# Output is saved under <git-common-dir>/review-logs/.
+# The full output is always saved under <git-common-dir>/review-logs/.
 set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 keep=0
+verbose=0
 mpi_filter=""
 np=4
 while (($#)); do
     case "$1" in
         --keep-build) keep=1; shift ;;
+        --verbose) verbose=1; shift ;;
         --mpi) mpi_filter=$2; shift 2 ;;
         --np) np=$2; shift 2 ;;
-        -*) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+        -*) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
         *) break ;;
     esac
 done
-(($# == 1)) || { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+(($# == 1)) || { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 branch=$1
 
 wt=$("$here/flow.sh" path "$branch") || exit 1
@@ -87,7 +90,17 @@ run() {
     ((check_status == 0 && mpi_status == 0))
 }
 
-run 2>&1 | tee "$log"
-status=${PIPESTATUS[0]}
+if ((verbose)); then
+    run 2>&1 | tee "$log"
+    status=${PIPESTATUS[0]}
+else
+    run >"$log" 2>&1
+    status=$?
+    # header (up to the diffstat), the check.sh summary, the MPI result and the verdict
+    sed -n '1,/^--- worktree status/p' "$log" | sed '$d'
+    sed -n '/^=== summary/,/^--- MPI/p' "$log" | sed '/^--- MPI/d'
+    sed -n '/^--- MPI/,$p' "$log" | grep -v '^kept ' | grep -E '^(--- MPI|mpirun exit|processes|FAILED lines|=== review)|FAILED|PASSED' || true
+    sed -n '/^--- worktree status/,/^--- check.sh/p' "$log" | sed '1d;$d' | grep . | sed 's/^/uncommitted: /'
+fi
 echo "log: $log"
 exit "$status"

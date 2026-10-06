@@ -17,6 +17,8 @@
 #                           after the run, instead of discarding it with the
 #                           temporary workspace. Useful for inspecting a run
 #                           or harvesting pdfresults.h5 as a new reference.h5.
+#   --full                Print every entry (default: PASS rows are hidden from the
+#                           progress lines and the summary table)
 #   -j, --jobs <N>        Parallel build jobs (default: nproc)
 #   -h, --help            Show this help message
 #
@@ -59,6 +61,7 @@ do_build=1
 jobs=$(nproc 2>/dev/null || echo 4)
 ref_format="auto"
 keep_work_dir=""
+full=0
 
 while (($#)); do
     case "$1" in
@@ -76,6 +79,8 @@ while (($#)); do
             ref_format="$2"; shift 2 ;;
         --keep-work-dir)
             keep_work_dir="$2"; shift 2 ;;
+        --full)
+            full=1; shift ;;
         -j|--jobs)
             jobs="$2"; shift 2 ;;
         -h|--help)
@@ -593,7 +598,9 @@ PYEOF
 
     fmt_str="${ref_format_used:--}"
 
-    printf "[%2d/%2d] %-22s %-4s (%s)%s\n" "$num" "$total_tests" "$entry" "$test_status" "$elapsed_sec" "${note:+ [$note]}"
+    if ((full)) || [[ "$test_status" != "PASS" ]]; then
+        printf "[%2d/%2d] %-22s %-4s (%s)%s\n" "$num" "$total_tests" "$entry" "$test_status" "$elapsed_sec" "${note:+ [$note]}"
+    fi
 
     result_status+=("$test_status")
     result_time+=("$elapsed_sec")
@@ -632,12 +639,19 @@ for idx in "${!entries[@]}"; do
     dte="${result_diff_te[$idx]}"
     nt="${result_notes[$idx]}"
 
+    # compact view: PASS rows are folded into the count below (--full shows them)
+    if ((!full)) && [[ "$status" == "PASS" ]]; then
+        continue
+    fi
     printf "%2d.  %-22s %-8s %-4s %-6s %-18s %-18s %-11s %s\n" \
         "$num" "$entry" "$status" "$fmt" "$istr" "$cte" "$ste" "$dte" "$nt"
 done
 
 printf '%0.s-' {1..110}
 echo
+if ((!full)); then
+    echo "(PASS rows are hidden; use --full to list all $total_tests entries)"
+fi
 
 # Print detailed diffs for failed tests
 failed_count=0
@@ -670,9 +684,9 @@ echo "All test logs saved to: $logs_dir/"
 
 if ((failed_count == 0)); then
     if ((skipped_count > 0)); then
-        echo "Result: ALL TESTS PASSED ($skipped_count skipped, ${total_elapsed}s)"
+        echo "Result: ALL TESTS PASSED ($passed_count passed, $skipped_count skipped, ${total_elapsed}s)"
     else
-        echo "Result: ALL TESTS PASSED (${total_elapsed}s)"
+        echo "Result: ALL TESTS PASSED ($passed_count passed, ${total_elapsed}s)"
     fi
     exit 0
 else
