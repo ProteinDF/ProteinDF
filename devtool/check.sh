@@ -2,22 +2,26 @@
 # Definition-of-done checks for a working branch. Run it in the branch's worktree.
 # Both the implementing agent and the reviewer run this and paste its output verbatim.
 #
-# Usage: devtool/check.sh [--base <ref>] [--build-dir <dir>] [--no-build]
+# Usage: devtool/check.sh [--base <ref>] [--build-dir <dir>] [--no-build] [--verbose]
 #   --base       ref to diff against (default: develop)
 #   --build-dir  CMake build directory (default: build-check)
 #   --no-build   only run the diff checks
+#   --verbose    print the whole ctest output (default: the last lines of the ctest
+#                output and the failed tests; the full output is in <build-dir>/check-ctest.log)
 # Extra CMake options can be passed via PDF_CMAKE_ARGS (e.g. "-DUSE_HDF5=on").
 set -uo pipefail
 
 base=develop
 build_dir=build-check
 do_build=1
+verbose=0
 while (($#)); do
     case "$1" in
         --base) base=$2; shift 2 ;;
         --build-dir) build_dir=$2; shift 2 ;;
         --no-build) do_build=0; shift ;;
-        *) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+        --verbose) verbose=1; shift ;;
+        *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
     esac
 done
 
@@ -104,10 +108,24 @@ if ((do_build)); then
         ntests=$(ctest --test-dir "$build_dir" -N 2>/dev/null | sed -n 's/^Total Tests: //p')
         if [[ -z "$ntests" || "$ntests" == 0 ]]; then
             record tests SKIP "no tests registered (GTest not found?)"
-        elif ctest --test-dir "$build_dir" --output-on-failure -j "$(nproc)"; then
-            record tests PASS "$ntests test(s)"
         else
-            record tests FAIL
+            ctest_log="$build_dir/check-ctest.log"
+            ctest --test-dir "$build_dir" --output-on-failure -j "$(nproc)" >"$ctest_log" 2>&1
+            ctest_status=$?
+            if ((verbose)); then
+                cat "$ctest_log"
+            elif ((ctest_status == 0)); then
+                tail -n 6 "$ctest_log"
+            else
+                # failed tests with their output, then the ctest summary
+                grep -E '^\[  FAILED  \]|Failed|\*\*\*' "$ctest_log" | sort -u | head -40
+                tail -n 15 "$ctest_log"
+            fi
+            if ((ctest_status == 0)); then
+                record tests PASS "$ntests test(s)"
+            else
+                record tests FAIL "see $ctest_log"
+            fi
         fi
     fi
 fi
