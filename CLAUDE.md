@@ -5,6 +5,7 @@
 ## Claudeがやること
 
 1. **タスク指示書を書く**: ユーザーと相談して`private/tasks/TASK_<name>.md`を`doc/tasks/TEMPLATE.md`から作る。**タスク指示書・`TODO.md`・`SPEC.md`は非公開**で、ProteinDF本体とは別の非公開リポジトリで管理する(developのworktreeの`private/`はそこへのシンボリックリンク、`TODO.md`・`SPEC.md`も`private/`へのリンク)。書いたら非公開リポジトリにコミットする(`git -C private commit`)。ProteinDF本体にはコミットしない。不具合の分析などを含むため、内容をコミットメッセージや公開されるファイルに書き写さない。設計判断が必要な点は書く前にユーザーに確認する。
+   - **指示書は短く、タスクは小さくする**: 指示書は約3KB、対象・完了の定義とも各5項目以内を目安にし、背景は5行以内、調査の経緯や数値は`TODO.md`・`SPEC.md`に置く(実装担当は毎回これを読み込むのでコンテキストを使う)。超えるなら調査・修正・基準値の更新などに分けて複数のTASKにする。レビュー結果も要点だけを書く。
 2. **実装を依頼する**: ユーザーの指示があれば`devtool/delegate.sh private/tasks/TASK_<name>.md`を実行する(時間がかかるのでバックグラウンドで実行する)。ユーザー自身がagy / Copilotに渡す場合もある。
    - agyが利用上限で止まると`delegate.sh`は終了コード75で終わる。再開の方法(上限のリセットを待って`-c`で続ける、`-W`で自動的に待つ、`-a copilot`に切り替える)はユーザーに確認する。
 3. **レビューする**: ブランチのworktree(`devtool/flow.sh path <branch>`)で`/code-review`を使い、あわせて次を行う。
