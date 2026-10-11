@@ -17,25 +17,30 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfInputdata.h"
-
-#include <iostream>
 #include <sstream>
 
 #include "CnError.h"
-#include "DfObject.h"
 #include "Fl_Geometry.h"
 #include "Fl_Gto.h"
-#include "PdfKeyword.h"
-#include "PdfUserInput.h"
+#include "TlPrdctbl.h"
+#include "TlResidue.h"
+
+#include "TlOrbitalInfo.h"
+#include "TlOrbitalInfo_Density.h"
+#include "TlOrbitalInfo_XC.h"
+
 #include "TlFile.h"
 #include "TlLogging.h"
+#include "TlUtils.h"
+
+#include "PdfKeyword.h"
+#include "PdfUserInput.h"
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
 #include "TlOrbitalInfo_XC.h"
-#include "TlPrdctbl.h"
-#include "TlResidue.h"
-#include "TlUtils.h"
+
+#include "DfObject.h"
 
 DfInputdata::DfInputdata() {}
 

@@ -1,8 +1,9 @@
-#include <climits>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <cstdlib>
 #include <fstream>
 #include <string>
-#include <vector>
 
 #include "PdfKeyword.h"
 #include "PdfUserInput.h"
@@ -12,53 +13,63 @@
 
 namespace {
 
-    void ensurePdfHome() {
-        const char* env = std::getenv("PDF_HOME");
-        std::string pdfHome = (env != nullptr) ? env : "";
-        if (!pdfHome.empty() &&
-            TlFile::isExistFile(pdfHome + "/data/pdfkwd.mpac") &&
-            TlFile::isExistFile(pdfHome + "/data/alias.mpac")) {
-            return;
+    class ScopedPdfHome {
+    public:
+        ScopedPdfHome() {
+            const char* current = std::getenv("PDF_HOME");
+            if (current != nullptr) {
+                hasOriginal_ = true;
+                original_ = current;
+            } else {
+                hasOriginal_ = false;
+            }
+
+#if defined(PDFKWD_MPAC_PATH) && defined(ALIAS_MPAC_PATH)
+            char tempTemplate[] = "/tmp/test_pdfhome_XXXXXX";
+            char* dir = mkdtemp(tempTemplate);
+            if (dir != nullptr) {
+                tempDir_ = dir;
+                std::string dataDir = tempDir_ + "/data";
+                mkdir(dataDir.c_str(), 0755);
+
+                if (TlFile::isExistFile(PDFKWD_MPAC_PATH)) {
+                    symlink(PDFKWD_MPAC_PATH, (dataDir + "/pdfkwd.mpac").c_str());
+                }
+                if (TlFile::isExistFile(ALIAS_MPAC_PATH)) {
+                    symlink(ALIAS_MPAC_PATH, (dataDir + "/alias.mpac").c_str());
+                }
+
+                setenv("PDF_HOME", tempDir_.c_str(), 1);
+            }
+#endif
         }
 
-        const std::vector<std::string> searchBases = {
-            pdfHome,
-            ".",
-            "..",
-            "../..",
-            "build-check/install",
-            "build-regress/install",
-            "build/install"};
+        ~ScopedPdfHome() {
+            if (hasOriginal_) {
+                setenv("PDF_HOME", original_.c_str(), 1);
+            } else {
+                unsetenv("PDF_HOME");
+            }
 
-        const std::vector<std::string> subDirs = {
-            "/install",
-            "/build-check/install",
-            "/build-regress/install",
-            ""};
-
-        for (size_t i = 0; i < searchBases.size(); ++i) {
-            if (searchBases[i].empty())
-                continue;
-            for (size_t j = 0; j < subDirs.size(); ++j) {
-                std::string candidate = searchBases[i] + subDirs[j];
-                if (TlFile::isExistFile(candidate + "/data/pdfkwd.mpac") &&
-                    TlFile::isExistFile(candidate + "/data/alias.mpac")) {
-                    char resolved[PATH_MAX];
-                    if (realpath(candidate.c_str(), resolved) != nullptr) {
-                        setenv("PDF_HOME", resolved, 1);
-                    } else {
-                        setenv("PDF_HOME", candidate.c_str(), 1);
-                    }
-                    return;
-                }
+            if (!tempDir_.empty()) {
+                std::string dataDir = tempDir_ + "/data";
+                unlink((dataDir + "/pdfkwd.mpac").c_str());
+                unlink((dataDir + "/alias.mpac").c_str());
+                rmdir(dataDir.c_str());
+                rmdir(tempDir_.c_str());
             }
         }
-    }
+
+    private:
+        bool hasOriginal_ = false;
+        std::string original_;
+        std::string tempDir_;
+    };
 
 }  // namespace
 
 TEST(PdfXCFunctionalDefault, OmittedXCDefaultB3LYP) {
-    ensurePdfHome();
+    ScopedPdfHome scopedPdfHome;
 
     const std::string filename = "test_userInput_omitted.txt";
     {
@@ -85,7 +96,7 @@ TEST(PdfXCFunctionalDefault, OmittedXCDefaultB3LYP) {
 }
 
 TEST(PdfXCFunctionalDefault, ExplicitXCPotentialPreserved) {
-    ensurePdfHome();
+    ScopedPdfHome scopedPdfHome;
 
     const std::string filename = "test_userInput_svwn.txt";
     {
@@ -111,7 +122,7 @@ TEST(PdfXCFunctionalDefault, ExplicitXCPotentialPreserved) {
 }
 
 TEST(PdfXCFunctionalDefault, ExplicitXCFunctionalPreserved) {
-    ensurePdfHome();
+    ScopedPdfHome scopedPdfHome;
 
     const std::string filename = "test_userInput_hf.txt";
     {
@@ -134,4 +145,50 @@ TEST(PdfXCFunctionalDefault, ExplicitXCFunctionalPreserved) {
     std::remove(filename.c_str());
 
     EXPECT_EQ(std::string("HF"), param["xc_functional"].getStr());
+}
+
+// Tests for review item 1 & 4: scf-memory-saving is always overridden to "yes"
+TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWhenOmitted) {
+    const std::string filename = "test_userInput_memsave_omitted.txt";
+    {
+        std::ofstream ofs(filename.c_str());
+        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = no\n";
+        ofs.close();
+    }
+
+    PdfUserInput userInput(filename);
+    userInput.load();
+    std::remove(filename.c_str());
+
+    EXPECT_EQ(std::string("yes"), userInput.getSerializeData()["scf-memory-saving"].getStr());
+}
+
+TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWithNormalXC) {
+    const std::string filename = "test_userInput_memsave_normal.txt";
+    {
+        std::ofstream ofs(filename.c_str());
+        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = no\nxc-potential = b3lyp\n";
+        ofs.close();
+    }
+
+    PdfUserInput userInput(filename);
+    userInput.load();
+    std::remove(filename.c_str());
+
+    EXPECT_EQ(std::string("yes"), userInput.getSerializeData()["scf-memory-saving"].getStr());
+}
+
+TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWithTildeXC) {
+    const std::string filename = "test_userInput_memsave_tilde.txt";
+    {
+        std::ofstream ofs(filename.c_str());
+        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = no\nxc-potential = svwn~\n";
+        ofs.close();
+    }
+
+    PdfUserInput userInput(filename);
+    userInput.load();
+    std::remove(filename.c_str());
+
+    EXPECT_EQ(std::string("yes"), userInput.getSerializeData()["scf-memory-saving"].getStr());
 }
