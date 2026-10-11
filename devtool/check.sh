@@ -27,6 +27,10 @@ done
 
 top=$(git rev-parse --show-toplevel) || exit 1
 cd "$top"
+common_dir=$(git rev-parse --git-common-dir) || exit 1
+if [[ -d "$common_dir/regress-venv/bin" ]]; then
+    export PATH="$common_dir/regress-venv/bin:$PATH"
+fi
 merge_base=$(git merge-base "$base" HEAD) || exit 1
 
 declare -a results=()

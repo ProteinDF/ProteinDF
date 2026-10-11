@@ -44,3 +44,6 @@ doc/api/*
 # private notes and task files (kept in a separate private repository, linked as private/)
 /private
 /doc/tasks/TASK_*.md
+
+# generated data files
+/data/pdfkwd.mpac
