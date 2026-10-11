@@ -465,7 +465,7 @@
     syntax: (real)
 - keyword: xc_functional
   property:
-    default: svwn
+    default: b3lyp
     desc_jp: 交換相関汎関数の指定
     description: XC-functional
     hidden: false
