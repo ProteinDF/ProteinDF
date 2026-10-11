@@ -57,6 +57,8 @@ TASKと作業ブランチの状況は`devtool/tasks.sh`(`--all`でマージ済�
 devtool/setup-dev-tools.sh
 ```
 
+ビルドには`data/pdfkwd.yaml`から`pdfkwd.mpac`を生成するため`ProteinDF_bridge`の`yml2mpac`が必要です(`regress-venv`等にインストールしてPATHを通すか`-DYML2MPAC_EXECUTABLE`で指定)。
+
 ```bash
 devtool/check.sh   # 差分の空白エラー、変更行のclang-format、ビルド、ctest
 devtool/regress.sh # 計算結果の回帰テスト(ProteinDF_testのserial_devスイート)
