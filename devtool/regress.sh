@@ -164,65 +164,9 @@ echo "Logs dir:    $logs_dir"
 echo
 
 # -----------------------------------------------------------------------------
-# 1. Build and install ProteinDF
+# 1. Python environment (uv venv)
 # -----------------------------------------------------------------------------
-if ((do_build)); then
-    echo "--- 1. Building and installing ProteinDF ---"
-    t_build_start=$(date +%s)
-    mkdir -p "$build_dir"
-
-    gen=()
-    if [[ ! -f "$build_dir/CMakeCache.txt" ]]; then
-        ninja --version >/dev/null 2>&1 && gen=(-G Ninja)
-    fi
-
-    # Ensure -O2 optimization flag is present
-    cmake_cxx_flags="-O2 -DNDEBUG"
-
-    echo "Configuring CMake..."
-    # shellcheck disable=SC2086
-    if ! cmake -S . -B "$build_dir" "${gen[@]}" \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_CXX_FLAGS="$cmake_cxx_flags" \
-        -DCMAKE_INSTALL_PREFIX="$install_dir" \
-        ${PDF_CMAKE_ARGS:-} > "$build_dir/regress-configure.log" 2>&1; then
-        echo "CMake configure failed. See $build_dir/regress-configure.log" >&2
-        tail -n 30 "$build_dir/regress-configure.log" >&2
-        exit 1
-    fi
-
-    echo "Building (jobs: $jobs)..."
-    if ! cmake --build "$build_dir" -j "$jobs" > "$build_dir/regress-build.log" 2>&1; then
-        echo "Build failed. See $build_dir/regress-build.log" >&2
-        grep -E "error|Error [0-9]" "$build_dir/regress-build.log" | sort -u | head -30 >&2
-        exit 1
-    fi
-
-    echo "Installing to $install_dir..."
-    if ! cmake --install "$build_dir" > "$build_dir/regress-install.log" 2>&1; then
-        echo "Install failed. See $build_dir/regress-install.log" >&2
-        tail -n 30 "$build_dir/regress-install.log" >&2
-        exit 1
-    fi
-
-    t_build_end=$(date +%s)
-    echo "Build & install completed in $((t_build_end - t_build_start))s."
-    echo
-else
-    echo "--- 1. Skipping build (--no-build specified) ---"
-    echo
-fi
-
-# Verify installation
-if [[ ! -x "$install_dir/bin/PDF.x" ]]; then
-    echo "ERROR: $install_dir/bin/PDF.x not found or not executable." >&2
-    exit 1
-fi
-
-# -----------------------------------------------------------------------------
-# 2. Python environment (uv venv)
-# -----------------------------------------------------------------------------
-echo "--- 2. Setting up Python environment ---"
+echo "--- 1. Setting up Python environment ---"
 t_py_start=$(date +%s)
 
 venv_ready=0
@@ -305,6 +249,65 @@ fi
 t_py_end=$(date +%s)
 echo "Python environment checked/prepared in $((t_py_end - t_py_start))s."
 echo
+
+# Ensure venv tools (such as yml2mpac) are available during build
+export PATH="$venv_dir/bin:$PATH"
+
+# -----------------------------------------------------------------------------
+# 2. Build and install ProteinDF
+# -----------------------------------------------------------------------------
+if ((do_build)); then
+    echo "--- 2. Building and installing ProteinDF ---"
+    t_build_start=$(date +%s)
+    mkdir -p "$build_dir"
+
+    gen=()
+    if [[ ! -f "$build_dir/CMakeCache.txt" ]]; then
+        ninja --version >/dev/null 2>&1 && gen=(-G Ninja)
+    fi
+
+    # Ensure -O2 optimization flag is present
+    cmake_cxx_flags="-O2 -DNDEBUG"
+
+    echo "Configuring CMake..."
+    # shellcheck disable=SC2086
+    if ! cmake -S . -B "$build_dir" "${gen[@]}" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CXX_FLAGS="$cmake_cxx_flags" \
+        -DCMAKE_INSTALL_PREFIX="$install_dir" \
+        ${PDF_CMAKE_ARGS:-} > "$build_dir/regress-configure.log" 2>&1; then
+        echo "CMake configure failed. See $build_dir/regress-configure.log" >&2
+        tail -n 30 "$build_dir/regress-configure.log" >&2
+        exit 1
+    fi
+
+    echo "Building (jobs: $jobs)..."
+    if ! cmake --build "$build_dir" -j "$jobs" > "$build_dir/regress-build.log" 2>&1; then
+        echo "Build failed. See $build_dir/regress-build.log" >&2
+        grep -E "error|Error [0-9]" "$build_dir/regress-build.log" | sort -u | head -30 >&2
+        exit 1
+    fi
+
+    echo "Installing to $install_dir..."
+    if ! cmake --install "$build_dir" > "$build_dir/regress-install.log" 2>&1; then
+        echo "Install failed. See $build_dir/regress-install.log" >&2
+        tail -n 30 "$build_dir/regress-install.log" >&2
+        exit 1
+    fi
+
+    t_build_end=$(date +%s)
+    echo "Build & install completed in $((t_build_end - t_build_start))s."
+    echo
+else
+    echo "--- 2. Skipping build (--no-build specified) ---"
+    echo
+fi
+
+# Verify installation
+if [[ ! -x "$install_dir/bin/PDF.x" ]]; then
+    echo "ERROR: $install_dir/bin/PDF.x not found or not executable." >&2
+    exit 1
+fi
 
 # -----------------------------------------------------------------------------
 # 3. Resolve test entries

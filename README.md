@@ -18,6 +18,7 @@ The standard configure scripts given will work for building it on any of the sys
 
 In order to build ProteinDF, you must have CMake, LAPACK, ScaLAPACK, MPI
 and any related dev packages installed.
+Building also requires `yml2mpac` (provided by `ProteinDF_bridge`) in PATH to generate keyword definitions from YAML.
 
 ### build ProteinDF
 
