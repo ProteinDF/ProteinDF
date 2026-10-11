@@ -17,30 +17,25 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfInputdata.h"
+
+#include <iostream>
 #include <sstream>
 
 #include "CnError.h"
+#include "DfObject.h"
 #include "Fl_Geometry.h"
 #include "Fl_Gto.h"
-#include "TlPrdctbl.h"
-#include "TlResidue.h"
-
-#include "TlOrbitalInfo.h"
-#include "TlOrbitalInfo_Density.h"
-#include "TlOrbitalInfo_XC.h"
-
-#include "TlFile.h"
-#include "TlLogging.h"
-#include "TlUtils.h"
-
 #include "PdfKeyword.h"
 #include "PdfUserInput.h"
+#include "TlFile.h"
+#include "TlLogging.h"
 #include "TlMsgPack.h"
 #include "TlOrbitalInfo.h"
 #include "TlOrbitalInfo_Density.h"
 #include "TlOrbitalInfo_XC.h"
-
-#include "DfObject.h"
+#include "TlPrdctbl.h"
+#include "TlResidue.h"
+#include "TlUtils.h"
 
 DfInputdata::DfInputdata() {}
 
@@ -58,6 +53,10 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput) {
         pdfUserInput.load();
         TlSerializeData inputParam = pdfUserInput.getSerializeData();
         pdfKwd.convertAlias(&(inputParam));
+
+        if (!inputParam.hasKey("xc_functional")) {
+            std::cout << "warning: 'xc-potential' is not specified; 'b3lyp' is used." << std::endl;
+        }
 
         // include user input parameters
         std::string mpacFilePath = param["pdf_param_path"].getStr();

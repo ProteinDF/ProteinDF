@@ -824,8 +824,11 @@ bool PdfUserInput::check() {
     bool bAnswer = true;
 
     // xc-poteintial
-    {
-        std::string sXcPotential = this->data_["xc_functional"].getStr();
+    if (this->data_.hasKey("xc_functional") ||
+        this->data_.hasKey("xc-potential")) {
+        const std::string key =
+            this->data_.hasKey("xc_functional") ? "xc_functional" : "xc-potential";
+        std::string sXcPotential = this->data_[key].getStr();
         std::string sTilde = "";
         if (!sXcPotential.empty() && sXcPotential.back() == '~') {
             sTilde = "~";
