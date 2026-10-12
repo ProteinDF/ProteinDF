@@ -823,24 +823,11 @@ void PdfUserInput::alias() {
 bool PdfUserInput::check() {
     bool bAnswer = true;
 
-    // xc-poteintial
-    {
-        std::string sXcPotential = this->data_["xc_functional"].getStr();
-        std::string sTilde = "";
-        if (!sXcPotential.empty() && sXcPotential.back() == '~') {
-            sTilde = "~";
-            sXcPotential = sXcPotential.substr(0, sXcPotential.length() - 1);
-        }
-
-        if (sTilde == "") {
-            if ((TlUtils::toUpper(this->data_["scf-memory-saving"].getStr()) ==
-                 "NO")) {
-                std::cout << " 'scf-memory-saving = yes' overridded."
-                          << std::endl;
-            }
-            this->data_["scf-memory-saving"] = "yes";
-        }
+    // scf-memory-saving
+    if (TlUtils::toUpper(this->data_["scf-memory-saving"].getStr()) == "NO") {
+        std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
     }
+    this->data_["scf-memory-saving"] = "yes";
 
     return bAnswer;
 }
