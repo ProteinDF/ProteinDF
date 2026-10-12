@@ -56,9 +56,11 @@ int TlSystem::getPPID() {
 }
 
 std::string TlSystem::getEnv(const std::string& key) {
-    std::string ans(std::getenv(key.c_str()));
-
-    return ans;
+    const char* val = std::getenv(key.c_str());
+    if (val == nullptr) {
+        return "";
+    }
+    return std::string(val);
 }
 
 std::string TlSystem::getHostName() {

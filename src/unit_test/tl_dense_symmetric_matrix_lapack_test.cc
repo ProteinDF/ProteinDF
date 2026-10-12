@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "TlFile.h"
 #include "TlSystem.h"
 #include "TlUtils.h"
 #include "config.h"
@@ -255,18 +256,30 @@ TEST(TlDenseSymmetricMatrix_Lapack, mul_gen_sym) {
 TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
     const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
 
+    const std::string mPath = TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str());
+    const std::string vPath = TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str());
+    const std::string mvPath = TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str());
+
+    ASSERT_TRUE(TlFile::isExistFile(mPath));
+    ASSERT_TRUE(TlFile::isExistFile(vPath));
+    ASSERT_TRUE(TlFile::isExistFile(mvPath));
+
     TlDenseSymmetricMatrix_Lapack M;
     TlDenseGeneralMatrix_Lapack V;
-    M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
-    V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(M.load(mPath));
+    ASSERT_TRUE(V.load(vPath));
+    ASSERT_GT(M.getNumOfRows(), 0);
+    ASSERT_GT(V.getNumOfCols(), 0);
 
     TlDenseGeneralMatrix_Lapack mv = M * V;
 
     TlDenseGeneralMatrix_Lapack MV;
-    MV.load(TlUtils::format("%s/data/unit_test/MV.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(MV.load(mvPath));
 
     const int rows = M.getNumOfRows();
     const int cols = V.getNumOfCols();
+    ASSERT_EQ(MV.getNumOfRows(), rows);
+    ASSERT_EQ(MV.getNumOfCols(), cols);
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             EXPECT_NEAR(MV.get(i, j), mv.get(i, j), 1.0E-5);
@@ -277,10 +290,20 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_MV) {
 TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
     const std::string PDF_HOME = TlSystem::getEnv("PDF_HOME");
 
+    const std::string mPath = TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str());
+    const std::string vPath = TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str());
+    const std::string vmvPath = TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str());
+
+    ASSERT_TRUE(TlFile::isExistFile(mPath));
+    ASSERT_TRUE(TlFile::isExistFile(vPath));
+    ASSERT_TRUE(TlFile::isExistFile(vmvPath));
+
     TlDenseSymmetricMatrix_Lapack M;
     TlDenseGeneralMatrix_Lapack V;
-    M.load(TlUtils::format("%s/data/unit_test/M.mat", PDF_HOME.c_str()));
-    V.load(TlUtils::format("%s/data/unit_test/V.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(M.load(mPath));
+    ASSERT_TRUE(V.load(vPath));
+    ASSERT_GT(M.getNumOfRows(), 0);
+    ASSERT_GT(V.getNumOfCols(), 0);
 
     TlDenseGeneralMatrix_Lapack tV = V;
     tV.transposeInPlace();
@@ -288,9 +311,11 @@ TEST(TlDenseSymmetricMatrix_Lapack, multiplication_VMV) {
     TlDenseGeneralMatrix_Lapack vmv = tV * M * V;
 
     TlDenseSymmetricMatrix_Lapack VMV;
-    VMV.load(TlUtils::format("%s/data/unit_test/VMV.mat", PDF_HOME.c_str()));
+    ASSERT_TRUE(VMV.load(vmvPath));
 
     const int dim = V.getNumOfCols();
+    ASSERT_EQ(VMV.getNumOfRows(), dim);
+    ASSERT_EQ(VMV.getNumOfCols(), dim);
     for (int i = 0; i < dim; ++i) {
         for (int j = 0; j < dim; ++j) {
             EXPECT_NEAR(VMV.get(i, j), vmv.get(i, j), 1.0E-5);
@@ -498,4 +523,101 @@ TEST(TlDenseSymmetricMatrix_Lapack, eig) {
             EXPECT_NEAR(lhs.get(i, j), rhs.get(i, j), 1.0E-2);
         }
     }
+}
+
+TEST(TlDenseSymmetricMatrix_Lapack, allocatedSize) {
+    // 1. Dimension constructor with 0
+    {
+        TlDenseSymmetricMatrix_Lapack mat(0);
+        EXPECT_EQ(0, mat.getNumOfRows());
+        EXPECT_EQ(0, mat.getNumOfCols());
+        EXPECT_EQ(0u, mat.getAllocatedSize());
+    }
+
+    // 2. Dimension constructor with positive dim
+    const int dim = 50;
+    const std::size_t packedElements = static_cast<std::size_t>(dim) * (dim + 1) / 2;
+    TlDenseSymmetricMatrix_Lapack mat(dim);
+    EXPECT_EQ(dim, mat.getNumOfRows());
+    EXPECT_EQ(dim, mat.getNumOfCols());
+    EXPECT_EQ(packedElements, mat.getAllocatedSize());
+
+    // 3. Constructor with buffer
+    std::vector<double> buf(packedElements, 1.23);
+    TlDenseSymmetricMatrix_Lapack matBuf(dim, &(buf[0]));
+    EXPECT_EQ(packedElements, matBuf.getAllocatedSize());
+    EXPECT_DOUBLE_EQ(1.23, matBuf.get(0, 0));
+
+    // 4. Copy constructor
+    TlDenseSymmetricMatrix_Lapack matCopy(matBuf);
+    EXPECT_EQ(dim, matCopy.getNumOfRows());
+    EXPECT_EQ(dim, matCopy.getNumOfCols());
+    EXPECT_EQ(packedElements, matCopy.getAllocatedSize());
+    EXPECT_DOUBLE_EQ(1.23, matCopy.get(0, 0));
+
+    // 5. Conversion constructor from general matrix
+    TlDenseGeneralMatrix_Lapack gen(dim, dim);
+    for (int r = 0; r < dim; ++r) {
+        for (int c = 0; c < dim; ++c) {
+            gen.set(r, c, r + c);
+        }
+    }
+    TlDenseSymmetricMatrix_Lapack matFromGen(gen);
+    EXPECT_EQ(dim, matFromGen.getNumOfRows());
+    EXPECT_EQ(dim, matFromGen.getNumOfCols());
+    EXPECT_EQ(packedElements, matFromGen.getAllocatedSize());
+    EXPECT_DOUBLE_EQ(0.0, matFromGen.get(0, 0));
+    EXPECT_DOUBLE_EQ(2.0, matFromGen.get(1, 1));
+
+    // 6. Copy assignment operator
+    TlDenseSymmetricMatrix_Lapack matAssigned;
+    matAssigned = matBuf;
+    EXPECT_EQ(dim, matAssigned.getNumOfRows());
+    EXPECT_EQ(dim, matAssigned.getNumOfCols());
+    EXPECT_EQ(packedElements, matAssigned.getAllocatedSize());
+    EXPECT_DOUBLE_EQ(1.23, matAssigned.get(0, 0));
+
+    // 7. resize to larger dimension
+    const int largerDim = 80;
+    const std::size_t largerPackedElements = static_cast<std::size_t>(largerDim) * (largerDim + 1) / 2;
+    matAssigned.resize(largerDim);
+    EXPECT_EQ(largerDim, matAssigned.getNumOfRows());
+    EXPECT_EQ(largerDim, matAssigned.getNumOfCols());
+    EXPECT_EQ(largerPackedElements, matAssigned.getAllocatedSize());
+    EXPECT_DOUBLE_EQ(1.23, matAssigned.get(0, 0));
+
+    // 8. resize to smaller dimension
+    const int smallerDim = 30;
+    const std::size_t smallerPackedElements = static_cast<std::size_t>(smallerDim) * (smallerDim + 1) / 2;
+    matAssigned.resize(smallerDim);
+    EXPECT_EQ(smallerDim, matAssigned.getNumOfRows());
+    EXPECT_EQ(smallerDim, matAssigned.getNumOfCols());
+    EXPECT_EQ(smallerPackedElements, matAssigned.getAllocatedSize());
+    EXPECT_DOUBLE_EQ(1.23, matAssigned.get(0, 0));
+}
+
+TEST(TlDenseSymmetricMatrix_Lapack, vectorAccessAndTranspose) {
+    const int dim = 4;
+    TlDenseSymmetricMatrix_Lapack mat(dim);
+    for (int r = 0; r < dim; ++r) {
+        for (int c = 0; c <= r; ++c) {
+            mat.set(r, c, (r + 1) * 10 + (c + 1));
+        }
+    }
+
+    // Row vector
+    std::vector<double> r1 = mat.getRowVector(1);
+    ASSERT_EQ(static_cast<std::size_t>(dim), r1.size());
+    EXPECT_DOUBLE_EQ(21.0, r1[0]);
+    EXPECT_DOUBLE_EQ(22.0, r1[1]);
+    EXPECT_DOUBLE_EQ(32.0, r1[2]);
+    EXPECT_DOUBLE_EQ(42.0, r1[3]);
+
+    // Col vector
+    std::vector<double> c1 = mat.getColVector(1);
+    ASSERT_EQ(static_cast<std::size_t>(dim), c1.size());
+    EXPECT_DOUBLE_EQ(21.0, c1[0]);
+    EXPECT_DOUBLE_EQ(22.0, c1[1]);
+    EXPECT_DOUBLE_EQ(32.0, c1[2]);
+    EXPECT_DOUBLE_EQ(42.0, c1[3]);
 }

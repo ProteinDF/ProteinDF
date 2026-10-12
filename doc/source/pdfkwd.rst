@@ -821,8 +821,8 @@
   :stub-columns: 1
 
   "parameter", "xc_functional"
-  "explanation", ""
-  "default", "svwn"
+  "explanation", "Specifies the exchange-correlation functional. If 'xc-potential' (or 'xc_functional') is omitted, 'b3lyp' is used with a warning."
+  "default", "b3lyp"
   "values", "(svwn~|svwn|blyp|b3lyp)"
 
 

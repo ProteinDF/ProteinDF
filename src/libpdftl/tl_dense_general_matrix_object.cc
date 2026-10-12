@@ -3,6 +3,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 #include "TlFile.h"
 #include "TlUtils.h"
@@ -217,20 +218,21 @@ bool TlDenseGeneralMatrixObject::load(const std::string& filePath) {
                 default:
                     this->log_.critical(TlUtils::format("not supported format: %s(%d) @%s:%d", filePath.c_str(),
                                                         static_cast<int>(headerInfo.matrixType), __FILE__, __LINE__));
-                    throw;
+                    throw std::runtime_error(TlUtils::format("not supported format: %s(%d)", filePath.c_str(),
+                                                             static_cast<int>(headerInfo.matrixType)));
                     break;
             }
         } else {
             this->log_.critical(
                 TlUtils::format("cannot open matrix file: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
-            throw;
+            throw std::runtime_error(TlUtils::format("cannot open matrix file: %s", filePath.c_str()));
         }
 
         fs.close();
     } else {
         this->log_.critical(TlUtils::format("illegal matrix format: %s @%s:%d", filePath.c_str(), __FILE__, __LINE__));
         this->log_.critical(TlUtils::format("file size: %ld", TlFile::getFileSize(filePath)));
-        throw;
+        throw std::runtime_error(TlUtils::format("illegal matrix format: %s", filePath.c_str()));
     }
 
     return answer;
