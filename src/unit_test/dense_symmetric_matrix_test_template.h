@@ -5,10 +5,14 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <fstream>
+#include <stdexcept>
 #include <string>
 
+#include "TlFile.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
+#include "tl_dense_general_matrix_lapack.h"
 
 static const double EPS = 1.0E-5;  // std::numeric_limits<double>::epsilon();
 
@@ -297,13 +301,94 @@ TYPED_TEST_P(DenseSymmetricMatrixTest, doesSum) {
 //   EXPECT_DOUBLE_EQ(A(3, 3), LL(3, 3));
 // }
 
-REGISTER_TYPED_TEST_SUITE_P(DenseSymmetricMatrixTest,
-                            doesConstructor,
-                            doesSetterGetter,
-                            doesCopyConstructor, 
+TYPED_TEST_P(DenseSymmetricMatrixTest, throwsOnNonExistentFile) {
+    TypeParam a;
+    EXPECT_THROW(a.load("non_existent_matrix_file_12345.mat"), std::runtime_error);
+}
+
+TYPED_TEST_P(DenseSymmetricMatrixTest, throwsOnCorruptedFile) {
+    static const std::string corrupted_path = "temp.sym.corrupted.mat";
+    if (TlFile::isExistFile(corrupted_path)) {
+        TlFile::remove(corrupted_path);
+    }
+    {
+        std::ofstream ofs(corrupted_path.c_str(), std::ios::binary);
+        ofs << "garbage corrupted matrix data";
+    }
+
+    TypeParam a;
+    EXPECT_THROW(a.load(corrupted_path), std::runtime_error);
+
+    if (TlFile::isExistFile(corrupted_path)) {
+        TlFile::remove(corrupted_path);
+    }
+}
+
+TYPED_TEST_P(DenseSymmetricMatrixTest, throwsOnGeneralSquareMatrixFile) {
+    static const std::string general_square_path = "temp.sym.general_square.mat";
+    if (TlFile::isExistFile(general_square_path)) {
+        TlFile::remove(general_square_path);
+    }
+    {
+        TlDenseGeneralMatrix_Lapack gen(3, 3);
+        gen.set(0, 0, 1.0);
+        gen.save(general_square_path);
+    }
+
+    TypeParam a(2);
+    a.set(0, 0, 42.0);
+    a.set(1, 1, 84.0);
+
+    EXPECT_THROW(a.load(general_square_path), std::runtime_error);
+
+    // resize(row) 後に default: で例外が発生するため、サイズは 3 に変更される。
+    // resize の仕様により既存の要素は保持され、拡張部分は 0.0 となる。
+    EXPECT_EQ(3, a.getNumOfRows());
+    EXPECT_EQ(3, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(42.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(84.0, a.get(1, 1));
+    EXPECT_DOUBLE_EQ(0.0, a.get(2, 2));
+
+    if (TlFile::isExistFile(general_square_path)) {
+        TlFile::remove(general_square_path);
+    }
+}
+
+TYPED_TEST_P(DenseSymmetricMatrixTest, throwsOnGeneralNonSquareMatrixFile) {
+    static const std::string general_nonsquare_path = "temp.sym.general_nonsquare.mat";
+    if (TlFile::isExistFile(general_nonsquare_path)) {
+        TlFile::remove(general_nonsquare_path);
+    }
+    {
+        TlDenseGeneralMatrix_Lapack gen(2, 3);
+        gen.set(0, 0, 1.0);
+        gen.save(general_nonsquare_path);
+    }
+
+    TypeParam a(2);
+    a.set(0, 0, 42.0);
+    a.set(1, 1, 84.0);
+
+    EXPECT_THROW(a.load(general_nonsquare_path), std::runtime_error);
+
+    // resize 前に例外が発生するため、load 前の状態（サイズ 2、元の値）が保持される
+    EXPECT_EQ(2, a.getNumOfRows());
+    EXPECT_EQ(2, a.getNumOfCols());
+    EXPECT_DOUBLE_EQ(42.0, a.get(0, 0));
+    EXPECT_DOUBLE_EQ(84.0, a.get(1, 1));
+
+    if (TlFile::isExistFile(general_nonsquare_path)) {
+        TlFile::remove(general_nonsquare_path);
+    }
+}
+
+REGISTER_TYPED_TEST_SUITE_P(DenseSymmetricMatrixTest, doesConstructor,
+                            doesSetterGetter, doesCopyConstructor,
                             doesOperatorEq, doesOperatorAdd,
                             doesOperatorIAdd, doesSaveAndLoad,
                             doesSaveAndLoadToHdf5, doesInverse, doesDotInPlace,
-                            doesSum);
+                            doesSum, throwsOnNonExistentFile,
+                            throwsOnCorruptedFile, throwsOnGeneralSquareMatrixFile,
+                            throwsOnGeneralNonSquareMatrixFile);
 
 #endif  // DENSE_SYMMETRIC_MATRIX_TEST_TEMPLATE_H

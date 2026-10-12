@@ -59,6 +59,10 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput) {
         TlSerializeData inputParam = pdfUserInput.getSerializeData();
         pdfKwd.convertAlias(&(inputParam));
 
+        if (!inputParam.hasKey("xc_functional")) {
+            std::cout << "warning: 'xc-potential' is not specified; 'b3lyp' is used." << std::endl;
+        }
+
         // include user input parameters
         std::string mpacFilePath = param["pdf_param_path"].getStr();
         if (inputParam.hasKey("pdf_param_path")) {

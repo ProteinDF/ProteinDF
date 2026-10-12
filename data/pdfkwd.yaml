@@ -1,0 +1,921 @@
+- keyword: pdf_param_path
+  property:
+    default: pdfparam.mpac
+    desc_jp: パラメータファイルのパス
+    description: the file path for ProteinDF parameters.
+    hidden: true
+    syntax: .*
+- keyword: step_control
+  property:
+    default: create
+    desc_jp: 計算ステップの指定
+    description: Job scheme of the calculation.
+    hidden: false
+    syntax: ((create|integral|guess|scf|force)\s*)+
+- keyword: comment
+  property:
+    default: ''
+    desc_jp: コメント
+    description: 'Comment of the calculation. '
+    hidden: false
+    syntax: .*
+- keyword: linear_algebra_package
+  property:
+    default: lapack
+    desc_jp: 線形ライブラリの指定
+    description: linear algebra package
+    hidden: false
+    syntax: (lapack|scalapack)
+- keyword: scalapack_block_size
+  property:
+    default: '64'
+    desc_jp: ScaLAPACKブロックサイズの指定
+    description: set block size for ScaLAPACK
+    hidden: false
+    syntax: (\d+)
+- keyword: save_distributed_matrix_to_local_disk
+  property:
+    default: 'no'
+    desc_jp: 大域分散行列を各ノードで分散して保存
+    description: store partial matrix elements in local disk
+    hidden: false
+    syntax: (yes|no)
+- keyword: local_temp_path
+  property:
+    default: null
+    desc_jp: ローカルディスクへの保存に使用するパス
+    description: local temporary path
+    hidden: false
+    syntax: .*
+- keyword: memory_size
+  property:
+    default: 1GB
+    desc_jp: 使用可能なメモリサイズ
+    description: memory size
+    hidden: false
+    syntax: \d+\s*(MB|GB)
+- keyword: use_mmap
+  property:
+    default: 'no'
+    desc_jp: mmapを使用する
+    description: use mmap
+    hidden: false
+    syntax: (yes|no)
+- keyword: mapfile_size
+  property:
+    default: auto
+    desc_jp: 仮想ディスクのサイズ
+    description: file size of mapfile
+    hidden: false
+    syntax: (\d+\s*(MB|GB)|auto)
+- keyword: mapfile_basename
+  property:
+    default: pdf
+    desc_jp: 仮想ディスクファイルの基本ファイル名
+    description: base name for mmap file
+    hidden: false
+    syntax: .*
+- keyword: work_on_disk
+  property:
+    default: 'no'
+    desc_jp: いつでも仮想ディスクを使用する
+    description: force to use mmap
+    hidden: false
+    syntax: (yes|no)
+- keyword: parallel_processing_type
+  property:
+    default: divide_and_conquer
+    desc_jp: 並列アルゴリズムの選択
+    description: computing method in parallel calculation
+    hidden: false
+    syntax: (divide_and_conquer|DC|master_slave|MS)
+- keyword: cleanup
+  property:
+    default: 'no'
+    desc_jp: 中間ファイルの削除
+    description: clean up intermediate files
+    hidden: false
+    syntax: (yes|no)
+- keyword: show_keyword
+  property:
+    default: 'no'
+    desc_jp: キーワードを表示する
+    description: print keyword list
+    hidden: false
+    syntax: (yes|no)
+- keyword: show_input
+  property:
+    default: 'yes'
+    desc_jp: 入力パラメータを表示する
+    description: print input perameters
+    hidden: false
+    syntax: (yes|no)
+- keyword: show_coordinates
+  property:
+    default: 'yes'
+    desc_jp: 分子座標を表示する
+    description: print coordinates
+    hidden: false
+    syntax: (yes|no)
+- keyword: show_orbital_basis
+  property:
+    default: gamess
+    desc_jp: 基底関数情報の表示形式の指定
+    description: orbital basis output type
+    hidden: false
+    syntax: (gamess|amoss|none)
+- keyword: guess
+  property:
+    default: rho
+    desc_jp: guessの指定
+    description: start scf from guess lcao and occupation files, or rho and occupation
+    hidden: false
+    syntax: (rho|file_rho|lcao|density|core|huckel|harris)
+- keyword: guess/normalize_density_matrix
+  property:
+    default: true
+    description: normalize initial density matrix
+    hidden: false
+    syntax: string
+- keyword: cut_value
+  property:
+    default: '1.0E-10'
+    desc_jp: 積分カットオフ値
+    description: cut off threshold for integrals
+    hidden: false
+    syntax: (double > 0)
+- keyword: block-size
+  property:
+    default: '1024000'
+    desc_jp: 積分ブロックサイズ
+    description: block size for integrals
+    hidden: false
+    syntax: (integer > 0)
+- keyword: charge-extrapolate-number
+  property:
+    default: '1'
+    desc_jp: ダミー電荷を段階的に外挿する回数
+    description: ''
+    hidden: false
+    syntax: (integer >= 1)
+- keyword: orbital-overlap-correspondence
+  property:
+    default: 'off'
+    desc_jp: 軌道の対応付けを行う
+    description: ''
+    hidden: false
+    syntax: on/off
+- keyword: orbital-overlap-correspondence-first
+  property:
+    default: 'off'
+    desc_jp: 軌道の対応付けを初回から行う
+    description: carry out 1st orbital correspondence to 0th orbital
+    hidden: false
+    syntax: on/off
+- keyword: orbital-overlap-correspondence-method
+  property:
+    default: mo-overlap
+    desc_jp: 軌道対応付けの方法
+    description: orbital correspondence method
+    hidden: false
+    syntax: mo-overlap/mo-projection
+- keyword: orbital-overlap-correspondence-number
+  property:
+    default: '3'
+    description: maxmum iteration number by orbital projection method
+    hidden: false
+    syntax: integer
+- keyword: summary
+  property:
+    default: none
+    desc_jp: 計算サマリーを表示する
+    description: print summary data
+    hidden: false
+    syntax: (none|convergence|every-scf)
+- keyword: analyze_population
+  property:
+    default: none
+    desc_jp: 形式電荷の計算を行う
+    description: analize population
+    hidden: false
+    syntax: (none|convergence|every-scf)
+- keyword: max_iteration
+  property:
+    default: '100'
+    desc_jp: SCF繰り返し計算の最大値
+    description: ''
+    hidden: false
+    syntax: (integer)
+- keyword: method
+  property:
+    default: rks
+    desc_jp: 計算方法
+    description: ''
+    hidden: false
+    syntax: (rks|uks|roks)
+- keyword: method/rks/occlevel
+  property:
+    default: ''
+    desc_jp: rks計算における占有軌道
+    description: ''
+    hidden: false
+    syntax: (array of integer >= 0)
+- keyword: method/rks/electrons
+  property:
+    default: ''
+    desc_jp: rks計算のおける電子数
+    description: null
+    hidden: false
+    syntax: (integer >= 2)
+- keyword: method/uks/alpha_occlevel
+  property:
+    default: ''
+    desc_jp: uks計算におけるalpha電子の占有軌道
+    description: null
+    hidden: false
+    syntax: (array of integer >= 0)
+- keyword: method/uks/alpha_electrons
+  property:
+    default: ''
+    desc_jp: uks計算におけるalpha電子の数
+    description: ''
+    hidden: false
+    syntax: (integer >= 1)
+- keyword: method/uks/beta_occlevel
+  property:
+    default: ''
+    desc_jp: uks計算におけるbeta電子の占有軌道
+    description: ''
+    hidden: false
+    syntax: (array of integer >= 0)
+- keyword: method/uks/beta_electrons
+  property:
+    default: ''
+    desc_jp: uks計算におけるbeta電子の数
+    description: ''
+    hidden: false
+    syntax: (integer >= 1)
+- keyword: method/roks/closed_occlevel
+  property:
+    default: ''
+    desc_jp: roks計算における閉殻軌道の指定
+    description: closed shell orbital on ROKS calculation
+    hidden: false
+    syntax: (array of integer >= 0)
+- keyword: method/roks/closed_electrons
+  property:
+    default: ''
+    desc_jp: roks計算における閉殻軌道の電子数
+    description: ''
+    hidden: false
+    syntax: (integer >= 1)
+- keyword: method/roks/open_occlevel
+  property:
+    default: ''
+    desc_jp: roks計算における開殻軌道の指定
+    description: open shell orbital on ROKS calculation
+    hidden: false
+    syntax: (array of integer >= 1)
+- keyword: method/roks/open_electrons
+  property:
+    default: ''
+    desc_jp: roks計算における開殻軌道の電子数
+    description: ''
+    hidden: false
+    syntax: (integer >= 0)
+- keyword: save_diff_density_matrix
+  property:
+    default: 'yes'
+    description: ''
+    hidden: false
+    syntax: (yes|no)
+- keyword: use_matrix_cache
+  property:
+    default: 'yes'
+    description: ''
+    hidden: false
+    syntax: (yes|no)
+- keyword: force_loading_from_disk
+  property:
+    default: 'yes'
+    description: ''
+    hidden: false
+    syntax: (yes|no)
+- keyword: show_cache_report
+  property:
+    default: 'no'
+    desc_jp: キャッシュ情報の表示
+    description: ''
+    hidden: false
+    syntax: (yes|no)
+- keyword: disk-utilization
+  property:
+    default: 'no'
+    description: ''
+    hidden: false
+    syntax: yes/no
+- keyword: update_method
+  property:
+    default: 'no'
+    description: use update method
+    hidden: false
+    syntax: (yes|no)
+- keyword: orbital-independence-threshold
+  property:
+    default: 0.007
+    description: ''
+    hidden: false
+    syntax: (real >= 0)
+- keyword: orbital-independence-threshold/canonical
+  property:
+    default: ''
+    description: ''
+    hidden: false
+    syntax: (real >= 0)
+- keyword: orbital-independence-threshold/lowdin
+  property:
+    default: ''
+    description: ''
+    hidden: false
+    syntax: (real >= 0)
+- keyword: convergence/type
+  property:
+    default: density_matrix
+    desc_jp: 収束の対象となるパラメータ
+    description: ''
+    hidden: false
+    syntax: (fock|density|dcoef)
+- keyword: convergence/threshold/rms
+  property:
+    default: 0.001
+    desc_jp: 収束の閾値(RMS)
+    description: ''
+    hidden: false
+    syntax: (real > 0)
+- keyword: convergence/threshold
+  property:
+    default: 1e-3
+    desc_jp: 収束の閾値
+    description: ''
+    hidden: false
+    syntax: (real > 0)
+- keyword: convergence/threshold_energy
+  property:
+    default: 1e-4
+    desc_jp: エネルギーにおける収束条件
+    description: ''
+    hidden: false
+    syntax: (real > 0)
+- keyword: scf_acceleration
+  property:
+    default: damping
+    desc_jp: 収束加速法の選択
+    description: ''
+    hidden: false
+    syntax: (damping|anderson|diis)
+- keyword: scf_acceleration/damping/damping_factor
+  property:
+    default: '0.85'
+    desc_jp: damping法におけるダンピング係数
+    description: ''
+    hidden: false
+    syntax: (real)
+- keyword: scf_acceleration/daming/start
+  property:
+    default: '0'
+    desc_jp: damping法を開始するイテレーション
+    description: start iteration number of damping
+    hidden: false
+    syntax: (int)
+- keyword: scf_acceleration/damping/damping_type
+  property:
+    default: density_matrix
+    desc_jp: damping法を適用する物理量
+    description: ''
+    hidden: false
+    syntax: (fock|density_matrix|density|dcoef)
+- keyword: scf_acceleration/oda/start
+  property:
+    default: 10
+    desc_jp: ODA法を開始するイテレーション
+    description: start iteration number of ODA
+    hidden: false
+    syntax: (int)
+- keyword: scf_acceleration/anderson/start
+  property:
+    default: 3
+    desc_jp: anderson法を適用開始するイテレーション
+    description: start iteration number of Anderson's converge
+    hidden: false
+    syntax: (int)
+- keyword: scf_acceleration/anderson/damping_factor
+  property:
+    default: 0.5
+    desc_jp: anderson法におけるダンピング係数
+    description: ''
+    hidden: false
+    syntax: (real)
+- keyword: scf_acceleration/diis/start
+  property:
+    default: 3
+    desc_jp: DIIS法を開始するイテレーション
+    description: start iteration number of the DIIS method
+    hidden: false
+    syntax: (integer >= 0)
+- keyword: scf_acceleration/diis/last_items
+  property:
+    default: '3'
+    description: ''
+    hidden: false
+    syntax: (integer)
+- keyword: level_shift
+  property:
+    default: 'no'
+    desc_jp: レベルシフト法を適用する
+    description: add level shift to F' matrix
+    hidden: false
+    syntax: (yes|no)
+- keyword: level_shift/start_iteration
+  property:
+    default: '1'
+    desc_jp: レベルシフト法を開始するイテレーション
+    description: level shift is carried out if start-iteration >= SCF iteration
+    hidden: false
+    syntax: (int)
+- keyword: level_shift/closed_mo
+  property:
+    default: '0.00'
+    desc_jp: 閉殻軌道に使用するレベルシフト値
+    description: level shift value for closed mo
+    hidden: false
+    syntax: (real)
+- keyword: level_shift/open_mo
+  property:
+    default: '0.00'
+    desc_jp: 開殻軌道に使用するレベルシフト値
+    description: level shift value for open mo
+    hidden: false
+    syntax: (real)
+- keyword: level_shift/virtual_mo
+  property:
+    default: '0.00'
+    desc_jp: 空軌道に使用するレベルシフト値
+    description: level shift value for virtural mo
+    hidden: false
+    syntax: (real)
+- keyword: xc_functional
+  property:
+    default: b3lyp
+    desc_jp: 交換相関汎関数の指定
+    description: XC-functional
+    hidden: false
+    syntax: (svwn~|svwn|blyp|b3lyp)
+- keyword: grid_free
+  property:
+    default: false
+    desc_jp: grid-free法を使用する
+    description: use grid-free method for XC calc.
+    hidden: false
+    syntax: (yes|no)
+- keyword: xc-potential/grid-type
+  property:
+    default: sg-1
+    desc_jp: 使用するグリッドの選択
+    description: Grid type selection for grid-used methods
+    hidden: false
+    syntax: fine/medium-fine/medium/coarse/sg-1
+- keyword: xc-update
+  property:
+    default: 'yes'
+    description: whether incDFT method is executed or not
+    hidden: false
+    syntax: (yes|no)
+- keyword: xc-density-threshold
+  property:
+    default: '1.0E-16'
+    description: cutoff threshold of density value on each grid
+    hidden: false
+    syntax: real
+- keyword: grid/weight_threshold
+  property:
+    default: '1.0E-16'
+    description: cutoff threshold of grid weight on each grid
+    hidden: false
+    syntax: real
+- keyword: grid/num_of_radial_shells
+  property:
+    default: 75
+    description: specify the number of radial shells for numerical integration on
+      USER grid
+    hidden: false
+    syntax: int
+- keyword: grid/num_of_angular_points
+  property:
+    default: 302
+    description: specify the number of angular points for numerical integration on
+      USER grid
+    hidden: false
+    syntax: int
+- keyword: grid/radial_quadorature_method
+  property:
+    default: GC
+    description: specify the method of radial guadrature for numerical integration
+      on USER grid
+    hidden: false
+    syntax: (GC|Gauss-Chebyshev|EM|Eular-Maclaurin)
+- keyword: grid/GC_mapping_type
+  property:
+    default: TA
+    description: specify the method of variable mapping type for Gauss-Chebyshev guadrature
+      for numerical integration on USER grid
+    hidden: false
+    syntax: (Becke|TA|KK)
+- keyword: grid/partitioning_method
+  property:
+    default: Becke
+    description: Use the weighting scheme for the multicenter numerical integration.
+    hidden: false
+    syntax: (Becke|SSWeight)
+- keyword: grid/pruning
+  property:
+    default: true
+    description: use grid pruning for numerical integration on USER grid
+    hidden: false
+    syntax: (yes|no)
+- keyword: TEI-integral-driven
+  property:
+    default: 'yes'
+    description: method of two-electron integral
+    hidden: false
+    syntax: (yes|no)
+- keyword: J_engine
+  property:
+    default: RI_J
+    desc_jp: クーロン項の計算方法の選択
+    description: build method for J matrix
+    hidden: false
+    syntax: (conventional|RI_J|CD)
+- keyword: K_engine
+  property:
+    default: conventional
+    desc_jp: Fock交換項の計算方法の選択
+    description: build method for K matrix
+    hidden: false
+    syntax: (conventional|RI_K|CD)
+- keyword: XC_engine
+  property:
+    default: grid
+    desc_jp: 交換相関項の計算方法の選択
+    description: build method for XC matrix
+    hidden: false
+    syntax: (grid|gridfree|gridfree_CD)
+- keyword: CDAM_tau
+  property:
+    default: '1.0E-10'
+    desc_jp: CDAM法におけるτ値
+    description: tau for CDAM
+    hidden: false
+    syntax: (real)
+- keyword: CD_epsilon
+  property:
+    default: '1.0E-4'
+    desc_jp: CD法におけるε値
+    description: epsilon for Cholesky Decomposition
+    hidden: false
+    syntax: (real)
+- keyword: CD/intermediate_file_format
+  property:
+    default: array_mmap
+    desc_jp: コレスキー分解計算時に使用するファイルフォーマットを指定する
+    description: Specify the file format to be used for Cholesky Decomposition calculation
+    hidden: false
+    syntax: (array_mmap|array|mmap)
+- keyword: gridfree/orthogonalize_method
+  property:
+    default: canonical
+    desc_jp: 規格直交化の方法
+    description: orthogonalize method for gridfree-CD
+    hidden: false
+    syntax: (canonical|lowdin)
+- keyword: gridfree/dedicated_basis
+  property:
+    default: false
+    desc_jp: gridfree法に専用の補助基底関数を使用する
+    description: use dedicated basis for gridfree-CD
+    hidden: false
+    syntax: (yes|no)
+- keyword: gridfree/save_v_eigval
+  property:
+    default: true
+    desc_jp: gridfree法においてV行列の固有値を保存する
+    description: save eigenvalues for gridfree
+    hidden: false
+    syntax: (yes|no)
+- keyword: scf-memory-saving
+  property:
+    default: 'no'
+    description: 'yes : use less memories and increase the times of calculation of
+      three-index integrals'
+    hidden: false
+    syntax: yes/no
+- keyword: geometry/cartesian/input
+  property:
+    default: nil
+    desc_jp: カーテシアン座標による#分子座標の指定
+    description: Input of nuclear geometry by cartesian.
+    hidden: false
+    syntax: nil/stored
+- keyword: geometry/cartesian/unit
+  property:
+    default: a.u.
+    description: Unit of inputted nuclear geometry. Default is a.u.
+    hidden: false
+    syntax: au/a.u./angstrom
+- keyword: basis-set/orbital
+  property:
+    default: nil
+    description: Input of basis set for orbitals.
+    hidden: false
+    syntax: nil/stored
+- keyword: basis-set/density-auxiliary
+  property:
+    default: nil
+    description: Input of basis set for electron density.
+    hidden: false
+    syntax: nil/stored
+- keyword: basis-set/exchange-auxiliary
+  property:
+    default: nil
+    description: Input of basi set for exchange potential.
+    hidden: false
+    syntax: nil/stored
+- keyword: basis-set/gridfree
+  property:
+    default: nil
+    description: Input of basi set for gridfree.
+    hidden: false
+    syntax: nil/stored
+- keyword: xc_density_threshold
+  property:
+    default: '1.0E-16'
+    description: ''
+    hidden: false
+    syntax: real
+- keyword: geometry
+  property:
+    default: cartesian
+    description: set geometry.
+    hidden: true
+    syntax: cartesian/file
+- keyword: coordinates
+  property:
+    default: ''
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: basis_set
+  property:
+    default: ''
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: basis_set_j
+  property:
+    default: ''
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: basis_set_xc
+  property:
+    default: ''
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: basis_set_gridfree
+  property:
+    default: ''
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: independent-orbital-number
+  property:
+    default: '0'
+    description: number of linearly independent orbitals
+    hidden: true
+    syntax: (integer > 0)
+- keyword: xc-potential/gxalpha/alpha-value
+  property:
+    default: '0.7'
+    description: ''
+    hidden: true
+    syntax: real
+- keyword: myu-nyu-zero
+  property:
+    default: 'no'
+    description: ''
+    hidden: true
+    syntax: (yes|no)
+- keyword: guess/nsp-ppq
+  property:
+    default: nil
+    description: ''
+    hidden: true
+    syntax: nil/stored
+- keyword: guess/sp-ppq
+  property:
+    default: nil
+    description: ''
+    hidden: true
+    syntax: nil/stored
+- keyword: guess/trans-angle-threshold
+  property:
+    default: 1.0 1.5 20 30
+    description: ''
+    hidden: true
+    syntax: nil/stored
+- keyword: guess/make-myu-nyu
+  property:
+    default: meth0
+    description: ''
+    hidden: true
+    syntax: meth0/meth1/meth2/meth3/meth4
+- keyword: guess/vct-normalize
+  property:
+    default: ON OFF OFF
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: guess/part-normalize
+  property:
+    default: nil
+    description: ''
+    hidden: true
+    syntax: nil/stored
+- keyword: guess/user-vector
+  property:
+    default: nil
+    description: ''
+    hidden: true
+    syntax: (nil|stored)
+- keyword: num_of_atoms
+  property:
+    default: 0
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: num_of_dummy_atoms
+  property:
+    default: 0
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: num_of_AOs
+  property:
+    default: 0
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: num_of_MOs
+  property:
+    default: 0
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: num_of_auxCDs
+  property:
+    default: 0
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: num_of_auxXCs
+  property:
+    default: 0
+    description: ''
+    hidden: true
+    syntax: ''
+- keyword: TE
+  property:
+    default: ''
+    description: history of total energy
+    hidden: true
+    syntax: ''
+- keyword: debug/file_warning
+  property:
+    default: 'yes'
+    description: ''
+    hidden: true
+    syntax: (yes|no)
+- keyword: debug/save_J
+  property:
+    default: 'no'
+    description: ''
+    hidden: true
+    syntax: (yes|no)
+- keyword: debug/save_K
+  property:
+    default: 'no'
+    description: ''
+    hidden: true
+    syntax: (yes|no)
+- keyword: debug/save_Fxc_pure
+  property:
+    default: 'no'
+    description: ''
+    hidden: true
+    syntax: (yes|no)
+- keyword: debug/save_forces
+  property:
+    default: 'no'
+    description: save the force of each term.
+    hidden: true
+    syntax: (yes|no)
+- keyword: cutoff_distribution
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: length_scale_parameter
+  property:
+    default: 1.0
+    description: null
+    hidden: false
+    syntax: null
+- keyword: control
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: debug/eri/exact_J
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: cutoff_density
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: cutoff_threshold_primitive
+  property:
+    default: 1.0e-12
+    description: null
+    hidden: false
+    syntax: null
+- keyword: debug/eri/exact_K
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: new_engine
+  property:
+    default: true
+    description: null
+    hidden: true
+    syntax: null
+- keyword: debug/eri/output_K
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: debug/eri/output_J
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null
+- keyword: debug/DfXMatrix/save-eigval
+  property:
+    default: false
+    description: save eigval on building X matrix
+    hidden: true
+    syntax: null
+- keyword: debug/DfXMatrix/save-mat
+  property:
+    default: false
+    description: null
+    hidden: true
+    syntax: null
+- keyword: debug/DfXMatrix/check-X
+  property:
+    default: false
+    description: null
+    hidden: true
+    syntax: null
+- keyword: num_of_iterations
+  property:
+    default: 0
+    description: null
+    hidden: true
+    syntax: null
+- keyword: stat
+  property:
+    default: null
+    description: null
+    hidden: true
+    syntax: null

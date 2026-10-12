@@ -2183,8 +2183,9 @@ double DfCalcGridX::buildVxc(const TlDenseGeneralMatrix_Lapack& gridMatrix,
             //                       pFunctional, weight, pF_A);
             this->build_XC_Matrix(
                 roundF_roundRhoA, roundF_roundGammaAA, roundF_roundGammaAB,
-                gradRhoXA, gradRhoYA, gradRhoZA, AO_values, dAO_dx_values,
-                dAO_dy_values, dAO_dz_values, pFunctional, weight, pF_A);
+                gradRhoXA, gradRhoYA, gradRhoZA, gradRhoXA, gradRhoYA,
+                gradRhoZA, AO_values, dAO_dx_values, dAO_dy_values,
+                dAO_dz_values, pFunctional, weight, pF_A);
             energy += weight * pFunctional->getFunctional(rhoA, gammaAA);
         }
     }
@@ -2263,12 +2264,14 @@ double DfCalcGridX::buildVxc(const TlDenseGeneralMatrix_Lapack& gridMatrix,
             //                       pFunctional, weight, pF_B);
             this->build_XC_Matrix(
                 roundF_roundRhoA, roundF_roundGammaAA, roundF_roundGammaAB,
-                gradRhoXA, gradRhoYA, gradRhoZA, AO_values, dAO_dx_values,
-                dAO_dy_values, dAO_dz_values, pFunctional, weight, pF_A);
+                gradRhoXA, gradRhoYA, gradRhoZA, gradRhoXB, gradRhoYB,
+                gradRhoZB, AO_values, dAO_dx_values, dAO_dy_values,
+                dAO_dz_values, pFunctional, weight, pF_A);
             this->build_XC_Matrix(
                 roundF_roundRhoB, roundF_roundGammaBB, roundF_roundGammaAB,
-                gradRhoXB, gradRhoYB, gradRhoZB, AO_values, dAO_dx_values,
-                dAO_dy_values, dAO_dz_values, pFunctional, weight, pF_B);
+                gradRhoXB, gradRhoYB, gradRhoZB, gradRhoXA, gradRhoYA,
+                gradRhoZA, AO_values, dAO_dx_values, dAO_dy_values,
+                dAO_dz_values, pFunctional, weight, pF_B);
             energy += weight * pFunctional->getFunctional(rhoA, rhoB, gammaAA,
                                                           gammaAB, gammaBB);
         }
@@ -2455,7 +2458,8 @@ void DfCalcGridX::build_XC_Matrix(const double roundF_roundRhoA,
 void DfCalcGridX::build_XC_Matrix(
     const double roundF_roundRhoA, const double roundF_roundGammaAA,
     const double roundF_roundGammaAB, const double gradRhoAX,
-    const double gradRhoAY, const double gradRhoAZ,
+    const double gradRhoAY, const double gradRhoAZ, const double gradRhoBX,
+    const double gradRhoBY, const double gradRhoBZ,
     const std::vector<double>& AO_values,
     const std::vector<double>& dAO_dx_values,
     const std::vector<double>& dAO_dy_values,
@@ -2464,11 +2468,11 @@ void DfCalcGridX::build_XC_Matrix(
     const double coef1_A = weight * roundF_roundRhoA;
     const double roundF_roundGammaAA2 = 2.0 * roundF_roundGammaAA;
     const double coef2_AX = weight * (roundF_roundGammaAA2 * gradRhoAX +
-                                      roundF_roundGammaAB * gradRhoAX);
+                                      roundF_roundGammaAB * gradRhoBX);
     const double coef2_AY = weight * (roundF_roundGammaAA2 * gradRhoAY +
-                                      roundF_roundGammaAB * gradRhoAY);
+                                      roundF_roundGammaAB * gradRhoBY);
     const double coef2_AZ = weight * (roundF_roundGammaAA2 * gradRhoAZ +
-                                      roundF_roundGammaAB * gradRhoAZ);
+                                      roundF_roundGammaAB * gradRhoBZ);
 
     const int numOfAOs = this->m_nNumOfAOs;
     for (int i = 0; i < numOfAOs; ++i) {

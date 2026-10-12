@@ -5,8 +5,11 @@
 #include "config.h"
 #endif  // HAVE_CONFIG_H
 
+#include <fstream>
+#include <stdexcept>
 #include <string>
 
+#include "TlFile.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
 #include "tl_matrix_object.h"
@@ -292,12 +295,36 @@ TYPED_TEST_P(DenseGeneralMatrixTest, doesSaveAndLoadToHdf5) {
 #endif  // HAVE_HDF5
 }
 
+TYPED_TEST_P(DenseGeneralMatrixTest, throwsOnNonExistentFile) {
+    TypeParam a;
+    EXPECT_THROW(a.load("non_existent_matrix_file_12345.mat"), std::runtime_error);
+}
+
+TYPED_TEST_P(DenseGeneralMatrixTest, throwsOnCorruptedFile) {
+    static const std::string corrupted_path = "temp.gen.corrupted.mat";
+    if (TlFile::isExistFile(corrupted_path)) {
+        TlFile::remove(corrupted_path);
+    }
+    {
+        std::ofstream ofs(corrupted_path.c_str(), std::ios::binary);
+        ofs << "garbage corrupted matrix data";
+    }
+
+    TypeParam a;
+    EXPECT_THROW(a.load(corrupted_path), std::runtime_error);
+
+    if (TlFile::isExistFile(corrupted_path)) {
+        TlFile::remove(corrupted_path);
+    }
+}
+
 REGISTER_TYPED_TEST_SUITE_P(DenseGeneralMatrixTest, doesConstructor,
                             doesCopyConstructor, doesResize, doesOperatorEq,
                             doesOperatorAdd, doesOperatorIAdd,
                             doesOperatorMultiMatrixAB, doesSum, doesTrace,
                             doesMaxAbsoluteElement, doesTransposeInPlace,
                             doesTranspose, doesDotInPlace, doesSaveAndLoad,
-                            doesSaveAndLoadToHdf5);
+                            doesSaveAndLoadToHdf5, throwsOnNonExistentFile,
+                            throwsOnCorruptedFile);
 
 #endif  // DENSE_GENERAL_MATRIX_TEST_TEMPLATE_H

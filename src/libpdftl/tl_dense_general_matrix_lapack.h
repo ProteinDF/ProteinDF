@@ -45,6 +45,8 @@ public:
     TlDenseGeneralMatrix_Lapack& operator*=(const TlDenseGeneralMatrix_Lapack& rhs);
 
 public:
+    virtual std::size_t getAllocatedSize() const;
+
     virtual TlMatrixObject::index_type getRowVector(const TlMatrixObject::index_type row,
                                                     const TlMatrixObject::index_type length, double* pBuf) const;
     virtual TlMatrixObject::index_type getColVector(const TlMatrixObject::index_type row,

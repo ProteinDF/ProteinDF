@@ -7,6 +7,7 @@ set(PDF_XTEST_SOURCES
   DfFunctional_LYPTest.cpp
   DfFunctional_SlaterTest.cpp
   DfFunctional_VWNTest.cpp
+  DfFunctional_VWN3Test.cpp
   TlFileTest.cpp
   TlMemManagerTest.cpp
 
@@ -28,8 +29,10 @@ set(PDF_XTEST_SOURCES
 
   TlPositionTest.cpp
   TlSerializeDataTest.cpp
+  PdfXCFunctionalDefaultTest.cpp
   TlStlUtilsTest.cpp
   TlStringTokenizerTest.cpp
+  TlSystemTest.cpp
   TlUtilsTest.cpp
 
   dense_general_matrix_test_template.h
@@ -110,6 +113,10 @@ endif(EIGEN3_FOUND AND VIENNACL_FOUND)
 
 add_executable(pdf-xtest ${PDF_XTEST_SOURCES})
 target_link_libraries(pdf-xtest libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
+target_compile_definitions(pdf-xtest PRIVATE
+  PDFKWD_MPAC_PATH="${CMAKE_BINARY_DIR}/data/pdfkwd.mpac"
+  ALIAS_MPAC_PATH="${PROJECT_SOURCE_DIR}/data/alias.mpac"
+)
 
 if (NOT DEFINED PDF_XTEST_FLAG)
   if (NOT DEFINED ENV{PDF_XTEST_FLAG})
@@ -121,12 +128,21 @@ endif (NOT DEFINED PDF_XTEST_FLAG)
 separate_arguments(PDF_XTEST_FLAG)
 message("PDF_XTEST_FLAG: ${PDF_XTEST_FLAG}")
 
+if (NOT DEFINED PDF_HOME)
+  if (DEFINED ENV{PDF_HOME})
+    set(PDF_HOME "$ENV{PDF_HOME}")
+  else ()
+    set(PDF_HOME "${PROJECT_SOURCE_DIR}")
+  endif ()
+endif ()
+
 add_test(
   NAME xtest
   COMMAND $<TARGET_FILE:pdf-xtest> ${PDF_XTEST_FLAG})
 set_property(TEST xtest PROPERTY LABELS xtest)
 set_property(TEST xtest PROPERTY RUN_SERIAL)
 set_property(TEST xtest PROPERTY TIMEOUT 600)
+set_property(TEST xtest PROPERTY ENVIRONMENT "PDF_HOME=${PDF_HOME}")
 
 if (MPI_FOUND)
   add_executable(pdf-xtest.MPI ${PDF_XTEST_MPI_SOURCES})
@@ -150,4 +166,5 @@ if (MPI_FOUND)
     set_property(TEST xtest.mpi PROPERTY LABELS xtest.mpi)
     set_property(TEST xtest.mpi PROPERTY RUN_SERIAL)
     set_property(TEST xtest.mpi PROPERTY TIMEOUT 600)
+    set_property(TEST xtest.mpi PROPERTY ENVIRONMENT "PDF_HOME=${PDF_HOME}")
 endif(MPI_FOUND)
