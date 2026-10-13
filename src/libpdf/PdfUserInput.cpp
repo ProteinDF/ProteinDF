@@ -822,12 +822,5 @@ void PdfUserInput::alias() {
 
 bool PdfUserInput::check() {
     bool bAnswer = true;
-
-    // scf-memory-saving
-    if (TlUtils::toUpper(this->data_["scf-memory-saving"].getStr()) == "NO") {
-        std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
-    }
-    this->data_["scf-memory-saving"] = "yes";
-
     return bAnswer;
 }
