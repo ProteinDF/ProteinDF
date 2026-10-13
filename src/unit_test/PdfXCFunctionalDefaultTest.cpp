@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 
+#include "DfInputdata.h"
 #include "PdfKeyword.h"
 #include "PdfUserInput.h"
 #include "TlFile.h"
@@ -147,8 +148,11 @@ TEST(PdfXCFunctionalDefault, ExplicitXCFunctionalPreserved) {
     EXPECT_EQ(std::string("HF"), param["xc_functional"].getStr());
 }
 
-// Tests for review item 1 & 4: scf-memory-saving is always overridden to "yes"
-TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWhenOmitted) {
+// Tests for scf-memory-saving override:
+// ~なし・省略(既定b3lyp)はyes、~付きはnoのまま、~付きyes指定はyes
+TEST(DfInputdataCheck, ScfMemorySavingOverriddenToYesWhenOmitted) {
+    ScopedPdfHome scopedPdfHome;
+
     const std::string filename = "test_userInput_memsave_omitted.txt";
     {
         std::ofstream ofs(filename.c_str());
@@ -156,14 +160,25 @@ TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWhenOmitted) {
         ofs.close();
     }
 
+    PdfKeyword pdfKwd;
+    TlSerializeData param = pdfKwd.getDefault();
+
     PdfUserInput userInput(filename);
     userInput.load();
+    TlSerializeData inputParam = userInput.getSerializeData();
+    pdfKwd.convertAlias(&inputParam);
+
+    param.merge(inputParam);
+    pdfKwd.convertAlias(&param);
+    DfInputdata::fixScfMemorySaving(&param);
     std::remove(filename.c_str());
 
-    EXPECT_EQ(std::string("yes"), userInput.getSerializeData()["scf-memory-saving"].getStr());
+    EXPECT_EQ(std::string("yes"), param["scf-memory-saving"].getStr());
 }
 
-TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWithNormalXC) {
+TEST(DfInputdataCheck, ScfMemorySavingOverriddenToYesWithNormalXC) {
+    ScopedPdfHome scopedPdfHome;
+
     const std::string filename = "test_userInput_memsave_normal.txt";
     {
         std::ofstream ofs(filename.c_str());
@@ -171,24 +186,70 @@ TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWithNormalXC) {
         ofs.close();
     }
 
+    PdfKeyword pdfKwd;
+    TlSerializeData param = pdfKwd.getDefault();
+
     PdfUserInput userInput(filename);
     userInput.load();
+    TlSerializeData inputParam = userInput.getSerializeData();
+    pdfKwd.convertAlias(&inputParam);
+
+    param.merge(inputParam);
+    pdfKwd.convertAlias(&param);
+    DfInputdata::fixScfMemorySaving(&param);
     std::remove(filename.c_str());
 
-    EXPECT_EQ(std::string("yes"), userInput.getSerializeData()["scf-memory-saving"].getStr());
+    EXPECT_EQ(std::string("yes"), param["scf-memory-saving"].getStr());
 }
 
-TEST(PdfUserInputCheck, ScfMemorySavingOverriddenToYesWithTildeXC) {
-    const std::string filename = "test_userInput_memsave_tilde.txt";
+TEST(DfInputdataCheck, ScfMemorySavingPreservedNoWithTildeXC) {
+    ScopedPdfHome scopedPdfHome;
+
+    const std::string filename = "test_userInput_memsave_tilde_no.txt";
     {
         std::ofstream ofs(filename.c_str());
         ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = no\nxc-potential = svwn~\n";
         ofs.close();
     }
 
+    PdfKeyword pdfKwd;
+    TlSerializeData param = pdfKwd.getDefault();
+
     PdfUserInput userInput(filename);
     userInput.load();
+    TlSerializeData inputParam = userInput.getSerializeData();
+    pdfKwd.convertAlias(&inputParam);
+
+    param.merge(inputParam);
+    pdfKwd.convertAlias(&param);
+    DfInputdata::fixScfMemorySaving(&param);
     std::remove(filename.c_str());
 
-    EXPECT_EQ(std::string("yes"), userInput.getSerializeData()["scf-memory-saving"].getStr());
+    EXPECT_EQ(std::string("no"), param["scf-memory-saving"].getStr());
+}
+
+TEST(DfInputdataCheck, ScfMemorySavingPreservedYesWithTildeXC) {
+    ScopedPdfHome scopedPdfHome;
+
+    const std::string filename = "test_userInput_memsave_tilde_yes.txt";
+    {
+        std::ofstream ofs(filename.c_str());
+        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = yes\nxc-potential = svwn~\n";
+        ofs.close();
+    }
+
+    PdfKeyword pdfKwd;
+    TlSerializeData param = pdfKwd.getDefault();
+
+    PdfUserInput userInput(filename);
+    userInput.load();
+    TlSerializeData inputParam = userInput.getSerializeData();
+    pdfKwd.convertAlias(&inputParam);
+
+    param.merge(inputParam);
+    pdfKwd.convertAlias(&param);
+    DfInputdata::fixScfMemorySaving(&param);
+    std::remove(filename.c_str());
+
+    EXPECT_EQ(std::string("yes"), param["scf-memory-saving"].getStr());
 }
