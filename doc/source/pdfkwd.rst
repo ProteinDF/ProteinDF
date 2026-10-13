@@ -1085,7 +1085,7 @@
   :stub-columns: 1
 
   "parameter", "scf-memory-saving"
-  "explanation", ""
+  "explanation", "~付きXC汎関数でのみ有効。それ以外はyesに固定される。noは三中心積分を事前計算する"
   "default", "no"
   "values", "yes/no"
 
