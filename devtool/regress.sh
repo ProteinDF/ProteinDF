@@ -34,17 +34,6 @@
 #   REGRESS_VENV_DIR      Path to shared python venv (default: <git-common-dir>/regress-venv)
 #   REGRESS_LOGS_DIR      Path to log directory (default: <git-common-dir>/regress-logs)
 #
-# Python Environment Compatibility Patches (sitecustomize.py in venv):
-#   - PdfArchive alias:
-#       proteindf_tools exposes PdfArchive_Sqlite3, but scripts reference
-#       proteindf_tools.PdfArchive. Added alias to prevent AttributeError.
-#   - Force dict conversion:
-#       PdfParamObject.set_by_raw_data expects force items to be indexed by integer.
-#       Some SQLite DBs store force records as dicts, causing KeyError: 0.
-#       Patched to convert dict {0:x, 1:y, 2:z} to list [x, y, z].
-#   - numpy<2:
-#       proteindf_bridge calls numpy.ndarray.tostring() removed in NumPy 2.0.
-#       Pinned to numpy<2 during installation.
 
 set -uo pipefail
 
@@ -172,8 +161,10 @@ t_py_start=$(date +%s)
 venv_ready=0
 if [[ -x "$venv_dir/bin/python" && -x "$venv_dir/bin/pdf-archive.py" && -x "$venv_dir/bin/pdf-test.py" \
         && -x "$venv_dir/bin/pdf-archive-h5.py" && -x "$venv_dir/bin/pdf-test-h5.py" ]]; then
-    if "$venv_dir/bin/python" -c "import proteindf_tools as p; import proteindf_bridge as b; import numpy as np; import h5py; assert hasattr(p, 'PdfArchive'); assert hasattr(np.ndarray, 'tostring')" >/dev/null 2>&1; then
-        venv_ready=1
+    if "$venv_dir/bin/python" -c "import proteindf_tools as p; import proteindf_bridge as b; import numpy as np; import h5py; assert hasattr(p, 'PdfArchive')" >/dev/null 2>&1; then
+        # a venv made by an older version of this script carries sitecustomize.py patches
+        sp_dir=$("$venv_dir/bin/python" -c "import site; print(site.getsitepackages()[0])")
+        [[ -e "$sp_dir/sitecustomize.py" ]] || venv_ready=1
     fi
 fi
 
@@ -193,14 +184,13 @@ else
         exit 1
     fi
 
-    uv venv "$venv_dir" --python 3.12 > "$logs_dir/venv-create.log" 2>&1 || {
+    uv venv --clear "$venv_dir" --python 3.12 > "$logs_dir/venv-create.log" 2>&1 || {
         echo "Failed to create uv venv. See $logs_dir/venv-create.log" >&2
         exit 1
     }
 
     echo "Installing ProteinDF_bridge and dependencies..."
-    # numpy<2 is required for numpy.ndarray.tostring() compatibility used by proteindf_bridge
-    uv pip install --python "$venv_dir/bin/python" "numpy<2" "$bridge_repo" > "$logs_dir/venv-bridge-install.log" 2>&1 || {
+    uv pip install --python "$venv_dir/bin/python" "$bridge_repo" > "$logs_dir/venv-bridge-install.log" 2>&1 || {
         echo "Failed to install ProteinDF_bridge. See $logs_dir/venv-bridge-install.log" >&2
         exit 1
     }
@@ -210,38 +200,6 @@ else
         echo "Failed to install ProteinDF_pytools. See $logs_dir/venv-pytools-install.log" >&2
         exit 1
     }
-
-    # Workaround: sitecustomize.py for Python 3.12 / pytools compatibility without touching repos
-    sp_dir=$("$venv_dir/bin/python" -c "import site; print(site.getsitepackages()[0])")
-    cat << 'EOF' > "$sp_dir/sitecustomize.py"
-import proteindf_tools
-import proteindf_tools.pdfarchive_sqlite3
-import proteindf_tools.pdfparam_object
-
-# Patch PdfArchive alias
-if not hasattr(proteindf_tools, 'PdfArchive'):
-    proteindf_tools.PdfArchive = proteindf_tools.PdfArchive_Sqlite3
-if not hasattr(proteindf_tools.pdfarchive_sqlite3, 'PdfArchive'):
-    proteindf_tools.pdfarchive_sqlite3.PdfArchive = proteindf_tools.pdfarchive_sqlite3.PdfArchive_Sqlite3
-
-# Patch force dict KeyError: 0 in set_by_raw_data
-_orig_set_by_raw_data = proteindf_tools.pdfparam_object.PdfParamObject.set_by_raw_data
-def _patched_set_by_raw_data(self, odict):
-    if "force" in odict:
-        force_dat = odict["force"]
-        if isinstance(force_dat, list):
-            new_force = []
-            for item in force_dat:
-                if isinstance(item, dict):
-                    new_force.append([item.get(0, item.get('0', 0.0)),
-                                      item.get(1, item.get('1', 0.0)),
-                                      item.get(2, item.get('2', 0.0))])
-                else:
-                    new_force.append(item)
-            odict["force"] = new_force
-    return _orig_set_by_raw_data(self, odict)
-proteindf_tools.pdfparam_object.PdfParamObject.set_by_raw_data = _patched_set_by_raw_data
-EOF
 
     echo "Environment setup complete."
 fi
