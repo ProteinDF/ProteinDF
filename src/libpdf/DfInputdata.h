@@ -28,13 +28,13 @@ class DfInputdata {
     DfInputdata();
     virtual ~DfInputdata();
 
-    // メインルーチン;
-    virtual TlSerializeData main(const bool isReadUserInput = true);
-
     /// xc_functionalが~で終わらなければscf-memory-savingをyesにする
     static void fixScfMemorySaving(TlSerializeData* pParam);
 
-protected:
+    // メインルーチン;
+    virtual TlSerializeData main(const bool isReadUserInput = true);
+
+   protected:
     void show(const TlSerializeData& data) const;
 
     // protected:
