@@ -728,39 +728,46 @@ void DfGenerateGrid::setCellPara() {
 }
 
 void DfGenerateGrid::generateGrid(const TlDenseGeneralMatrix_Lapack& O) {
-    std::size_t numOfGrids = 0;
     const int endAtom = this->m_nNumOfAtoms;
 
-#pragma omp parallel for schedule(runtime)
-    for (int atom = 0; atom < endAtom; ++atom) {
+    struct AtomGridData {
         std::vector<double> coordX;
         std::vector<double> coordY;
         std::vector<double> coordZ;
         std::vector<double> weight;
+    };
+    std::vector<AtomGridData> atomGrids(endAtom);
 
+#pragma omp parallel for schedule(runtime)
+    for (int atom = 0; atom < endAtom; ++atom) {
         // if (this->m_gridType == SG_1) {
-        this->generateGrid_atom(O, atom, &coordX, &coordY, &coordZ, &weight);
+        this->generateGrid_atom(O, atom, &atomGrids[atom].coordX,
+                                &atomGrids[atom].coordY,
+                                &atomGrids[atom].coordZ,
+                                &atomGrids[atom].weight);
         // } else {
         //     this->generateGrid_general(O, atom, &coordX, &coordY, &coordZ,
         //                                &weight);
         // }
+    }
 
-        // store grid matrix
-        const std::size_t numOfAtomGrids = weight.size();
-        if (numOfAtomGrids > 0) {
-#pragma omp critical(DfGenerateGrid__generateGrid)
-            {
-                this->grdMat_.resize(numOfGrids + numOfAtomGrids,
-                                     this->numOfColsOfGrdMat_);
-                for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
-                    this->grdMat_.set(numOfGrids, 0, coordX[i]);
-                    this->grdMat_.set(numOfGrids, 1, coordY[i]);
-                    this->grdMat_.set(numOfGrids, 2, coordZ[i]);
-                    this->grdMat_.set(numOfGrids, 3, weight[i]);
-                    this->grdMat_.set(numOfGrids, 4, atom);
-                    ++numOfGrids;
-                }
-            }
+    std::size_t totalGrids = 0;
+    for (int atom = 0; atom < endAtom; ++atom) {
+        totalGrids += atomGrids[atom].weight.size();
+    }
+
+    this->grdMat_.resize(totalGrids, this->numOfColsOfGrdMat_);
+
+    std::size_t numOfGrids = 0;
+    for (int atom = 0; atom < endAtom; ++atom) {
+        const std::size_t numOfAtomGrids = atomGrids[atom].weight.size();
+        for (std::size_t i = 0; i < numOfAtomGrids; ++i) {
+            this->grdMat_.set(numOfGrids, 0, atomGrids[atom].coordX[i]);
+            this->grdMat_.set(numOfGrids, 1, atomGrids[atom].coordY[i]);
+            this->grdMat_.set(numOfGrids, 2, atomGrids[atom].coordZ[i]);
+            this->grdMat_.set(numOfGrids, 3, atomGrids[atom].weight[i]);
+            this->grdMat_.set(numOfGrids, 4, atom);
+            ++numOfGrids;
         }
     }
 
@@ -1765,7 +1772,6 @@ TlDenseGeneralMatrix_Lapack DfGenerateGrid::getOMatrix() {
     I.set(0, 0, 1.0);
     I.set(1, 1, 1.0);
     I.set(2, 2, 1.0);
-#pragma omp parallel for
     for (int atom = 0; atom < numOfAtoms; ++atom) {
         const std::string symbol = this->flGeometry_.getAtomSymbol(atom);
         if (symbol == "X") {
