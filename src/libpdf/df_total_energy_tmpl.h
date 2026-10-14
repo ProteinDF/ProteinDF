@@ -773,11 +773,7 @@ template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOver
 void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_J_RI(
     const SymmetricMatrix& P_AB) {
     this->calcE_J_rhoTilde_rhoTilde();
-
-    if (!((this->m_bMemorySave == false) && (this->m_bDiskUtilization == false))) {
-        // NOT use Threeindexintegrals
-        this->calcE_J_rho_rhoTilde_DIRECT(P_AB);
-    }
+    this->calcE_J_rho_rhoTilde_DIRECT(P_AB);
 }
 
 // energy for a part of coulomb term ( rho*Ppq*Pqa )
@@ -933,18 +929,10 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     // J term
     switch (this->J_engine_) {
         case J_ENGINE_RI_J: {
-            // if ((this->m_bMemorySave == false) &&
-            //     (this->m_bDiskUtilization == false)) {
-            //   E_Total += this->m_dE_OEP_JRR_Exc;
-
-            //   this->logger(TlUtils::format(" Ts+Vn+J[Rho~,Rho~]+Exc =
-            //   %28.16lf",
-            //                                this->m_dE_OEP_JRR_Exc));
-            // }
             this->log_.info(TlUtils::format(" E_J[Rho, Rho~] = %28.16lf", this->E_J_rho_rhoTilde_));
-            // E_Total += this->m_dE_J_Rho_RhoTilde;
+            E_Total += this->E_J_rho_rhoTilde_;
             this->log_.info(TlUtils::format(" E_J[Rho~,Rho~] = %28.16lf", this->E_J_rhoTilde_rhoTilde_));
-            // E_Total += this->m_dE_J_RhoTilde_RhoTilde;
+            E_Total += this->E_J_rhoTilde_rhoTilde_;
         } break;
 
         case J_ENGINE_CONVENTIONAL:

@@ -80,7 +80,6 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput) {
 
         // keyword check
         pdfKwd.convertAlias(&(param));
-        DfInputdata::fixScfMemorySaving(&(param));
         pdfKwd.checkInputParam(param);
 
         //
@@ -105,19 +104,6 @@ TlSerializeData DfInputdata::main(const bool isReadUserInput) {
     }
 
     return param;
-}
-
-void DfInputdata::fixScfMemorySaving(TlSerializeData* pParam) {
-    if (pParam == nullptr) {
-        return;
-    }
-    const std::string xcFunctional = TlUtils::toUpper((*pParam)["xc_functional"].getStr());
-    if (xcFunctional.empty() || xcFunctional[xcFunctional.length() - 1] != '~') {
-        if (TlUtils::toUpper((*pParam)["scf-memory-saving"].getStr()) == "NO") {
-            std::cout << " 'scf-memory-saving = yes' overridded." << std::endl;
-        }
-        (*pParam)["scf-memory-saving"] = "yes";
-    }
 }
 
 void DfInputdata::show(const TlSerializeData& data) const {

@@ -614,9 +614,9 @@
 - keyword: scf-memory-saving
   property:
     default: 'no'
-    desc_jp: '~付きXC汎関数でのみ有効。それ以外はyesに固定される。noは三中心積分を事前計算する'
-    description: 'Only effective with ~ XC functionals (otherwise fixed to yes). no
-      precalculates three-center integrals.'
+    desc_jp: 三中心積分の事前計算は現在未実装で、計算結果には影響しない
+    description: Precalculation of three-center integrals is currently not implemented
+      and does not affect calculation results.
     hidden: false
     syntax: yes/no
 - keyword: geometry/cartesian/input
