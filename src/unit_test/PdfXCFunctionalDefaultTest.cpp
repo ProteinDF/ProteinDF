@@ -148,15 +148,15 @@ TEST(PdfXCFunctionalDefault, ExplicitXCFunctionalPreserved) {
     EXPECT_EQ(std::string("HF"), param["xc_functional"].getStr());
 }
 
-// Tests for scf-memory-saving override:
-// ~なし・省略(既定b3lyp)はyes、~付きはnoのまま、~付きyes指定はyes
-TEST(DfInputdataCheck, ScfMemorySavingOverriddenToYesWhenOmitted) {
+// Tests for scf-memory-saving preservation:
+// yes・no・省略のいずれも入力のまま保たれる
+TEST(DfInputdataCheck, ScfMemorySavingDefaultNoWhenOmitted) {
     ScopedPdfHome scopedPdfHome;
 
     const std::string filename = "test_userInput_memsave_omitted.txt";
     {
         std::ofstream ofs(filename.c_str());
-        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = no\n";
+        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nxc-potential = b3lyp\n";
         ofs.close();
     }
 
@@ -170,16 +170,15 @@ TEST(DfInputdataCheck, ScfMemorySavingOverriddenToYesWhenOmitted) {
 
     param.merge(inputParam);
     pdfKwd.convertAlias(&param);
-    DfInputdata::fixScfMemorySaving(&param);
     std::remove(filename.c_str());
 
-    EXPECT_EQ(std::string("yes"), param["scf-memory-saving"].getStr());
+    EXPECT_EQ(std::string("no"), param["scf-memory-saving"].getStr());
 }
 
-TEST(DfInputdataCheck, ScfMemorySavingOverriddenToYesWithNormalXC) {
+TEST(DfInputdataCheck, ScfMemorySavingPreservedNoWithNormalXC) {
     ScopedPdfHome scopedPdfHome;
 
-    const std::string filename = "test_userInput_memsave_normal.txt";
+    const std::string filename = "test_userInput_memsave_normal_no.txt";
     {
         std::ofstream ofs(filename.c_str());
         ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = no\nxc-potential = b3lyp\n";
@@ -196,7 +195,31 @@ TEST(DfInputdataCheck, ScfMemorySavingOverriddenToYesWithNormalXC) {
 
     param.merge(inputParam);
     pdfKwd.convertAlias(&param);
-    DfInputdata::fixScfMemorySaving(&param);
+    std::remove(filename.c_str());
+
+    EXPECT_EQ(std::string("no"), param["scf-memory-saving"].getStr());
+}
+
+TEST(DfInputdataCheck, ScfMemorySavingPreservedYesWithNormalXC) {
+    ScopedPdfHome scopedPdfHome;
+
+    const std::string filename = "test_userInput_memsave_normal_yes.txt";
+    {
+        std::ofstream ofs(filename.c_str());
+        ofs << ">>>>MAIN\nstep-control = [create]\n>>>>SCF\nmethod = rks\nscf-memory-saving = yes\nxc-potential = b3lyp\n";
+        ofs.close();
+    }
+
+    PdfKeyword pdfKwd;
+    TlSerializeData param = pdfKwd.getDefault();
+
+    PdfUserInput userInput(filename);
+    userInput.load();
+    TlSerializeData inputParam = userInput.getSerializeData();
+    pdfKwd.convertAlias(&inputParam);
+
+    param.merge(inputParam);
+    pdfKwd.convertAlias(&param);
     std::remove(filename.c_str());
 
     EXPECT_EQ(std::string("yes"), param["scf-memory-saving"].getStr());
@@ -222,7 +245,6 @@ TEST(DfInputdataCheck, ScfMemorySavingPreservedNoWithTildeXC) {
 
     param.merge(inputParam);
     pdfKwd.convertAlias(&param);
-    DfInputdata::fixScfMemorySaving(&param);
     std::remove(filename.c_str());
 
     EXPECT_EQ(std::string("no"), param["scf-memory-saving"].getStr());
@@ -248,7 +270,6 @@ TEST(DfInputdataCheck, ScfMemorySavingPreservedYesWithTildeXC) {
 
     param.merge(inputParam);
     pdfKwd.convertAlias(&param);
-    DfInputdata::fixScfMemorySaving(&param);
     std::remove(filename.c_str());
 
     EXPECT_EQ(std::string("yes"), param["scf-memory-saving"].getStr());
