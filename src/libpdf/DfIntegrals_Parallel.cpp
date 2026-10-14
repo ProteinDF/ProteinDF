@@ -212,33 +212,31 @@ void DfIntegrals_Parallel::createOverlapMatrix_LAPACK() {
         this->saveParam();
     }
 
-    if (this->K_engine_ == K_ENGINE_RI_K) {
+    if (this->K_engine_ == K_ENGINE_RI_K || this->m_bIsXCFitting == true) {
         // Sgd
         if ((calcState & DfIntegrals::Sgd) == 0) {
-            if (this->m_bIsXCFitting == true) {
-                this->outputStartTitle("Sgd");
+            this->outputStartTitle("Sgd");
 
-                // const std::size_t needMem =
-                //     this->numOfAuxXC_ * (this->numOfAuxXC_ + 1) / 2 *
-                //     sizeof(double);
-                // if (this->procMaxMemSize_ < needMem) {
-                //   this->logger(" S_(gamma delta) is build on disk.\n");
-                //   TlMatrix::useMemManager(true);
-                // } else {
-                //   this->logger(" S_(gamma delta) is build on memory.\n");
-                //   TlMatrix::useMemManager(false);
-                // }
+            // const std::size_t needMem =
+            //     this->numOfAuxXC_ * (this->numOfAuxXC_ + 1) / 2 *
+            //     sizeof(double);
+            // if (this->procMaxMemSize_ < needMem) {
+            //   this->logger(" S_(gamma delta) is build on disk.\n");
+            //   TlMatrix::useMemManager(true);
+            // } else {
+            //   this->logger(" S_(gamma delta) is build on memory.\n");
+            //   TlMatrix::useMemManager(false);
+            // }
 
-                TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
-                dfOverlapX.getSgd(&Sgd);
+            TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
+            dfOverlapX.getSgd(&Sgd);
 
-                if (rComm.isMaster() == true) {
-                    this->saveSgdMatrix(Sgd);
-                }
-                rComm.barrier();
-
-                this->outputEndTitle();
+            if (rComm.isMaster() == true) {
+                this->saveSgdMatrix(Sgd);
             }
+            rComm.barrier();
+
+            this->outputEndTitle();
 
             calcState |= DfIntegrals::Sgd;
             (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);
@@ -336,18 +334,16 @@ void DfIntegrals_Parallel::createOverlapMatrix_ScaLAPACK() {
         this->saveParam();
     }
 
-    if (this->K_engine_ == K_ENGINE_RI_K) {
+    if (this->K_engine_ == K_ENGINE_RI_K || this->m_bIsXCFitting == true) {
         // Sgd
         if ((calcState & DfIntegrals::Sgd) == 0) {
-            if (this->m_bIsXCFitting == true) {
-                this->outputStartTitle("Sgd");
+            this->outputStartTitle("Sgd");
 
-                TlDenseSymmetricMatrix_Scalapack Sgd(this->numOfAuxXC_);
-                dfOverlapX.getSgd(&Sgd);
-                this->saveSgdMatrix(Sgd);
+            TlDenseSymmetricMatrix_Scalapack Sgd(this->numOfAuxXC_);
+            dfOverlapX.getSgd(&Sgd);
+            this->saveSgdMatrix(Sgd);
 
-                this->outputEndTitle();
-            }
+            this->outputEndTitle();
 
             calcState |= DfIntegrals::Sgd;
             (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);

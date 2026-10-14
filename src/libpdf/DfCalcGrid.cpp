@@ -780,13 +780,7 @@ void DfCalcGrid::calcXCcoef_RKS(const TlDenseVector_Lapack& tmpVector,
 
     if (xc > 0) {
         TlDenseVector_Lapack epsGamma = Sgdinv * eTmpVector;
-        if ((this->m_bMemorySave == false) &&
-            (this->m_bDiskUtilization == false)) {
-            epsGamma.save("fl_Work/fl_Vct_Epsilon" +
-                          TlUtils::xtos(this->m_nIteration));
-        } else {
-            epsGamma.save("fl_Work/fl_Vct_Epsilon");
-        }
+        epsGamma.save("fl_Work/fl_Vct_Epsilon");
     }
 }
 
@@ -806,16 +800,8 @@ void DfCalcGrid::calcXCcoef_UKS(const TlDenseVector_Lapack& tmpVectorA,
 
     if (xc > 0) {
         TlDenseVector_Lapack epsGamma = Sgdinv * eTmpVector;
-        if ((this->m_bMemorySave == false) &&
-            (this->m_bDiskUtilization == false)) {
-            epsGamma.save("fl_Work/fl_Vct_Epsilona" +
-                          TlUtils::xtos(this->m_nIteration));
-            epsGamma.save("fl_Work/fl_Vct_Epsilonb" +
-                          TlUtils::xtos(this->m_nIteration));
-        } else {
-            epsGamma.save("fl_Work/fl_Vct_Epsilona");
-            epsGamma.save("fl_Work/fl_Vct_Epsilonb");
-        }
+        epsGamma.save("fl_Work/fl_Vct_Epsilona");
+        epsGamma.save("fl_Work/fl_Vct_Epsilonb");
     }
 }
 

@@ -16,11 +16,13 @@
 // You should have received a copy of the GNU General Public License
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "PdfUserInput.h"
+
 #include <fstream>
 #include <iostream>
 
+#include "CnError.h"
 #include "Fl_Db_Basis.h"
-#include "PdfUserInput.h"
 #include "TlAtom.h"
 #include "TlLogging.h"
 #include "TlResidue.h"
@@ -822,5 +824,35 @@ void PdfUserInput::alias() {
 
 bool PdfUserInput::check() {
     bool bAnswer = true;
+
+    std::string xc = "";
+    if (this->data_.hasKey("xc_functional") == true) {
+        xc = this->data_["xc_functional"].getStr();
+    } else if (this->data_.hasKey("xc-potential") == true) {
+        xc = this->data_["xc-potential"].getStr();
+    }
+
+    if (!xc.empty() && xc[xc.length() - 1] == '~') {
+        std::string jEngine = "RI_J";
+        if (this->data_.hasKey("J_engine") == true) {
+            jEngine = this->data_["J_engine"].getStr();
+        } else if (this->data_.hasKey("j_engine") == true) {
+            jEngine = this->data_["j_engine"].getStr();
+        } else if (this->data_.hasKey("j-engine") == true) {
+            jEngine = this->data_["j-engine"].getStr();
+        } else if (this->data_.hasKey("J-engine") == true) {
+            jEngine = this->data_["J-engine"].getStr();
+        }
+
+        jEngine = TlUtils::toUpper(jEngine);
+        if (jEngine != "RI_J") {
+            CnErr.abort("PdfUserInput", "", "check",
+                        "XC fitting functional ('" + xc +
+                            "') requires J_engine = RI_J, but '" + jEngine +
+                            "' is specified.");
+            bAnswer = false;
+        }
+    }
+
     return bAnswer;
 }

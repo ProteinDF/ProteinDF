@@ -821,7 +821,7 @@
   :stub-columns: 1
 
   "parameter", "xc_functional"
-  "explanation", "Specifies the exchange-correlation functional. If 'xc-potential' (or 'xc_functional') is omitted, 'b3lyp' is used with a warning."
+  "explanation", "Specifies the exchange-correlation functional. If 'xc-potential' (or 'xc_functional') is omitted, 'b3lyp' is used with a warning. XC fitting (functional with '~') requires J_engine = RI_J."
   "default", "b3lyp"
   "values", "(svwn~|svwn|blyp|b3lyp)"
 

@@ -61,7 +61,7 @@ protected:
 
     void calcE_XC(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_XC = NULL);
     void calcE_XC_gridfree(const RUN_TYPE runType, const SymmetricMatrix& PA, SymmetricMatrix* pE_XC = NULL);
-    void calcE_XC_DIRECT(const SymmetricMatrix& PA, const Vector& eps);
+    void calcE_XC_DIRECT(const RUN_TYPE runType, const SymmetricMatrix& PA, const Vector& eps);
 
 protected:
     void calcS2();
@@ -81,7 +81,7 @@ protected:
 protected:
     TlOrbitalInfo orbInfo_;
     DfXCFunctional* pDfXCFunctionalObject_;
-    DfOverlapX* pDfOverlapObject_;
+    DfOverlapType* pDfOverlapObject_;
 
     static const double TOO_SMALL;
     static double E_nuc_;
@@ -164,7 +164,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::prepareDfOverlapObject() {
-    this->pDfOverlapObject_ = new DfOverlapX(this->pPdfParam_);
+    this->pDfOverlapObject_ = new DfOverlapType(this->pPdfParam_);
 }
 
 // ----------------------------------------------------------------------------
@@ -836,7 +836,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
     if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
         if (this->m_bIsXCFitting == true) {
             const Vector Eps = this->getEps(runType);
-            this->calcE_XC_DIRECT(PA, Eps);
+            this->calcE_XC_DIRECT(runType, PA, Eps);
         } else {
             if (this->XC_engine_ != XC_ENGINE_GRID) {
                 this->calcE_XC_gridfree(runType, PA, pE_XC);
@@ -866,14 +866,22 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 // energy for xc energy term (compare myu*Ppq*Pqa with 4/3*Ex1)
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::calcE_XC_DIRECT(
-    const SymmetricMatrix& PA, const Vector& eps) {
+    const RUN_TYPE runType, const SymmetricMatrix& PA, const Vector& eps) {
+    if (this->pDfOverlapObject_ == NULL) {
+        this->prepareDfOverlapObject();
+    }
+
     // put eps*[pqs] into B
     SymmetricMatrix pqg(this->m_nNumOfAOs);
 
     // TODO: lapack only
-    // this->pDfOverlapObject_->get_pqg(eps, &pqg);
+    this->pDfOverlapObject_->get_pqg(eps, &pqg);
 
-    this->E_XC_ = pqg.dotInPlace(PA).sum();
+    double e_xc = pqg.dotInPlace(PA).sum();
+    if (runType == DfObject::RUN_RKS) {
+        e_xc *= 2.0;
+    }
+    this->E_XC_ += e_xc;
 }
 
 // ----------------------------------------------------------------------------
