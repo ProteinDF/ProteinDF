@@ -178,18 +178,16 @@ void DfIntegrals::createOverlapMatrix() {
         this->saveParam();
     }
 
-    if (this->K_engine_ == K_ENGINE_RI_K) {
+    if (this->K_engine_ == K_ENGINE_RI_K || this->m_bIsXCFitting == true) {
         // Sgd
         if ((calcState & DfIntegrals::Sgd) == 0) {
-            if (this->m_bIsXCFitting == true) {
-                this->outputStartTitle("Sgd");
+            this->outputStartTitle("Sgd");
 
-                TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
-                dfOverlapX.getSgd(&Sgd);
-                this->saveSgdMatrix(Sgd);
+            TlDenseSymmetricMatrix_Lapack Sgd(this->numOfAuxXC_);
+            dfOverlapX.getSgd(&Sgd);
+            this->saveSgdMatrix(Sgd);
 
-                this->outputEndTitle();
-            }
+            this->outputEndTitle();
 
             calcState |= DfIntegrals::Sgd;
             (*this->pPdfParam_)["control"]["integrals_state"].set(calcState);

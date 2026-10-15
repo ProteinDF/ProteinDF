@@ -37,6 +37,7 @@
 #include "DfJMatrix.h"
 #include "DfKMatrix.h"
 #include "DfLevelshift.h"
+#include "DfOverlapX.h"
 #include "DfPopulation.h"
 #include "DfScf.h"
 #include "DfSummary.h"
@@ -564,39 +565,60 @@ void DfScf::buildXcMatrix() {
     fapp_start("XC_matrix", 1, 0);
 #endif  // __FUJITSU
 
-    if ((this->isDFT_ == true) && (this->m_bIsXCFitting == false)) {
-        TlTime timer(true);
-        this->loggerStartTitle("generate XC matrix");
+    if (this->isDFT_ == true) {
+        if (this->m_bIsXCFitting == false) {
+            TlTime timer(true);
+            this->loggerStartTitle("generate XC matrix");
 
-        if (this->XC_engine_ != XC_ENGINE_GRID) {
-            this->log_.info("using grid-free method");
-            DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXcObject();
-            pDfGridFreeXC->buildFxc();
+            if (this->XC_engine_ != XC_ENGINE_GRID) {
+                this->log_.info("using grid-free method");
+                DfGridFreeXC* pDfGridFreeXC = this->getDfGridFreeXcObject();
+                pDfGridFreeXC->buildFxc();
 
-            delete pDfGridFreeXC;
-            pDfGridFreeXC = NULL;
-        } else {
-            this->log_.info("using grid method");
+                delete pDfGridFreeXC;
+                pDfGridFreeXC = NULL;
+            } else {
+                this->log_.info("using grid method");
 
-            // for restart
-            if (this->isRestart_ == true) {
-                const std::string prevGridDataFilePath =
-                    TlUtils::format("%s.itr%d", this->getGridDataFilePath().c_str(), this->m_nIteration - 1);
-                TlFile::copy(prevGridDataFilePath, this->getGridDataFilePath());
+                // for restart
+                if (this->isRestart_ == true) {
+                    const std::string prevGridDataFilePath =
+                        TlUtils::format("%s.itr%d", this->getGridDataFilePath().c_str(), this->m_nIteration - 1);
+                    TlFile::copy(prevGridDataFilePath, this->getGridDataFilePath());
+                }
+
+                DfXCFunctional* pDfXCFunctional = this->getDfXCFunctional();
+                pDfXCFunctional->buildXcMatrix();
+
+                delete pDfXCFunctional;
+                pDfXCFunctional = NULL;
             }
 
-            DfXCFunctional* pDfXCFunctional = this->getDfXCFunctional();
-            pDfXCFunctional->buildXcMatrix();
+            this->loggerEndTitle();
+            (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
 
-            delete pDfXCFunctional;
-            pDfXCFunctional = NULL;
+            // flush
+            this->matrixCache_.flush();
+        } else {
+            TlTime timer(true);
+            this->loggerStartTitle("generate XC matrix");
+
+            const TlDenseVector_Lapack myu =
+                this->getMyu<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration);
+
+            DfOverlapX dfOverlapX(this->pPdfParam_);
+            TlDenseSymmetricMatrix_Lapack Fxc;
+            dfOverlapX.get_pqg(myu, &Fxc);
+
+            this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                RUN_RKS, this->m_nIteration, Fxc);
+
+            this->loggerEndTitle();
+            (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
+
+            // flush
+            this->matrixCache_.flush();
         }
-
-        this->loggerEndTitle();
-        (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();
-
-        // flush
-        this->matrixCache_.flush();
     }
 
 #ifdef __FUJITSU
