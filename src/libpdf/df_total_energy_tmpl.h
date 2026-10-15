@@ -204,19 +204,22 @@ Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::getEps(const RUN_TYPE runType) {
     Vector eps;
+    const bool appendItr = (this->m_bMemorySave == false) && (this->m_bDiskUtilization == false);
+    const std::string suffix = appendItr ? TlUtils::xtos(this->m_nIteration) : "";
+
     switch (runType) {
         case RUN_RKS:
-            eps.load("fl_Work/fl_Vct_Epsilon");
+            eps.load("fl_Work/fl_Vct_Epsilon" + suffix);
             assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 
         case RUN_UKS_ALPHA:
-            eps.load("fl_Work/fl_Vct_Epsilona");
+            eps.load("fl_Work/fl_Vct_Epsilona" + suffix);
             assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 
         case RUN_UKS_BETA:
-            eps.load("fl_Work/fl_Vct_Epsilonb");
+            eps.load("fl_Work/fl_Vct_Epsilonb" + suffix);
             assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 

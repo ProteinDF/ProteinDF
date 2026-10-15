@@ -552,7 +552,12 @@ void DfScf::doXCIntegral() {
 }
 
 void DfScf::doThreeIndexIntegral() {
-    // DfThreeindexintegrals is obsolete and not used
+    if ((this->isDFT_ == true) && (this->m_bMemorySave != true) && (this->m_bIsXCFitting == true)) {
+        this->loggerStartTitle("DfThreeindexintegrals");
+        DfThreeindexintegrals dfThreeindexintegrals(this->pPdfParam_);
+        dfThreeindexintegrals.DfThreeindexintegralsMain();
+        this->loggerEndTitle();
+    }
 }
 
 void DfScf::buildXcMatrix() {
