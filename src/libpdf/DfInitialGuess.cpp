@@ -415,8 +415,12 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType) {
         } break;
 
         case RUN_ROKS_CLOSED: {
-            const std::vector<int> occLevel_c = this->getLevel(
-                pdfParam["method/roks/closed_occlevel"].getStr());
+            std::string occStr = pdfParam["method/roks/closed_occlevel"].getStr();
+            if (occStr.empty() && (this->numOfClosedShellElectrons_ > 0)) {
+                const int nclosed = this->numOfClosedShellElectrons_ / 2;
+                occStr = TlUtils::format("[ 1 - %d ]", nclosed);
+            }
+            const std::vector<int> occLevel_c = this->getLevel(occStr);
             for (std::vector<int>::const_iterator p = occLevel_c.begin();
                  p != occLevel_c.end(); ++p) {
                 const int level = *p - 1;
@@ -427,8 +431,13 @@ void DfInitialGuess::createOccupation(const RUN_TYPE runType) {
         } break;
 
         case RUN_ROKS_OPEN: {
-            const std::vector<int> occLevel_o =
-                this->getLevel(pdfParam["method/roks/open_occlevel"].getStr());
+            std::string occStr = pdfParam["method/roks/open_occlevel"].getStr();
+            if (occStr.empty() && (this->numOfOpenShellElectrons_ > 0)) {
+                const int nclosed = this->numOfClosedShellElectrons_ / 2;
+                const int nopen = this->numOfOpenShellElectrons_;
+                occStr = TlUtils::format("[ %d - %d ]", nclosed + 1, nclosed + nopen);
+            }
+            const std::vector<int> occLevel_o = this->getLevel(occStr);
             for (std::vector<int>::const_iterator p = occLevel_o.begin();
                  p != occLevel_o.end(); ++p) {
                 const int level = *p - 1;
