@@ -283,6 +283,13 @@
     description: ''
     hidden: false
     syntax: (integer >= 0)
+- keyword: method/roks/fock
+  property:
+    default: 'legacy'
+    desc_jp: 'roks計算におけるFock演算子の方式(legacy: 統一Fock, roothaan: Roothaan型有効Fock)'
+    description: ''
+    hidden: false
+    syntax: (legacy|roothaan)
 - keyword: save_diff_density_matrix
   property:
     default: 'yes'

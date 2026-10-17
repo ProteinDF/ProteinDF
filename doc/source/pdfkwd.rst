@@ -490,6 +490,18 @@
   "values", "(integer >= 0)"
 
 
+* method/roks/fock
+
+.. csv-table::
+  :widths: 20,80
+  :stub-columns: 1
+
+  "parameter", "method/roks/fock"
+  "explanation", ""
+  "default", "legacy"
+  "values", "(legacy|roothaan)"
+
+
 * save_diff_density_matrix
 
 .. csv-table::
