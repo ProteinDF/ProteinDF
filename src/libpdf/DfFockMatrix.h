@@ -242,21 +242,6 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 
     {
         const DfXCFunctional dfXCFunctional(this->pPdfParam_);
-        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
-            {
-                SymmetricMatrixType Fxc_o =
-                    DfObject::getFxcMatrix<SymmetricMatrixType>(
-                        RUN_ROKS_OPEN, this->m_nIteration);
-                Fo += Fxc_o;
-            }
-            {
-                SymmetricMatrixType Fxc_c =
-                    DfObject::getFxcMatrix<SymmetricMatrixType>(
-                        RUN_ROKS_CLOSED, this->m_nIteration);
-                Fc += Fxc_c;
-            }
-        }
-
         if (dfXCFunctional.isHybridFunctional() == true) {
             const double coef = dfXCFunctional.getFockExchangeCoefficient();
             this->log_.info(TlUtils::format("coefficient of K: %f", coef));
