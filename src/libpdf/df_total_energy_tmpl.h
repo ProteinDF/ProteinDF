@@ -301,7 +301,6 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 
         case METHOD_ROKS: {
             SymmetricMatrix PB = this->getSpinDensityMatrix(RUN_ROKS_CLOSED, iteration);
-            PB *= 0.5;
             SymmetricMatrix PA = this->getSpinDensityMatrix(RUN_ROKS_OPEN, iteration);
             PA += PB;
 
@@ -1009,7 +1008,7 @@ void DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::
 
     this->output_stdout(TlUtils::format(" %3d th TE = %18.16lf", this->m_nIteration, E_Total));
 
-    if (this->m_nMethodType != METHOD_RKS) {
+    if (this->m_nMethodType == METHOD_UKS) {
         this->calcS2();
     }
 
