@@ -203,6 +203,129 @@ template <typename MatrixType, typename SymmetricMatrixType,
           typename VectorType, class DfEriClass, class DfOverlapClass>
 void DfFockMatrix::mainDIRECT_ROKS() {
     const index_type numOfAOs = this->m_nNumOfAOs;
+
+    std::string fockType = "legacy";
+    if (this->pPdfParam_->hasKey("method/roks/fock")) {
+        fockType = TlUtils::toLower((*this->pPdfParam_)["method/roks/fock"].getStr());
+    }
+    this->log_.info(TlUtils::format("ROKS fockType: '%s'", fockType.c_str()));
+
+    if (fockType == "roothaan") {
+        SymmetricMatrixType FA(numOfAOs);
+        SymmetricMatrixType FB(numOfAOs);
+
+        {
+            SymmetricMatrixType Hpq = DfObject::getHpqMatrix<SymmetricMatrixType>();
+            FA += Hpq;
+            FB += Hpq;
+        }
+        if (this->m_nNumOfDummyAtoms > 0) {
+            SymmetricMatrixType Hpq2 =
+                DfObject::getHpq2Matrix<SymmetricMatrixType>();
+            const int chargeExtrapolateNumber =
+                std::max(this->chargeExtrapolateNumber_, 1);
+            const int times = std::min(this->m_nIteration, chargeExtrapolateNumber);
+            FA += static_cast<int>(times) * Hpq2;
+            FB += static_cast<int>(times) * Hpq2;
+        }
+
+        {
+            SymmetricMatrixType J =
+                DfObject::getJMatrix<SymmetricMatrixType>(this->m_nIteration);
+            FA += J;
+            FB += J;
+        }
+
+        {
+            const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+            if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+                {
+                    SymmetricMatrixType FxcA =
+                        DfObject::getFxcMatrix<SymmetricMatrixType>(
+                            RUN_ROKS_ALPHA, this->m_nIteration);
+                    FA += FxcA;
+                }
+                {
+                    SymmetricMatrixType FxcB =
+                        DfObject::getFxcMatrix<SymmetricMatrixType>(
+                            RUN_ROKS_BETA, this->m_nIteration);
+                    FB += FxcB;
+                }
+            }
+
+            if (dfXCFunctional.isHybridFunctional() == true) {
+                const double coef = dfXCFunctional.getFockExchangeCoefficient();
+                this->log_.info(TlUtils::format("coefficient of K: %f", coef));
+                {
+                    SymmetricMatrixType KA =
+                        DfObject::getHFxMatrix<SymmetricMatrixType>(
+                            RUN_ROKS_ALPHA, this->m_nIteration);
+                    KA *= coef;
+                    FA += KA;
+                }
+                {
+                    SymmetricMatrixType KB =
+                        DfObject::getHFxMatrix<SymmetricMatrixType>(
+                            RUN_ROKS_BETA, this->m_nIteration);
+                    KB *= coef;
+                    FB += KB;
+                }
+            }
+        }
+
+        const SymmetricMatrixType Fc = 0.5 * (FA + FB);
+        const MatrixType Fc_mat(Fc);
+        const MatrixType FA_mat(FA);
+        const MatrixType FB_mat(FB);
+
+        MatrixType SDc, DcS, SDo, DoS;
+        {
+            const SymmetricMatrixType S = DfObject::getSpqMatrix<SymmetricMatrixType>();
+            const SymmetricMatrixType Dc = 0.5 * DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_CLOSED, this->m_nIteration);
+            const SymmetricMatrixType Do = DfObject::getPInMatrix<SymmetricMatrixType>(RUN_ROKS_OPEN, this->m_nIteration);
+
+            SDc = S * Dc;
+            DcS = SDc;
+            DcS.transposeInPlace();
+
+            SDo = S * Do;
+            DoS = SDo;
+            DoS.transposeInPlace();
+        }
+
+        MatrixType Pv(numOfAOs, numOfAOs);
+        MatrixType PvT(numOfAOs, numOfAOs);
+        {
+            MatrixType E(numOfAOs, numOfAOs);
+            for (index_type i = 0; i < numOfAOs; ++i) {
+                E.set(i, i, 1.0);
+            }
+            Pv = E - DcS - DoS;
+            PvT = E - SDc - SDo;
+        }
+
+        MatrixType Fhalf(numOfAOs, numOfAOs);
+        {
+            const MatrixType cc = SDc * Fc_mat * DcS;
+            const MatrixType oo = SDo * Fc_mat * DoS;
+            const MatrixType vv = PvT * Fc_mat * Pv;
+
+            const MatrixType oc = SDo * FB_mat * DcS;
+            const MatrixType ov = SDo * FA_mat * Pv;
+            const MatrixType vc = PvT * Fc_mat * DcS;
+
+            MatrixType diag = cc + oo + vv;
+            diag *= 0.5;
+            Fhalf = diag + oc + ov + vc;
+        }
+
+        MatrixType FhalfT = Fhalf;
+        FhalfT.transposeInPlace();
+        const MatrixType Ftmp = Fhalf + FhalfT;
+        const SymmetricMatrixType F(Ftmp);
+        DfObject::saveFpqMatrix(RUN_ROKS, this->m_nIteration, F);
+        return;
+    }
     SymmetricMatrixType Fc(numOfAOs);
     SymmetricMatrixType Fo(numOfAOs);
 
