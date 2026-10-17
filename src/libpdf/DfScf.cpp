@@ -603,15 +603,33 @@ void DfScf::buildXcMatrix() {
             TlTime timer(true);
             this->loggerStartTitle("generate XC matrix");
 
-            const TlDenseVector_Lapack myu =
-                this->getMyu<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration);
+            if (this->m_nMethodType == METHOD_UKS) {
+                const TlDenseVector_Lapack myuA =
+                    this->getMyu<TlDenseVector_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                const TlDenseVector_Lapack myuB =
+                    this->getMyu<TlDenseVector_Lapack>(RUN_UKS_BETA, this->m_nIteration);
 
-            DfOverlapX dfOverlapX(this->pPdfParam_);
-            TlDenseSymmetricMatrix_Lapack Fxc;
-            dfOverlapX.get_pqg(myu, &Fxc);
+                DfOverlapX dfOverlapX(this->pPdfParam_);
+                TlDenseSymmetricMatrix_Lapack FxcA;
+                dfOverlapX.get_pqg(myuA, &FxcA);
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_UKS_ALPHA, this->m_nIteration, FxcA);
 
-            this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
-                RUN_RKS, this->m_nIteration, Fxc);
+                TlDenseSymmetricMatrix_Lapack FxcB;
+                dfOverlapX.get_pqg(myuB, &FxcB);
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_UKS_BETA, this->m_nIteration, FxcB);
+            } else {
+                const TlDenseVector_Lapack myu =
+                    this->getMyu<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration);
+
+                DfOverlapX dfOverlapX(this->pPdfParam_);
+                TlDenseSymmetricMatrix_Lapack Fxc;
+                dfOverlapX.get_pqg(myu, &Fxc);
+
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_RKS, this->m_nIteration, Fxc);
+            }
 
             this->loggerEndTitle();
             (*this->pPdfParam_)["stat"]["elapsed_time"]["xc_matrix"][this->m_nIteration] = timer.getElapseTime();

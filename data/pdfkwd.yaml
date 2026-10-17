@@ -466,8 +466,8 @@
 - keyword: xc_functional
   property:
     default: b3lyp
-    desc_jp: 交換相関汎関数の指定 (~付きXCフィッティングはJ_engine = RI_Jが必要)
-    description: XC-functional (~ XC fitting requires J_engine = RI_J)
+    desc_jp: 交換相関汎関数の指定 (~付きXCフィッティングはJ_engine = RI_Jが必要、RKS・UKSのみ対応)
+    description: XC-functional (~ XC fitting requires J_engine = RI_J, RKS/UKS only)
     hidden: false
     syntax: (svwn~|svwn|blyp|b3lyp)
 - keyword: grid_free
