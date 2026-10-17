@@ -220,10 +220,29 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
         calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
 
     } else {
-        P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
-    }
-    if (runType == RUN_RKS) {
-        P *= 0.5;
+        switch (runType) {
+            case RUN_RKS:
+                P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_RKS, this->m_nIteration);
+                break;
+
+            case RUN_UKS_ALPHA:
+            case RUN_UKS_BETA:
+                P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+                break;
+
+            case RUN_ROKS_ALPHA: {
+                P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+                P += this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
+            } break;
+
+            case RUN_ROKS_BETA: {
+                P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+            } break;
+
+            default:
+                this->log_.critical(TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
+                CnErr.abort();
+        }
     }
 
     const PQ_PairArray I2PQ = this->getI2PQ(this->getI2pqVtrPath());
