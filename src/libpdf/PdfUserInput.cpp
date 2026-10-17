@@ -852,6 +852,18 @@ bool PdfUserInput::check() {
                             "' is specified.");
             bAnswer = false;
         }
+
+        std::string method = "rks";
+        if (this->data_.hasKey("method") == true) {
+            method = this->data_["method"].getStr();
+        }
+        method = TlUtils::toLower(method);
+        if (method == "roks") {
+            CnErr.abort("PdfUserInput", "", "check",
+                        "XC fitting functional ('" + xc +
+                            "') is not supported for method = roks.");
+            bAnswer = false;
+        }
     }
 
     return bAnswer;
