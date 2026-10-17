@@ -371,6 +371,7 @@ inline void DfDmatrix::generateDensityMatrix(const DfObject::RUN_TYPE runType) {
         case RUN_ROKS_OPEN: {
             GeneralMatrix C = DfObject::getCMatrix<GeneralMatrix>(RUN_ROKS, this->m_nIteration);
             SymmetricMatrix P = this->calcDensMatrix<GeneralMatrix, SymmetricMatrix, Vector>(RUN_ROKS_OPEN, C, 1.0);
+            this->saveSpinDensityMatrix(runType, this->m_nIteration, P);
             this->savePOutMatrix(runType, this->m_nIteration, P);
         } break;
 
