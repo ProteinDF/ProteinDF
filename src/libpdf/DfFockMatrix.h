@@ -350,21 +350,23 @@ void DfFockMatrix::mainDIRECT_ROKS() {
     Fo = 0.5 * Fc;
 
     {
-        SymmetricMatrixType Fxc_up =
-            0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(
-                      RUN_ROKS_ALPHA, this->m_nIteration);
-        Fc += Fxc_up;
-        Fo += Fxc_up;
-    }
-    {
-        SymmetricMatrixType Fxc_down =
-            0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(
-                      RUN_ROKS_BETA, this->m_nIteration);
-        Fc += Fxc_down;
-    }
-
-    {
         const DfXCFunctional dfXCFunctional(this->pPdfParam_);
+        if (dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+            {
+                SymmetricMatrixType Fxc_up =
+                    0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(
+                              RUN_ROKS_ALPHA, this->m_nIteration);
+                Fc += Fxc_up;
+                Fo += Fxc_up;
+            }
+            {
+                SymmetricMatrixType Fxc_down =
+                    0.5 * DfObject::getFxcMatrix<SymmetricMatrixType>(
+                              RUN_ROKS_BETA, this->m_nIteration);
+                Fc += Fxc_down;
+            }
+        }
+
         if (dfXCFunctional.isHybridFunctional() == true) {
             const double coef = dfXCFunctional.getFockExchangeCoefficient();
             this->log_.info(TlUtils::format("coefficient of K: %f", coef));
@@ -414,7 +416,7 @@ void DfFockMatrix::mainDIRECT_ROKS() {
 
     MatrixType Ftmp(numOfAOs, numOfAOs);
     {
-        SymmetricMatrixType E(numOfAOs);
+        MatrixType E(numOfAOs, numOfAOs);
         for (index_type i = 0; i < numOfAOs; ++i) {
             E.set(i, i, 1.0);
         }
