@@ -120,6 +120,7 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
                 rho = DfObject::getRho<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration);
                 break;
             case METHOD_UKS:
+            case METHOD_ROKS:
                 rho = DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
                 rho += DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_BETA, this->m_nIteration);
                 break;
@@ -141,6 +142,7 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
                         prevRho = DfObject::getRho<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration - 1);
                         break;
                     case METHOD_UKS:
+                    case METHOD_ROKS:
                         prevRho = DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_ALPHA, this->m_nIteration - 1);
                         prevRho += DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_BETA, this->m_nIteration - 1);
                         break;
@@ -180,6 +182,7 @@ void DfJMatrix_Parallel::getJ_RI_distributed(TlDenseSymmetricMatrix_Scalapack* p
                 rho = DfObject::getRho<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration);
                 break;
             case METHOD_UKS:
+            case METHOD_ROKS:
                 rho = DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
                 rho += DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_BETA, this->m_nIteration);
                 break;
@@ -201,6 +204,7 @@ void DfJMatrix_Parallel::getJ_RI_distributed(TlDenseSymmetricMatrix_Scalapack* p
                         prevRho = DfObject::getRho<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration - 1);
                         break;
                     case METHOD_UKS:
+                    case METHOD_ROKS:
                         prevRho = DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_ALPHA, this->m_nIteration - 1);
                         prevRho += DfObject::getRho<TlDenseVector_Lapack>(RUN_UKS_BETA, this->m_nIteration - 1);
                         break;
