@@ -148,24 +148,23 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::calc() {
             this->getTalpha_ROKS(&t_alphaA, &t_alphaB);
 
             this->log_.info(" calc Ramda");
+            const double dNumOfElecB = 0.5 * this->numOfClosedShellElectrons_;
             const double dNumOfElecA =
-                pdfParam["method/roks/electron-number-alpha"].getDouble();
-            const double dNumOfElecB =
-                pdfParam["method/roks/electron-number-beta"].getDouble();
+                dNumOfElecB + this->numOfOpenShellElectrons_;
             const double lamdaA =
                 this->getLamda(SabinvN, t_alphaA, N_alpha, dNumOfElecA);
             const double lamdaB =
                 this->getLamda(SabinvN, t_alphaB, N_alpha, dNumOfElecB);
             this->log_.info(TlUtils::format(
-                " the number of alpha elctrons = %5.2lf, %5.2lf", dNumOfElecA));
+                " the number of alpha elctrons = %5.2lf", dNumOfElecA));
             this->log_.info(TlUtils::format(
-                " the number of beta  elctrons = %5.2lf, %5.2lf", dNumOfElecA));
+                " the number of beta  elctrons = %5.2lf", dNumOfElecB));
 
             // calculate tAlpha - lamda * nAlpha
             const Vector rhoA = Sabinv * (t_alphaA - lamdaA * N_alpha);
             const Vector rhoB = Sabinv * (t_alphaB - lamdaB * N_alpha);
             this->saveRho(rhoA, RUN_UKS_ALPHA);
-            this->saveRho(rhoA, RUN_UKS_BETA);
+            this->saveRho(rhoB, RUN_UKS_BETA);
 
             const double SumA = rhoA * N_alpha;
             const double SumB = rhoB * N_alpha;
@@ -252,36 +251,42 @@ void DfDensityFittingTmpl<SymmetricMatrix, Vector, DfERI_Class>::getTalpha_ROKS(
     assert(pT_alphaA != NULL);
     assert(pT_alphaB != NULL);
 
-    SymmetricMatrix PA = this->getP2pq(this->m_nIteration - 1);
-    SymmetricMatrix PB = this->getP1pq(this->m_nIteration - 1);
-    PA += PB;
-
     if (this->m_bDiskUtilization == false) {
-        {
-            const SymmetricMatrix prevP2 =
-                this->getP2pq(this->m_nIteration - 2);
-            PA -= prevP2;
-        }
-        {
-            const SymmetricMatrix prevP1 =
-                this->getP1pq(this->m_nIteration - 2);
-            PA -= prevP1;
-            PB -= prevP1;
+        if (this->isUpdateMethod_ == false) {
+            const SymmetricMatrix Pc =
+                this->template getPInMatrix<SymmetricMatrix>(
+                    RUN_ROKS_CLOSED, this->m_nIteration);
+            const SymmetricMatrix Po =
+                this->template getPInMatrix<SymmetricMatrix>(
+                    RUN_ROKS_OPEN, this->m_nIteration);
+            const SymmetricMatrix PB = 0.5 * Pc;
+            const SymmetricMatrix PA = PB + Po;
+
+            *pT_alphaA = this->calcTAlpha_DIRECT(PA);
+            *pT_alphaB = this->calcTAlpha_DIRECT(PB);
+        } else {
+            const SymmetricMatrix dPc =
+                this->getDiffDensityMatrix(RUN_ROKS_CLOSED);
+            const SymmetricMatrix dPo =
+                this->getDiffDensityMatrix(RUN_ROKS_OPEN);
+            const SymmetricMatrix dPB = 0.5 * dPc;
+            const SymmetricMatrix dPA = dPB + dPo;
+
+            *pT_alphaA = this->calcTAlpha_DIRECT(dPA);
+            *pT_alphaB = this->calcTAlpha_DIRECT(dPB);
+            if (this->m_nIteration > 1) {
+                *pT_alphaA +=
+                    this->getTalpha(RUN_UKS_ALPHA, this->m_nIteration - 1);
+                *pT_alphaB +=
+                    this->getTalpha(RUN_UKS_BETA, this->m_nIteration - 1);
+            }
         }
 
-        *pT_alphaA = this->calcTAlpha_DIRECT(PA) +
-                     this->getTalpha(RUN_UKS_ALPHA, this->m_nIteration - 1);
-        *pT_alphaB = this->calcTAlpha_DIRECT(PB) +
-                     this->getTalpha(RUN_UKS_BETA, this->m_nIteration - 1);
+        pT_alphaA->save(this->getTalphaPath(RUN_UKS_ALPHA, this->m_nIteration));
+        pT_alphaB->save(this->getTalphaPath(RUN_UKS_BETA, this->m_nIteration));
     } else {
         // TODO
         abort();
-    }
-
-    // save
-    if (this->m_bDiskUtilization == false) {
-        pT_alphaA->save(this->getTalphaPath(RUN_UKS_ALPHA, this->m_nIteration));
-        pT_alphaB->save(this->getTalphaPath(RUN_UKS_BETA, this->m_nIteration));
     }
 }
 
