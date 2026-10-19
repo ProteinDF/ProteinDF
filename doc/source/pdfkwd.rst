@@ -1061,7 +1061,7 @@
   :stub-columns: 1
 
   "parameter", "CD/update_relaxation_cutoff"
-  "explanation", "update_method = yesのK=CDで、ΔPの最大値がこの値以下になったら打ち切りの緩和をやめ、すべてのCholeskyベクトルを使う。0では常に緩和する"
+  "explanation", "In K=CD with update_method = yes, rebuild the K matrix from the total density once and use all Cholesky vectors in subsequent iterations when max delta P drops below or equal to this value. 0 means always relax cutoff without reset."
   "default", "0.0"
   "values", "(real >= 0)"
 
