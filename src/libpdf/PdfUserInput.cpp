@@ -866,25 +866,5 @@ bool PdfUserInput::check() {
         }
     }
 
-    std::string method = "rks";
-    if (this->data_.hasKey("method") == true) {
-        method = this->data_["method"].getStr();
-    }
-    method = TlUtils::toLower(method);
-
-    bool isUpdateMethod = false;
-    if (this->data_.hasKey("update_method") == true) {
-        isUpdateMethod = this->data_["update_method"].getBoolean();
-    } else if (this->data_.hasKey("update-method") == true) {
-        isUpdateMethod = this->data_["update-method"].getBoolean();
-    }
-
-    if ((method == "roks") && (isUpdateMethod == true)) {
-        CnErr.abort("PdfUserInput", "", "check",
-                    "update_method = yes is not supported for method = roks "
-                    "(difference density for K_engine = CD is not implemented).");
-        bAnswer = false;
-    }
-
     return bAnswer;
 }

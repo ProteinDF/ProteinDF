@@ -199,10 +199,34 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     TempSymmetricMatrix P;
     if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1)) {
         this->log_.info("update method is applied.");
-        P = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+        switch (runType) {
+            case RUN_RKS:
+                P = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_RKS, this->m_nIteration);
+                break;
+
+            case RUN_UKS_ALPHA:
+            case RUN_UKS_BETA:
+                P = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+                break;
+
+            case RUN_ROKS_ALPHA: {
+                P = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+                P += DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
+            } break;
+
+            case RUN_ROKS_BETA: {
+                P = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+            } break;
+
+            default:
+                this->log_.critical(TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
+                CnErr.abort();
+        }
 
         double threshold = 1.0E-10;
-        const double diffP = (*this->pPdfParam_)["DfDiffDensityMatrix"]["max_abs"][this->m_nIteration - 1].getDouble();
+        const double diffP = (runType == RUN_ROKS_ALPHA || runType == RUN_ROKS_BETA)
+                                 ? P.getMaxAbsoluteElement()
+                                 : (*this->pPdfParam_)["DfDiffDensityMatrix"]["max_abs"][this->m_nIteration].getDouble();
         this->log_.info(TlUtils::format("dP max: %e", diffP));
         if (diffP < 1.0) {
             threshold /= diffP;
