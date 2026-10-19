@@ -1054,6 +1054,18 @@
   "values", "(array_mmap|array|mmap)"
 
 
+* CD/update_relaxation_cutoff
+
+.. csv-table::
+  :widths: 20,80
+  :stub-columns: 1
+
+  "parameter", "CD/update_relaxation_cutoff"
+  "explanation", "update_method = yesのK=CDで、ΔPの最大値がこの値以下になったら打ち切りの緩和をやめ、すべてのCholeskyベクトルを使う。0では常に緩和する"
+  "default", "0.0"
+  "values", "(real >= 0)"
+
+
 * gridfree/orthogonalize_method
 
 .. csv-table::

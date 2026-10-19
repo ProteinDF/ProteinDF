@@ -107,6 +107,7 @@ protected:
     FastCDK_MODE fastCDK_mode_;
 
     bool useFP32_;
+    double updateRelaxationCutoff_;
 };
 
 // ----------------------------------------------------------------------------
@@ -228,20 +229,25 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
                                  ? P.getMaxAbsoluteElement()
                                  : (*this->pPdfParam_)["DfDiffDensityMatrix"]["max_abs"][this->m_nIteration].getDouble();
         this->log_.info(TlUtils::format("dP max: %e", diffP));
-        if (diffP < 1.0) {
-            threshold /= diffP;
-            threshold = std::sqrt(threshold);
-        }
-        this->log_.info(TlUtils::format("threshold: %e", threshold));
+        if (diffP <= this->updateRelaxationCutoff_) {
+            calcNumOfCVs = L.getNumOfCols();
+        } else {
+            if (diffP < 1.0) {
+                threshold /= diffP;
+                threshold = std::sqrt(threshold);
+            }
+            this->log_.info(TlUtils::format("threshold: %e", threshold));
 
-        std::vector<double> errors;
-        {
-            TlDenseVector_Lapack errs_vtr = DfObject::loadLjkErrorsVector<TlDenseVector_Lapack>();
-            errors = errs_vtr;
+            std::vector<double> errors;
+            {
+                TlDenseVector_Lapack errs_vtr = DfObject::loadLjkErrorsVector<TlDenseVector_Lapack>();
+                errors = errs_vtr;
+            }
+            std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
+                                                            std::bind(std::less<double>(), std::placeholders::_1, threshold));
+            calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
         }
-        std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
-                                                        std::bind(std::less<double>(), std::placeholders::_1, threshold));
-        calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
+        this->log_.info(TlUtils::format("num of CVs: %d", calcNumOfCVs));
 
     } else {
         switch (runType) {
