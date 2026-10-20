@@ -107,6 +107,7 @@ protected:
     FastCDK_MODE fastCDK_mode_;
 
     bool useFP32_;
+    double updateRelaxationCutoff_;
 };
 
 // ----------------------------------------------------------------------------
@@ -197,25 +198,27 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     index_type calcNumOfCVs = L.getNumOfCols();
 
     TempSymmetricMatrix P;
+    bool isResetIteration = false;
     if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1)) {
         this->log_.info("update method is applied.");
+        TempSymmetricMatrix P_diff;
         switch (runType) {
             case RUN_RKS:
-                P = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_RKS, this->m_nIteration);
+                P_diff = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_RKS, this->m_nIteration);
                 break;
 
             case RUN_UKS_ALPHA:
             case RUN_UKS_BETA:
-                P = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+                P_diff = DfObject::getDiffDensityMatrix<SymmetricMatrix>(runType, this->m_nIteration);
                 break;
 
             case RUN_ROKS_ALPHA: {
-                P = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
-                P += DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
+                P_diff = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+                P_diff += DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
             } break;
 
             case RUN_ROKS_BETA: {
-                P = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+                P_diff = 0.5 * DfObject::getDiffDensityMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
             } break;
 
             default:
@@ -223,25 +226,79 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
                 CnErr.abort();
         }
 
-        double threshold = 1.0E-10;
         const double diffP = (runType == RUN_ROKS_ALPHA || runType == RUN_ROKS_BETA)
-                                 ? P.getMaxAbsoluteElement()
+                                 ? P_diff.getMaxAbsoluteElement()
                                  : (*this->pPdfParam_)["DfDiffDensityMatrix"]["max_abs"][this->m_nIteration].getDouble();
         this->log_.info(TlUtils::format("dP max: %e", diffP));
-        if (diffP < 1.0) {
-            threshold /= diffP;
-            threshold = std::sqrt(threshold);
-        }
-        this->log_.info(TlUtils::format("threshold: %e", threshold));
 
-        std::vector<double> errors;
-        {
-            TlDenseVector_Lapack errs_vtr = DfObject::loadLjkErrorsVector<TlDenseVector_Lapack>();
-            errors = errs_vtr;
+        const std::string runTypeStr = DfObject::m_sRunTypeSuffix[runType];
+        const int resetIter = (*this->pPdfParam_)["CD"]["reset_iteration"][runTypeStr].getInt();
+        const bool resetDone = (resetIter > 0 && resetIter != this->m_nIteration);
+
+        if (this->updateRelaxationCutoff_ > 0.0) {
+            const bool hadRelaxed = (*this->pPdfParam_)["CD"]["had_relaxed"][runTypeStr].getBoolean();
+            if (!resetDone) {
+                if (diffP <= this->updateRelaxationCutoff_) {
+                    if (hadRelaxed) {
+                        isResetIteration = true;
+                        (*this->pPdfParam_)["CD"]["reset_iteration"][runTypeStr] = this->m_nIteration;
+                        this->log_.info(
+                            TlUtils::format("Reset K matrix from total density at iteration %d", this->m_nIteration));
+                    }
+                } else {
+                    (*this->pPdfParam_)["CD"]["had_relaxed"][runTypeStr] = true;
+                }
+            }
         }
-        std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
-                                                        std::bind(std::less<double>(), std::placeholders::_1, threshold));
-        calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
+
+        if (isResetIteration) {
+            switch (runType) {
+                case RUN_RKS:
+                    P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_RKS, this->m_nIteration);
+                    break;
+
+                case RUN_UKS_ALPHA:
+                case RUN_UKS_BETA:
+                    P = this->getPInMatrix<SymmetricMatrix>(runType, this->m_nIteration);
+                    break;
+
+                case RUN_ROKS_ALPHA: {
+                    P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+                    P += this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_OPEN, this->m_nIteration);
+                } break;
+
+                case RUN_ROKS_BETA: {
+                    P = 0.5 * this->getPInMatrix<SymmetricMatrix>(RUN_ROKS_CLOSED, this->m_nIteration);
+                } break;
+
+                default:
+                    this->log_.critical(TlUtils::format("Program Error: %s:%d", __FILE__, __LINE__));
+                    CnErr.abort();
+            }
+            calcNumOfCVs = L.getNumOfCols();
+        } else {
+            P = P_diff;
+            if (this->updateRelaxationCutoff_ > 0.0 && (diffP <= this->updateRelaxationCutoff_ || resetDone)) {
+                calcNumOfCVs = L.getNumOfCols();
+            } else {
+                double threshold = 1.0E-10;
+                if (diffP < 1.0) {
+                    threshold /= diffP;
+                    threshold = std::sqrt(threshold);
+                }
+                this->log_.info(TlUtils::format("threshold: %e", threshold));
+
+                std::vector<double> errors;
+                {
+                    TlDenseVector_Lapack errs_vtr = DfObject::loadLjkErrorsVector<TlDenseVector_Lapack>();
+                    errors = errs_vtr;
+                }
+                std::vector<double>::iterator it = std::find_if(errors.begin(), errors.end(),
+                                                                std::bind(std::less<double>(), std::placeholders::_1, threshold));
+                calcNumOfCVs = static_cast<index_type>(std::distance(errors.begin(), it));
+            }
+        }
+        this->log_.info(TlUtils::format("num of CVs: %d", calcNumOfCVs));
 
     } else {
         switch (runType) {
@@ -300,7 +357,7 @@ void DfCdkMatrix::getK_byLjk_useDenseMatrix(const RUN_TYPE runType) {
     K *= -1.0;
 
     SymmetricMatrix Kout = K;
-    if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1)) {
+    if ((this->isUpdateMethod_ == true) && (this->m_nIteration > 1) && (isResetIteration == false)) {
         SymmetricMatrix prevK = this->getHFxMatrix<SymmetricMatrix>(runType, this->m_nIteration - 1);
         Kout += prevK;
     }

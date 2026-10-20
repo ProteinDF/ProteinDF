@@ -597,6 +597,13 @@
     description: Specify the file format to be used for Cholesky Decomposition calculation
     hidden: false
     syntax: (array_mmap|array|mmap)
+- keyword: CD/update_relaxation_cutoff
+  property:
+    default: 0.0
+    desc_jp: update_method = yesのK=CDで、ΔPの最大値がこの値以下になったら全密度からK行列を一度再構築し、以降の反復ではすべてのCholeskyベクトルを使う。0では常に緩和する
+    description: In K=CD with update_method = yes, rebuild the K matrix from the total density once and use all Cholesky vectors in subsequent iterations when max delta P drops below or equal to this value. 0 means always relax cutoff without reset.
+    hidden: false
+    syntax: (real >= 0)
 - keyword: gridfree/orthogonalize_method
   property:
     default: canonical
