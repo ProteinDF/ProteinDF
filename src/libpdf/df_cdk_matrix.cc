@@ -70,6 +70,12 @@ DfCdkMatrix::DfCdkMatrix(TlSerializeData* pPdfParam)
             (*this->pPdfParam_)["CD/sparse_matrix_level"].getInt();
     }
 
+    this->updateRelaxationCutoff_ = 0.0;
+    if (!(*this->pPdfParam_)["CD/update_relaxation_cutoff"].getStr().empty()) {
+        this->updateRelaxationCutoff_ =
+            (*this->pPdfParam_)["CD/update_relaxation_cutoff"].getDouble();
+    }
+
     if (this->K_engine_ == DfObject::K_ENGINE_CD) {
         this->fastCDK_mode_ = FASTCDK_NONE;
     } else {

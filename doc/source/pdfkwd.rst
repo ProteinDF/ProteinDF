@@ -1054,6 +1054,18 @@
   "values", "(array_mmap|array|mmap)"
 
 
+* CD/update_relaxation_cutoff
+
+.. csv-table::
+  :widths: 20,80
+  :stub-columns: 1
+
+  "parameter", "CD/update_relaxation_cutoff"
+  "explanation", "In K=CD with update_method = yes, rebuild the K matrix from the total density once and use all Cholesky vectors in subsequent iterations when max delta P drops below or equal to this value. 0 means always relax cutoff without reset."
+  "default", "0.0"
+  "values", "(real >= 0)"
+
+
 * gridfree/orthogonalize_method
 
 .. csv-table::
