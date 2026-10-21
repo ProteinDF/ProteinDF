@@ -451,9 +451,9 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration) {
     TlDenseVector_Lapack currRho;
     {
         TlDenseVector_Lapack currRhoA;
-        currRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration));
+        currRhoA.load(this->getRhoPath(RUN_UKS_ALPHA, iteration));
         TlDenseVector_Lapack currRhoB;
-        currRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration));
+        currRhoB.load(this->getRhoPath(RUN_UKS_BETA, iteration));
 
         assert(currRhoA.getSize() == currRhoB.getSize());
         assert(this->m_nNumOfAux == currRhoA.getSize());
@@ -463,9 +463,9 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration) {
 
     // read Myu
     TlDenseVector_Lapack currMyuA;
-    currMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration));
+    currMyuA.load(this->getMyuPath(RUN_UKS_ALPHA, iteration));
     TlDenseVector_Lapack currMyuB;
-    currMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration));
+    currMyuB.load(this->getMyuPath(RUN_UKS_BETA, iteration));
 
     assert(currMyuA.getSize() == currMyuB.getSize());
     assert(this->numOfAuxXC_ == currMyuA.getSize());
@@ -490,9 +490,9 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration) {
     if (iteration > 1) {
         {
             TlDenseVector_Lapack prevRhoA;
-            prevRhoA.load("fl_Work/fl_Vct_Roua" + TlUtils::xtos(iteration - 1));
+            prevRhoA.load(this->getRhoPath(RUN_UKS_ALPHA, iteration - 1));
             TlDenseVector_Lapack prevRhoB;
-            prevRhoB.load("fl_Work/fl_Vct_Roub" + TlUtils::xtos(iteration - 1));
+            prevRhoB.load(this->getRhoPath(RUN_UKS_BETA, iteration - 1));
 
             assert(prevRhoA.getSize() == prevRhoB.getSize());
             assert(this->m_nNumOfAux == prevRhoA.getSize());
@@ -502,9 +502,9 @@ void DfThreeindexintegrals::mainDIRECT_ROKS(int iteration) {
 
         {
             TlDenseVector_Lapack prevMyuA;
-            prevMyuA.load("fl_Work/fl_Vct_Myua" + TlUtils::xtos(iteration - 1));
+            prevMyuA.load(this->getMyuPath(RUN_UKS_ALPHA, iteration - 1));
             TlDenseVector_Lapack prevMyuB;
-            prevMyuB.load("fl_Work/fl_Vct_Myub" + TlUtils::xtos(iteration - 1));
+            prevMyuB.load(this->getMyuPath(RUN_UKS_BETA, iteration - 1));
 
             assert(prevMyuA.getSize() == prevMyuB.getSize());
             assert(this->numOfAuxXC_ == prevMyuA.getSize());

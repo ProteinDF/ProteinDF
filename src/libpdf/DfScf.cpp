@@ -619,6 +619,22 @@ void DfScf::buildXcMatrix() {
                 dfOverlapX.get_pqg(myuB, &FxcB);
                 this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
                     RUN_UKS_BETA, this->m_nIteration, FxcB);
+            } else if (this->m_nMethodType == METHOD_ROKS) {
+                const TlDenseVector_Lapack myuA =
+                    this->getMyu<TlDenseVector_Lapack>(RUN_UKS_ALPHA, this->m_nIteration);
+                const TlDenseVector_Lapack myuB =
+                    this->getMyu<TlDenseVector_Lapack>(RUN_UKS_BETA, this->m_nIteration);
+
+                DfOverlapX dfOverlapX(this->pPdfParam_);
+                TlDenseSymmetricMatrix_Lapack FxcA;
+                dfOverlapX.get_pqg(myuA, &FxcA);
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_ROKS_ALPHA, this->m_nIteration, FxcA);
+
+                TlDenseSymmetricMatrix_Lapack FxcB;
+                dfOverlapX.get_pqg(myuB, &FxcB);
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_ROKS_BETA, this->m_nIteration, FxcB);
             } else {
                 const TlDenseVector_Lapack myu =
                     this->getMyu<TlDenseVector_Lapack>(RUN_RKS, this->m_nIteration);
