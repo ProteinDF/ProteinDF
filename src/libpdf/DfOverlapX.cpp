@@ -460,8 +460,8 @@ void DfOverlapX::calcOverlap_part(
                                     myu.get(globalShellIndexR) *
                                         this->pEngines_[threadID].WORK[index]);
                             }
+                            ++index;
                         }
-                        ++index;
                     }
                 }
 
@@ -545,8 +545,8 @@ void DfOverlapX::calcOverlap_part(
                                 pE->add(globalShellIndexP, globalShellIndexQ,
                                         eps.get(globalShellIndexR) * value);
                             }
+                            ++index;
                         }
-                        ++index;
                     }
                 }
 
