@@ -214,11 +214,13 @@ Vector DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>
             break;
 
         case RUN_UKS_ALPHA:
+        case RUN_ROKS_ALPHA:
             eps.load("fl_Work/fl_Vct_Epsilona" + suffix);
             assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
 
         case RUN_UKS_BETA:
+        case RUN_ROKS_BETA:
             eps.load("fl_Work/fl_Vct_Epsilonb" + suffix);
             assert(static_cast<TlVectorAbstract::size_type>(this->numOfAuxXC_) == eps.getSize());
             break;
