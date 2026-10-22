@@ -1213,6 +1213,148 @@ double DfCalcGridX::energyGradient_part(
 }
 
 TlDenseGeneralMatrix_Lapack DfCalcGridX::energyGradient(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_LDA* pFunctional) {
+    this->log_.info("pure DFT XC energy (LDA UKS) gradient by grid method");
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlDenseGeneralMatrix_Lapack Fxc_f(numOfAtoms, 3);  // func derivative term
+    TlDenseGeneralMatrix_Lapack Fxc_w(numOfAtoms, 3);  // weight derivative term
+    const double ene_xc = this->energyGradient_part(
+        P_A, P_B, pFunctional, 0, numOfAtoms, &Fxc_f, &Fxc_w);
+
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    // debug
+    if (this->isSaveGrad_) {
+        Fxc_w.save("Fxc_w.mat");
+        Fxc_f.save("Fxc_f.mat");
+    }
+
+    return Fxc_w + Fxc_f;
+}
+
+double DfCalcGridX::energyGradient_part(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_LDA* pFunctional,
+    const int startAtomIndex, const int endAtomIndex,
+    TlDenseGeneralMatrix_Lapack* pFxc_f, TlDenseGeneralMatrix_Lapack* pFxc_w) {
+    assert(pFxc_w != NULL);
+    assert(pFxc_f != NULL);
+
+    const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const double densityCutOffValue =
+        std::min(this->m_densityCutOffValueA, this->m_densityCutOffValueB);
+    const TlOrbitalInfo orbitalInfo((*this->pPdfParam_)["coordinates"],
+                                    (*this->pPdfParam_)["basis_set"]);
+    DfGenerateGrid dfGenGrid(this->pPdfParam_);
+    double ene_xc = 0.0;
+    for (int atomIndexA = startAtomIndex; atomIndexA < endAtomIndex;
+         ++atomIndexA) {
+        std::vector<TlPosition> grids;
+        std::vector<double> singleCenterWeights;
+        std::vector<double> partitioningWeights;
+        dfGenGrid.getGrids(atomIndexA, &grids, &singleCenterWeights,
+                           &partitioningWeights);
+
+        const int numOfGrids = grids.size();
+        assert(static_cast<int>(singleCenterWeights.size()) == numOfGrids);
+        assert(static_cast<int>(partitioningWeights.size()) == numOfGrids);
+
+        for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
+            const TlPosition gridPosition = grids[gridIndex];
+            const double singleCenterWeight = singleCenterWeights[gridIndex];
+            const double partitioningWeight = partitioningWeights[gridIndex];
+
+            // calc AO
+            std::vector<double> AO_values;
+            this->getAOs(gridPosition, &AO_values);
+
+            std::vector<double> dAO_dx_values;
+            std::vector<double> dAO_dy_values;
+            std::vector<double> dAO_dz_values;
+            this->getDAOs(gridPosition, &dAO_dx_values, &dAO_dy_values,
+                          &dAO_dz_values);
+
+            // calc rho
+            double rhoA = 0.0;
+            this->getRhoAtGridPoint(P_A, AO_values, &rhoA);
+            double rhoB = 0.0;
+            this->getRhoAtGridPoint(P_B, AO_values, &rhoB);
+
+            if ((rhoA > densityCutOffValue) || (rhoB > densityCutOffValue)) {
+                const double w = partitioningWeight * singleCenterWeight;
+
+                // calc energy
+                const double ene = pFunctional->getFunctional(rhoA, rhoB);
+                ene_xc += w * ene;
+
+                // calc func derivative
+                double dF_dRhoA = 0.0;
+                double dF_dRhoB = 0.0;
+                pFunctional->getDerivativeFunctional(rhoA, rhoB, &dF_dRhoA,
+                                                     &dF_dRhoB);
+
+                // functional derivative term
+                for (int i = 0; i < numOfAOs; ++i) {
+                    const double dx = dAO_dx_values[i];
+                    const double dy = dAO_dy_values[i];
+                    const double dz = dAO_dz_values[i];
+
+                    double raoA = 0.0;
+                    double raoB = 0.0;
+                    for (int j = 0; j < numOfAOs; ++j) {
+                        raoA += P_A.get(i, j) * AO_values[j];
+                        raoB += P_B.get(i, j) * AO_values[j];
+                    }
+
+                    const double dF_term = dF_dRhoA * raoA + dF_dRhoB * raoB;
+
+                    // LDA
+                    double gradx = dF_term * dx;
+                    double grady = dF_term * dy;
+                    double gradz = dF_term * dz;
+
+                    gradx *= -2.0 * w;
+                    grady *= -2.0 * w;
+                    gradz *= -2.0 * w;
+
+                    const int atomIndexB = orbitalInfo.getAtomIndex(i);
+                    pFxc_f->add(atomIndexB, 0, gradx);
+                    pFxc_f->add(atomIndexA, 0, -gradx);
+                    pFxc_f->add(atomIndexB, 1, grady);
+                    pFxc_f->add(atomIndexA, 1, -grady);
+                    pFxc_f->add(atomIndexB, 2, gradz);
+                    pFxc_f->add(atomIndexA, 2, -gradz);
+                }
+
+                // weight derivative term
+                for (int atomIndexB = 0; atomIndexB < numOfAtoms;
+                     ++atomIndexB) {
+                    if (atomIndexA != atomIndexB) {
+                        const TlDenseVector_Lapack nablaB_omegaA =
+                            dfGenGrid.JGP_nablaB_omegaA(atomIndexA, atomIndexB,
+                                                        gridPosition);
+                        const TlDenseVector_Lapack E_nablaB_omegaAi =
+                            nablaB_omegaA * singleCenterWeight * ene;
+
+                        for (int i = 0; i < 3; ++i) {
+                            pFxc_w->add(atomIndexB, i, E_nablaB_omegaAi.get(i));
+                            pFxc_w->add(
+                                atomIndexA, i,
+                                -E_nablaB_omegaAi.get(i));  // 作用反作用
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return ene_xc;
+}
+
+TlDenseGeneralMatrix_Lapack DfCalcGridX::energyGradient(
     const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_GGA* pFunctional) {
     this->log_.info("pure DFT XC energy (GGA) gradient by grid method");
     const int numOfAOs = this->m_nNumOfAOs;

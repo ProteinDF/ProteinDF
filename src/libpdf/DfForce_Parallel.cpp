@@ -26,6 +26,9 @@
 
 DfForce_Parallel::DfForce_Parallel(TlSerializeData* pPdfParam)
     : DfForce(pPdfParam) {
+    if (this->m_nMethodType == METHOD_UKS) {
+        CnErr.abort("Parallel UKS force is not supported.");
+    }
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.broadcast(this->pdfParamForForce_);
 }

@@ -85,6 +85,10 @@ class DfCalcGridX : public DfObject {
         DfFunctional_LDA* pFunctional);
     virtual TlDenseGeneralMatrix_Lapack energyGradient(
         const TlDenseSymmetricMatrix_Lapack& P_A,
+        const TlDenseSymmetricMatrix_Lapack& P_B,
+        DfFunctional_LDA* pFunctional);
+    virtual TlDenseGeneralMatrix_Lapack energyGradient(
+        const TlDenseSymmetricMatrix_Lapack& P_A,
         DfFunctional_GGA* pFunctional);
 
    protected:
@@ -293,6 +297,12 @@ class DfCalcGridX : public DfObject {
 
 protected:
     double energyGradient_part(const TlDenseSymmetricMatrix_Lapack& P_A,
+                               DfFunctional_LDA* pFunctional,
+                               const int startAtomIndex, const int endAtomIndex,
+                               TlDenseGeneralMatrix_Lapack* pFxc_f,
+                               TlDenseGeneralMatrix_Lapack* pFxc_w);
+    double energyGradient_part(const TlDenseSymmetricMatrix_Lapack& P_A,
+                               const TlDenseSymmetricMatrix_Lapack& P_B,
                                DfFunctional_LDA* pFunctional,
                                const int startAtomIndex, const int endAtomIndex,
                                TlDenseGeneralMatrix_Lapack* pFxc_f,
