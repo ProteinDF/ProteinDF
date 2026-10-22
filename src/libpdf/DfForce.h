@@ -53,6 +53,7 @@ class DfForce : public DfObject {
 
     /// Weighted ...
     virtual void calcForceFromWS(RUN_TYPE runType);
+    void calcForceFromWS_UKS();
     TlDenseGeneralMatrix_Lapack getEnergyWeightedDensityMatrix(
         RUN_TYPE runType);
 
@@ -62,10 +63,20 @@ class DfForce : public DfObject {
     void calcForceFromCoulomb(const RUN_TYPE runType);
     virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
     virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
+    void calcForceFromCoulomb_UKS(
+        const TlDenseSymmetricMatrix_Lapack& P_total);
+    void calcForceFromCoulomb_exact_UKS(
+        const TlDenseSymmetricMatrix_Lapack& P_total);
+    void calcForceFromCoulomb_RIJ_UKS(
+        const TlDenseSymmetricMatrix_Lapack& P_total);
 
     virtual void calcForceFromK(RUN_TYPE runType);
+    void calcForceFromK_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
+                            const TlDenseSymmetricMatrix_Lapack& Pb);
 
     void calcForceFromPureXC(RUN_TYPE runType);
+    void calcForceFromPureXC_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
+                                 const TlDenseSymmetricMatrix_Lapack& Pb);
     void calcForceFromPureXC_gridfree(RUN_TYPE runType);
     virtual DfCalcGridX* getCalcGridObj();
 
