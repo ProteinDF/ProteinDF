@@ -1,9 +1,11 @@
+#include "tl_dense_general_matrix_lapack.h"
+
 #include <iostream>
 
 #include "config.h"
 #include "gtest/gtest.h"
 #include "matrix_common.h"
-#include "tl_dense_general_matrix_lapack.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
 #include "vector_common.h"
 
@@ -322,6 +324,29 @@ TEST(TlDenseGeneralMatrix_Lapack, operator_mul_vec_mat) {
     EXPECT_DOUBLE_EQ(26.0, z.get(1));
     EXPECT_DOUBLE_EQ(29.0, z.get(2));
     EXPECT_DOUBLE_EQ(32.0, z.get(3));
+}
+
+TEST(TlDenseGeneralMatrix_Lapack, operator_mul_scalar) {
+    const int row = 4;
+    const int col = 3;
+    TlDenseGeneralMatrix_Lapack G(row, col);
+    for (int r = 0; r < row; ++r) {
+        for (int c = 0; c < col; ++c) {
+            G.set(r, c, (r + 1) * 10.0 + (c + 1));
+        }
+    }
+
+    const double coef = 0.5;
+    TlDenseGeneralMatrix_Lapack G_mul_scalar = G * coef;
+    TlDenseGeneralMatrix_Lapack scalar_mul_G = coef * G;
+
+    EXPECT_EQ(row, scalar_mul_G.getNumOfRows());
+    EXPECT_EQ(col, scalar_mul_G.getNumOfCols());
+    for (int r = 0; r < row; ++r) {
+        for (int c = 0; c < col; ++c) {
+            EXPECT_DOUBLE_EQ(G_mul_scalar.get(r, c), scalar_mul_G.get(r, c));
+        }
+    }
 }
 
 // TEST(TlDenseGeneralMatrix_Lapack, dotInPlace) {
