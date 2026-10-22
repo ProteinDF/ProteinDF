@@ -239,3 +239,10 @@ TlDenseVector_Lapack operator*(const TlDenseVector_Lapack& rhs1, const TlDenseGe
 
     return answer;
 }
+
+TlDenseGeneralMatrix_Lapack operator*(const double coef,
+                                      const TlDenseGeneralMatrix_Lapack& matrix) {
+    TlDenseGeneralMatrix_Lapack answer = matrix;
+    answer *= coef;
+    return answer;
+}
