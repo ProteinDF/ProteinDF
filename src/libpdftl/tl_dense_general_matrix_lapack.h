@@ -119,4 +119,7 @@ private:
     friend TlDenseVector_Lapack operator*(const TlDenseVector_Lapack& rhs1, const TlDenseGeneralMatrix_Lapack& rhs2);
 };
 
+TlDenseGeneralMatrix_Lapack operator*(const double coef,
+                                      const TlDenseGeneralMatrix_Lapack& matrix);
+
 #endif  // TL_DENSE_GENERAL_MATRIX_LAPACK_H
