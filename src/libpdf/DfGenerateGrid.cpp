@@ -2309,6 +2309,15 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_PA(
 
     if (PA > 1.0E-10) {
         const int numOfAtoms = this->m_nNumOfAtoms;
+        const int atomicNumber_A =
+            this->isAtomicSizeAdjustments_
+                ? TlAtom::getElementNumber(
+                      this->flGeometry_.getAtomSymbol(atomIndexA))
+                : 0;
+        const double R_A = (this->isAtomicSizeAdjustments_ && atomicNumber_A > 0)
+                               ? this->getCovalentRadiiForBecke(atomicNumber_A)
+                               : 0.0;
+
         for (int atomIndexB = 0; atomIndexB < numOfAtoms; ++atomIndexB) {
             if (atomIndexB != atomIndexA) {
                 const TlDenseVector_Lapack nablaA_myuAB =
@@ -2321,7 +2330,28 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_PA(
                 const double myu_AB =
                     (rr_A - rr_B) *
                     this->invDistanceMatrix_.get(atomIndexA, atomIndexB);
-                const double t = this->JGP_t(myu_AB);
+
+                double myu = myu_AB;
+                double dnu_dmu = 1.0;
+                if (this->isAtomicSizeAdjustments_ && atomicNumber_A > 0) {
+                    const int atomicNumber_B = TlAtom::getElementNumber(
+                        this->flGeometry_.getAtomSymbol(atomIndexB));
+                    if (atomicNumber_B > 0) {
+                        const double R_B =
+                            this->getCovalentRadiiForBecke(atomicNumber_B);
+                        const double au_ij = (R_A - R_B) / (R_A + R_B);
+                        double a = au_ij / (au_ij * au_ij - 1.0);
+                        if (a < -0.50) {
+                            a = -0.50;
+                        } else if (a > 0.50) {
+                            a = 0.50;
+                        }
+                        myu = myu_AB + a * (1.0 - myu_AB * myu_AB);
+                        dnu_dmu = 1.0 - 2.0 * a * myu_AB;
+                    }
+                }
+
+                const double t = this->JGP_t(myu) * dnu_dmu;
 
                 nablaA_PA += t * nablaA_myuAB;
             }
@@ -2342,16 +2372,49 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaB_PA(
 
     const double PA = this->Ps_uij(atomIndexA, gridpoint);
     if (PA > 1.0E-10) {
-        const TlDenseVector_Lapack nablaB_myuBA =
-            this->JGP_nablaA_myuAB(atomIndexB, atomIndexA, gridpoint);
-
+        const double inv_R_AB =
+            this->invDistanceMatrix_.get(atomIndexA, atomIndexB);
         const double rr_A = this->coord_[atomIndexA].distanceFrom(gridpoint);
         const double rr_B = this->coord_[atomIndexB].distanceFrom(gridpoint);
-        const double myu_AB = (rr_A - rr_B) * this->invDistanceMatrix_.get(
-                                                  atomIndexA, atomIndexB);
-        const double t = this->JGP_t(myu_AB);
+        const double myu_AB = (rr_A - rr_B) * inv_R_AB;
 
-        nablaB_PA = -PA * t * nablaB_myuBA;
+        const TlPosition v_rB = this->coord_[atomIndexB] - gridpoint;
+        const TlPosition u_B = v_rB / rr_B;
+        const TlPosition u_BA =
+            (this->coord_[atomIndexB] - this->coord_[atomIndexA]) * inv_R_AB;
+
+        const TlPosition nablaB_myuAB =
+            inv_R_AB * ((u_B * -1.0) - (u_BA * myu_AB));
+
+        double myu = myu_AB;
+        double dnu_dmu = 1.0;
+        if (this->isAtomicSizeAdjustments_) {
+            const int atomicNumber_A = TlAtom::getElementNumber(
+                this->flGeometry_.getAtomSymbol(atomIndexA));
+            const int atomicNumber_B = TlAtom::getElementNumber(
+                this->flGeometry_.getAtomSymbol(atomIndexB));
+            if (atomicNumber_A > 0 && atomicNumber_B > 0) {
+                const double R_A =
+                    this->getCovalentRadiiForBecke(atomicNumber_A);
+                const double R_B =
+                    this->getCovalentRadiiForBecke(atomicNumber_B);
+                const double au_ij = (R_A - R_B) / (R_A + R_B);
+                double a = au_ij / (au_ij * au_ij - 1.0);
+                if (a < -0.50) {
+                    a = -0.50;
+                } else if (a > 0.50) {
+                    a = 0.50;
+                }
+                myu = myu_AB + a * (1.0 - myu_AB * myu_AB);
+                dnu_dmu = 1.0 - 2.0 * a * myu_AB;
+            }
+        }
+
+        const double t = this->JGP_t(myu) * dnu_dmu;
+
+        for (int i = 0; i < 3; ++i) {
+            nablaB_PA.set(i, PA * t * nablaB_myuAB[i]);
+        }
     }
 
     return nablaB_PA;
@@ -2364,13 +2427,13 @@ double DfGenerateGrid::JGP_t(const double myu) {
     // static const double coef = - 81.0 / 32.0;
 
     double answer = 0.0;
-    if ((std::fabs(myu) - 1.0) > 1.0E-16) {
+    if ((1.0 - std::fabs(myu)) > 1.0E-16) {
         const double p1 = this->Becke_f1(myu);
         const double p2 = this->Becke_f1(p1);
         const double p3 = this->Becke_f1(p2);
         const double s = 0.5 * (1.0 - p3);  // B4
 
-        answer = coef * (1.0 - p2 * p2) * (1.0 - p1 * p1) * (1 - myu * myu) / s;
+        answer = coef * (1.0 - p2 * p2) * (1.0 - p1 * p1) * (1.0 - myu * myu) / s;
     }
 
     return answer;
@@ -2386,10 +2449,11 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_myuAB(
     const TlPosition u_A = v_rA / rA;
 
     const double rB = this->coord_[atomIndexB].distanceFrom(gridpoint);
-    TlPosition u_AB = this->coord_[atomIndexB] - this->coord_[atomIndexA];
-    u_AB.unit();
+    const TlPosition u_AB =
+        (this->coord_[atomIndexA] - this->coord_[atomIndexB]) * inv_R_AB;
 
-    TlPosition nablaA_myuAB = inv_R_AB * (u_A - ((rA - rB) * inv_R_AB) * u_AB);
+    TlPosition nablaA_myuAB =
+        inv_R_AB * (u_A - ((rA - rB) * inv_R_AB) * u_AB);
     TlDenseVector_Lapack answer(3);
     for (int i = 0; i < 3; ++i) {
         answer.set(i, nablaA_myuAB[i]);
