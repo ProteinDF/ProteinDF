@@ -139,6 +139,10 @@ class DfCalcGridX_Parallel : public DfCalcGridX {
         DfFunctional_LDA* pFunctional);
     virtual TlDenseGeneralMatrix_Lapack energyGradient(
         const TlDenseSymmetricMatrix_Lapack& P_A,
+        const TlDenseSymmetricMatrix_Lapack& P_B,
+        DfFunctional_LDA* pFunctional);
+    virtual TlDenseGeneralMatrix_Lapack energyGradient(
+        const TlDenseSymmetricMatrix_Lapack& P_A,
         DfFunctional_GGA* pFunctional);
 
    protected:

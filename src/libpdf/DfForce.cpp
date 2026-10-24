@@ -56,34 +56,95 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
 DfForce::~DfForce() {}
 
 void DfForce::calcForce() {
-    RUN_TYPE runType = RUN_RKS;
+    if (this->m_nMethodType == METHOD_ROKS) {
+        CnErr.abort("ROKS force is not supported.");
+    }
+    if (this->m_nMethodType != METHOD_RKS &&
+        this->m_nMethodType != METHOD_UKS) {
+        CnErr.abort("Unsupported method type for force calculation.");
+    }
+
+    if (this->m_nMethodType == METHOD_UKS) {
+        DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
+        if (dfXCFunctional.getFunctionalType() == DfXCFunctional::GGA) {
+            CnErr.abort("UKS force does not support GGA functionals.");
+        }
+        if (this->isDFT_ == true &&
+            (this->XC_engine_ == XC_ENGINE_GRIDFREE ||
+             this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
+            CnErr.abort("UKS force does not support grid-free XC engine.");
+        }
+        std::string xc = "";
+        if (this->pdfParamForForce_.hasKey("xc_functional") == true) {
+            xc = this->pdfParamForForce_["xc_functional"].getStr();
+        } else if (this->pdfParamForForce_.hasKey("xc-potential") == true) {
+            xc = this->pdfParamForForce_["xc-potential"].getStr();
+        }
+        if (!xc.empty() && xc[xc.length() - 1] == '~') {
+            CnErr.abort("UKS force does not support XC fitting ('~').");
+        }
+    }
+
     const int iteration = this->m_nIteration;
 
     this->calcForceFromNuclei();
-    this->calcForceFromWS(runType);
 
-    TlDenseSymmetricMatrix_Lapack P =
-        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, iteration);
-    this->calcForceFromHpq(P);
+    if (this->m_nMethodType == METHOD_RKS) {
+        RUN_TYPE runType = RUN_RKS;
+        this->calcForceFromWS(runType);
 
-    this->calcForceFromCoulomb(runType);
+        TlDenseSymmetricMatrix_Lapack P =
+            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType,
+                                                              iteration);
+        this->calcForceFromHpq(P);
 
-    this->calcForceFromK(runType);
+        this->calcForceFromCoulomb(runType);
 
-    if (this->isDFT_ == true) {
-        switch (this->XC_engine_) {
-            case XC_ENGINE_GRID:
-                this->calcForceFromPureXC(runType);
-                break;
+        this->calcForceFromK(runType);
 
-            case XC_ENGINE_GRIDFREE:
-            case XC_ENGINE_GRIDFREE_CD:
-                this->calcForceFromPureXC_gridfree(runType);
-                break;
+        if (this->isDFT_ == true) {
+            switch (this->XC_engine_) {
+                case XC_ENGINE_GRID:
+                    this->calcForceFromPureXC(runType);
+                    break;
 
-            default:
-                this->log_.critical("program error.");
-                break;
+                case XC_ENGINE_GRIDFREE:
+                case XC_ENGINE_GRIDFREE_CD:
+                    this->calcForceFromPureXC_gridfree(runType);
+                    break;
+
+                default:
+                    this->log_.critical("program error.");
+                    break;
+            }
+        }
+    } else if (this->m_nMethodType == METHOD_UKS) {
+        this->calcForceFromWS_UKS();
+
+        TlDenseSymmetricMatrix_Lapack Pa =
+            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
+                                                              iteration);
+        TlDenseSymmetricMatrix_Lapack Pb =
+            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
+                                                              iteration);
+        TlDenseSymmetricMatrix_Lapack P_total = Pa + Pb;
+
+        this->calcForceFromHpq(P_total);
+
+        this->calcForceFromCoulomb_UKS(P_total);
+
+        this->calcForceFromK_UKS(Pa, Pb);
+
+        if (this->isDFT_ == true) {
+            switch (this->XC_engine_) {
+                case XC_ENGINE_GRID:
+                    this->calcForceFromPureXC_UKS(Pa, Pb);
+                    break;
+
+                default:
+                    this->log_.critical("program error.");
+                    break;
+            }
         }
     }
 
@@ -279,6 +340,44 @@ void DfForce::calcForceFromWS(RUN_TYPE runType) {
     this->force_ += F_WS;
 }
 
+void DfForce::calcForceFromWS_UKS() {
+    this->logger("calc WS (UKS)");
+
+    DfOverlapX dfOvpX(&(this->pdfParamForForce_));
+
+    const int iteration = this->m_nIteration;
+    const TlDenseSymmetricMatrix_Lapack Pa =
+        DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Lapack>(
+            RUN_UKS_ALPHA, iteration);
+    const TlDenseSymmetricMatrix_Lapack Fa =
+        DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
+                                                              iteration);
+    const TlDenseSymmetricMatrix_Lapack Pb =
+        DfObject::getSpinDensityMatrix<TlDenseSymmetricMatrix_Lapack>(
+            RUN_UKS_BETA, iteration);
+    const TlDenseSymmetricMatrix_Lapack Fb =
+        DfObject::getFpqMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
+                                                              iteration);
+
+    const TlDenseGeneralMatrix_Lapack Wa = Pa * Fa * Pa;
+    const TlDenseGeneralMatrix_Lapack Wb = Pb * Fb * Pb;
+    const TlDenseSymmetricMatrix_Lapack W = Wa + Wb;
+
+    if (this->isDebugOutMatrix_ == true) {
+        W.save("W.mtx");
+    }
+
+    TlDenseGeneralMatrix_Lapack F_WS(this->m_nNumOfAtoms, 3);
+    dfOvpX.getForce(W, &F_WS);
+
+    F_WS *= -1.0;
+    if (this->isDebugOutMatrix_ == true) {
+        F_WS.save("F_WS.mtx");
+    }
+
+    this->force_ += F_WS;
+}
+
 TlDenseGeneralMatrix_Lapack DfForce::getEnergyWeightedDensityMatrix(
     RUN_TYPE runType) {
     const int iteration = this->m_nIteration;
@@ -357,6 +456,66 @@ void DfForce::calcForceFromCoulomb_RIJ(const RUN_TYPE runType) {
     this->force_ += F_J;
 }
 
+void DfForce::calcForceFromCoulomb_UKS(
+    const TlDenseSymmetricMatrix_Lapack& P_total) {
+    if (this->J_engine_ == J_ENGINE_RI_J) {
+        this->calcForceFromCoulomb_RIJ_UKS(P_total);
+    } else {
+        this->calcForceFromCoulomb_exact_UKS(P_total);
+    }
+}
+
+void DfForce::calcForceFromCoulomb_exact_UKS(
+    const TlDenseSymmetricMatrix_Lapack& P_total) {
+    this->loggerTime("calc force from J (UKS)");
+
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    DfEriX dfEri(&(this->pdfParamForForce_));
+
+    // ((pq)'|(rs))
+    TlDenseGeneralMatrix_Lapack F_J(numOfAtoms, 3);
+    dfEri.getForceJ(P_total, &F_J);
+
+    if (this->isDebugOutMatrix_ == true) {
+        F_J.save("F_J.mtx");
+    }
+
+    this->force_ += F_J;
+}
+
+void DfForce::calcForceFromCoulomb_RIJ_UKS(
+    const TlDenseSymmetricMatrix_Lapack& P_total) {
+    this->loggerTime("calc force from RI_J (UKS)");
+
+    const int iteration = this->m_nIteration;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    const TlDenseVector_Lapack rhoA =
+        this->getRho<TlDenseVector_Lapack>(RUN_UKS_ALPHA, iteration);
+    const TlDenseVector_Lapack rhoB =
+        this->getRho<TlDenseVector_Lapack>(RUN_UKS_BETA, iteration);
+    const TlDenseVector_Lapack rho = rhoA + rhoB;
+
+    DfEriX dfEri(&(this->pdfParamForForce_));
+
+    // ((pq)'|a)
+    TlDenseGeneralMatrix_Lapack F_pqa(numOfAtoms, 3);
+    dfEri.getForceJ(P_total, rho, &F_pqa);
+
+    // (a'|b)
+    TlDenseGeneralMatrix_Lapack F_ab(numOfAtoms, 3);
+    dfEri.getForceJ(rho, &F_ab);
+
+    if (this->isDebugOutMatrix_ == true) {
+        F_pqa.save("F_pqa.mtx");
+        F_ab.save("F_ab.mtx");
+    }
+
+    const TlDenseGeneralMatrix_Lapack F_J = (F_pqa - 0.5 * F_ab);
+    this->force_ += F_J;
+}
+
 DfCalcGridX* DfForce::getCalcGridObj() {
     this->logger("create calc-grid engine");
     DfCalcGridX* pDfCalcGrid = new DfCalcGridX(&(this->pdfParamForForce_));
@@ -415,6 +574,44 @@ void DfForce::calcForceFromPureXC(const RUN_TYPE runType) {
     this->force_ += Fxc;
 }
 
+void DfForce::calcForceFromPureXC_UKS(
+    const TlDenseSymmetricMatrix_Lapack& Pa,
+    const TlDenseSymmetricMatrix_Lapack& Pb) {
+    this->loggerTime("calc XC(grid UKS)");
+
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    TlDenseGeneralMatrix_Lapack Fxc(numOfAtoms, 3);
+
+    DfCalcGridX* pCalcGrid = this->getCalcGridObj();
+
+    DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
+    DfXCFunctional::XC_TYPE xcType = dfXCFunctional.getXcType();
+    switch (xcType) {
+        case DfXCFunctional::SVWN: {
+            DfFunctional_SVWN svwn;
+            Fxc = pCalcGrid->energyGradient(Pa, Pb, &svwn);
+        } break;
+
+        case DfXCFunctional::HF: {
+            // do nothing
+        } break;
+
+        default:
+            std::cerr << "unsupported functional for UKS force. XC_TYPE="
+                      << xcType << std::endl;
+            abort();
+            break;
+    }
+
+    delete pCalcGrid;
+    pCalcGrid = NULL;
+
+    if (this->isDebugOutMatrix_ == true) {
+        Fxc.save("F_xc.mtx");
+    }
+    this->force_ += Fxc;
+}
+
 void DfForce::calcForceFromPureXC_gridfree(RUN_TYPE runType) {
     this->loggerTime("calc XC(gridfree)");
 
@@ -453,6 +650,33 @@ void DfForce::calcForceFromK(RUN_TYPE runType) {
 
         F_K *= -1.0;
         F_K *= dfXCFunctional.getFockExchangeCoefficient();  // for B3LYP
+
+        if (this->isDebugOutMatrix_ == true) {
+            F_K.save("F_K.mtx");
+        }
+        this->force_ += F_K;
+    }
+}
+
+void DfForce::calcForceFromK_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
+                                 const TlDenseSymmetricMatrix_Lapack& Pb) {
+    this->loggerTime("calc K (UKS)");
+
+    const DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
+
+    if (dfXCFunctional.isHybridFunctional() == true) {
+        const int numOfAtoms = this->m_nNumOfAtoms;
+
+        DfEriX dfEri(&(this->pdfParamForForce_));
+
+        TlDenseGeneralMatrix_Lapack F_Ka(numOfAtoms, 3);
+        TlDenseGeneralMatrix_Lapack F_Kb(numOfAtoms, 3);
+        dfEri.getForceK(Pa, &F_Ka);
+        dfEri.getForceK(Pb, &F_Kb);
+
+        TlDenseGeneralMatrix_Lapack F_K = F_Ka + F_Kb;
+        F_K *= -1.0;
+        F_K *= dfXCFunctional.getFockExchangeCoefficient();
 
         if (this->isDebugOutMatrix_ == true) {
             F_K.save("F_K.mtx");
