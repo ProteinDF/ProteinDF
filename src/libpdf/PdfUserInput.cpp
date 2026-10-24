@@ -880,11 +880,7 @@ bool PdfUserInput::check() {
                 method = TlUtils::toLower(this->data_["method"].getStr());
             }
 
-            if (method == "roks") {
-                CnErr.abort("PdfUserInput", "", "check",
-                            "ROKS force is not supported.");
-                bAnswer = false;
-            } else if (method == "uks") {
+            if (method == "uks") {
                 if (!xc.empty() && xc[xc.length() - 1] == '~') {
                     CnErr.abort("PdfUserInput", "", "check",
                                 "UKS force does not support XC fitting ('" +
