@@ -54,6 +54,8 @@ class DfForce : public DfObject {
     /// Weighted ...
     virtual void calcForceFromWS(RUN_TYPE runType);
     void calcForceFromWS_UKS();
+    void calcForceFromWS_ROKS(const TlDenseSymmetricMatrix_Lapack& Pc,
+                              const TlDenseSymmetricMatrix_Lapack& Po);
     TlDenseGeneralMatrix_Lapack getEnergyWeightedDensityMatrix(
         RUN_TYPE runType);
 
