@@ -56,23 +56,26 @@ DfForce::DfForce(TlSerializeData* pPdfParam)
 DfForce::~DfForce() {}
 
 void DfForce::calcForce() {
-    if (this->m_nMethodType == METHOD_ROKS) {
-        CnErr.abort("ROKS force is not supported.");
-    }
     if (this->m_nMethodType != METHOD_RKS &&
-        this->m_nMethodType != METHOD_UKS) {
+        this->m_nMethodType != METHOD_UKS &&
+        this->m_nMethodType != METHOD_ROKS) {
         CnErr.abort("Unsupported method type for force calculation.");
     }
 
-    if (this->m_nMethodType == METHOD_UKS) {
+    if (this->m_nMethodType == METHOD_UKS ||
+        this->m_nMethodType == METHOD_ROKS) {
         DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
         if (dfXCFunctional.getFunctionalType() == DfXCFunctional::GGA) {
-            CnErr.abort("UKS force does not support GGA functionals.");
+            CnErr.abort(this->m_nMethodType == METHOD_ROKS
+                            ? "ROKS force does not support GGA functionals."
+                            : "UKS force does not support GGA functionals.");
         }
         if (this->isDFT_ == true &&
             (this->XC_engine_ == XC_ENGINE_GRIDFREE ||
              this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
-            CnErr.abort("UKS force does not support grid-free XC engine.");
+            CnErr.abort(this->m_nMethodType == METHOD_ROKS
+                            ? "ROKS force does not support grid-free XC engine."
+                            : "UKS force does not support grid-free XC engine.");
         }
         std::string xc = "";
         if (this->pdfParamForForce_.hasKey("xc_functional") == true) {
@@ -81,7 +84,9 @@ void DfForce::calcForce() {
             xc = this->pdfParamForForce_["xc-potential"].getStr();
         }
         if (!xc.empty() && xc[xc.length() - 1] == '~') {
-            CnErr.abort("UKS force does not support XC fitting ('~').");
+            CnErr.abort(this->m_nMethodType == METHOD_ROKS
+                            ? "ROKS force does not support XC fitting ('~')."
+                            : "UKS force does not support XC fitting ('~').");
         }
     }
 
@@ -128,6 +133,39 @@ void DfForce::calcForce() {
             this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
                                                               iteration);
         TlDenseSymmetricMatrix_Lapack P_total = Pa + Pb;
+
+        this->calcForceFromHpq(P_total);
+
+        this->calcForceFromCoulomb_UKS(P_total);
+
+        this->calcForceFromK_UKS(Pa, Pb);
+
+        if (this->isDFT_ == true) {
+            switch (this->XC_engine_) {
+                case XC_ENGINE_GRID:
+                    this->calcForceFromPureXC_UKS(Pa, Pb);
+                    break;
+
+                default:
+                    this->log_.critical("program error.");
+                    break;
+            }
+        }
+    } else if (this->m_nMethodType == METHOD_ROKS) {
+        TlDenseSymmetricMatrix_Lapack P_closed =
+            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
+                                                              iteration);
+        TlDenseSymmetricMatrix_Lapack P_open =
+            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
+                                                              iteration);
+
+        TlDenseSymmetricMatrix_Lapack Pc = 0.5 * P_closed;
+        TlDenseSymmetricMatrix_Lapack Po = P_open;
+        TlDenseSymmetricMatrix_Lapack Pa = Pc + Po;
+        TlDenseSymmetricMatrix_Lapack Pb = Pc;
+        TlDenseSymmetricMatrix_Lapack P_total = Pa + Pb;
+
+        this->calcForceFromWS_ROKS(Pc, Po);
 
         this->calcForceFromHpq(P_total);
 
@@ -362,6 +400,91 @@ void DfForce::calcForceFromWS_UKS() {
     const TlDenseGeneralMatrix_Lapack Wa = Pa * Fa * Pa;
     const TlDenseGeneralMatrix_Lapack Wb = Pb * Fb * Pb;
     const TlDenseSymmetricMatrix_Lapack W = Wa + Wb;
+
+    if (this->isDebugOutMatrix_ == true) {
+        W.save("W.mtx");
+    }
+
+    TlDenseGeneralMatrix_Lapack F_WS(this->m_nNumOfAtoms, 3);
+    dfOvpX.getForce(W, &F_WS);
+
+    F_WS *= -1.0;
+    if (this->isDebugOutMatrix_ == true) {
+        F_WS.save("F_WS.mtx");
+    }
+
+    this->force_ += F_WS;
+}
+
+void DfForce::calcForceFromWS_ROKS(
+    const TlDenseSymmetricMatrix_Lapack& Pc,
+    const TlDenseSymmetricMatrix_Lapack& Po) {
+    this->logger("calc WS (ROKS)");
+
+    DfOverlapX dfOvpX(&(this->pdfParamForForce_));
+    const int iteration = this->m_nIteration;
+
+    TlDenseSymmetricMatrix_Lapack Hpq =
+        DfObject::getHpqMatrix<TlDenseSymmetricMatrix_Lapack>();
+    TlDenseSymmetricMatrix_Lapack Fa = Hpq;
+    TlDenseSymmetricMatrix_Lapack Fb = Hpq;
+    if (this->m_nNumOfDummyAtoms > 0) {
+        TlDenseSymmetricMatrix_Lapack Hpq2 =
+            DfObject::getHpq2Matrix<TlDenseSymmetricMatrix_Lapack>();
+        const int chargeExtrapolateNumber =
+            std::max(this->chargeExtrapolateNumber_, 1);
+        const int times = std::min(iteration, chargeExtrapolateNumber);
+        Fa += static_cast<double>(times) * Hpq2;
+        Fb += static_cast<double>(times) * Hpq2;
+    }
+
+    TlDenseSymmetricMatrix_Lapack J =
+        DfObject::getJMatrix<TlDenseSymmetricMatrix_Lapack>(iteration);
+    Fa += J;
+    Fb += J;
+
+    const DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
+    if (this->isDFT_ == true &&
+        dfXCFunctional.getXcType() != DfXCFunctional::HF) {
+        TlDenseSymmetricMatrix_Lapack FxcA =
+            DfObject::getFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                RUN_ROKS_ALPHA, iteration);
+        TlDenseSymmetricMatrix_Lapack FxcB =
+            DfObject::getFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                RUN_ROKS_BETA, iteration);
+        Fa += FxcA;
+        Fb += FxcB;
+    }
+
+    if (dfXCFunctional.isHybridFunctional() == true) {
+        const double coef = dfXCFunctional.getFockExchangeCoefficient();
+        TlDenseSymmetricMatrix_Lapack Ka =
+            DfObject::getHFxMatrix<TlDenseSymmetricMatrix_Lapack>(
+                RUN_ROKS_ALPHA, iteration);
+        TlDenseSymmetricMatrix_Lapack Kb =
+            DfObject::getHFxMatrix<TlDenseSymmetricMatrix_Lapack>(
+                RUN_ROKS_BETA, iteration);
+        Ka *= coef;
+        Kb *= coef;
+        Fa += Ka;
+        Fb += Kb;
+    }
+
+    const TlDenseSymmetricMatrix_Lapack Ps = Pc + Po;
+    const TlDenseSymmetricMatrix_Lapack Fab = Fa + Fb;
+    const TlDenseGeneralMatrix_Lapack term1 = Fab * Pc;
+    const TlDenseGeneralMatrix_Lapack term2 = Fa * Po;
+    const TlDenseGeneralMatrix_Lapack bracket = term1 + term2;
+    const TlDenseGeneralMatrix_Lapack W_gen = Ps * bracket;
+
+    TlDenseGeneralMatrix_Lapack WT = W_gen;
+    WT.transposeInPlace();
+    const TlDenseGeneralMatrix_Lapack W_diff = W_gen - WT;
+    const double max_asym = W_diff.getMaxAbsoluteElement();
+    this->log_.info(TlUtils::format("ROKS W matrix asymmetry: %e", max_asym));
+
+    const TlDenseGeneralMatrix_Lapack W_sym = 0.5 * (W_gen + WT);
+    const TlDenseSymmetricMatrix_Lapack W(W_sym);
 
     if (this->isDebugOutMatrix_ == true) {
         W.save("W.mtx");
