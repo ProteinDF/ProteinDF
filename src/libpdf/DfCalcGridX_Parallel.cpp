@@ -772,6 +772,41 @@ TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::energyGradient(
 }
 
 TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::energyGradient(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_LDA* pFunctional) {
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    this->log_.info(
+        "pure DFT XC energy (LDA UKS) gradient by grid method (parallel)");
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlDenseGeneralMatrix_Lapack Fxc_f(numOfAtoms, 3);  // func derivative term
+    TlDenseGeneralMatrix_Lapack Fxc_w(numOfAtoms, 3);  // weight derivative term
+
+    const int myRank = rComm.getRank();
+    const int numOfProcs = rComm.getNumOfProcs();
+    const int range = (numOfAtoms + numOfProcs) / numOfProcs;
+    const int startIndex = range * myRank;
+    const int endIndex = std::min(range * (myRank + 1), numOfAtoms);
+    double ene_xc = this->energyGradient_part(P_A, P_B, pFunctional, startIndex,
+                                              endIndex, &Fxc_f, &Fxc_w);
+    rComm.allReduce_SUM(ene_xc);
+    rComm.allReduce_SUM(&Fxc_f);
+    rComm.allReduce_SUM(&Fxc_w);
+
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    // debug
+    if (this->isSaveGrad_) {
+        if (rComm.isMaster()) {
+            Fxc_w.save("Fxc_w.mat");
+            Fxc_f.save("Fxc_f.mat");
+        }
+    }
+
+    return Fxc_w + Fxc_f;
+}
+
+TlDenseGeneralMatrix_Lapack DfCalcGridX_Parallel::energyGradient(
     const TlDenseSymmetricMatrix_Lapack& P_A, DfFunctional_GGA* pFunctional) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
     this->log_.info(
