@@ -2098,14 +2098,17 @@ void DfGenerateGrid::getGrids(const int atomIndex,
                               std::vector<TlPosition>* pGrids,
                               std::vector<double>* pSingleCenterWeights,
                               std::vector<double>* pPartitioningWeights) {
-    const int gridType = SG_1;
-    const int numOfRadialGrids = 50;
-    const int radialGridType = RG_EularMaclaurin;
-    const int maxAngularGrids = 196;
-    const PARTITIONING_METHOD partitioningMethod = Paritioning_Becke;
-    this->getGrids_sub(atomIndex, gridType, numOfRadialGrids, radialGridType,
-                       maxAngularGrids, partitioningMethod, pGrids,
-                       pSingleCenterWeights, pPartitioningWeights);
+    if (this->partitioningMethod_ == Partitioning_SSWeight) {
+        if (atomIndex == 0) {
+            this->log_.warn(
+                "grid weight derivative for SSWeight partitioning is not "
+                "implemented (using Becke derivative).");
+        }
+    }
+    this->getGrids_sub(atomIndex, this->m_gridType, this->nrgrid,
+                       this->radialGridType_, this->nOgrid,
+                       this->partitioningMethod_, pGrids, pSingleCenterWeights,
+                       pPartitioningWeights);
 }
 
 void DfGenerateGrid::getGrids_sub(const int atomIndex, const int gridType,
@@ -2239,6 +2242,10 @@ void DfGenerateGrid::getGrids_sub(const int atomIndex, const int gridType,
                       pPartitioningWeights->begin() + numOfGrids);
             numOfGrids += numOfAngularGrids;
         }
+
+        pGrids->resize(numOfGrids);
+        pSingleCenterWeights->resize(numOfGrids);
+        pPartitioningWeights->resize(numOfGrids);
 
         // screening by weight
         {
