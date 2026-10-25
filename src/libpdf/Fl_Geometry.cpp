@@ -233,7 +233,11 @@ void Fl_Geometry::setup(const TlSerializeData& geomData) {
             const double y = (*atom)["xyz"].getAt(1).getDouble();
             const double z = (*atom)["xyz"].getAt(2).getDouble();
             ad.atom.moveTo(x, y, z);
-            ad.label = (*atom)["label"].getStr();
+            if ((*atom).hasKey("label")) {
+                ad.label = (*atom)["label"].getStr();
+            } else {
+                ad.label = "";
+            }
 
             this->atoms_.push_back(ad);
         }
