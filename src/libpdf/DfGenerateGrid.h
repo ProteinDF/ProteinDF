@@ -131,6 +131,7 @@ class DfGenerateGrid : public DfObject {
     double getCovalentRadiiForBecke(const int atomicNumber);
     double Becke_f1(const double x);
     double Becke_f3(const double x);
+    void calcCellFunction_SS(const double u, double* s, double* ds_du);
 
     void screeningGridsByWeight0(std::vector<TlPosition>* pGrids,
                                  std::vector<double>* pWeights);
