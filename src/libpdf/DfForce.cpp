@@ -64,12 +64,6 @@ void DfForce::calcForce() {
 
     if (this->m_nMethodType == METHOD_UKS ||
         this->m_nMethodType == METHOD_ROKS) {
-        DfXCFunctional dfXCFunctional(&(this->pdfParamForForce_));
-        if (dfXCFunctional.getFunctionalType() == DfXCFunctional::GGA) {
-            CnErr.abort(this->m_nMethodType == METHOD_ROKS
-                            ? "ROKS force does not support GGA functionals."
-                            : "UKS force does not support GGA functionals.");
-        }
         if (this->isDFT_ == true &&
             (this->XC_engine_ == XC_ENGINE_GRIDFREE ||
              this->XC_engine_ == XC_ENGINE_GRIDFREE_CD)) {
@@ -713,6 +707,16 @@ void DfForce::calcForceFromPureXC_UKS(
         case DfXCFunctional::SVWN: {
             DfFunctional_SVWN svwn;
             Fxc = pCalcGrid->energyGradient(Pa, Pb, &svwn);
+        } break;
+
+        case DfXCFunctional::BLYP: {
+            DfFunctional_B88LYP blyp;
+            Fxc = pCalcGrid->energyGradient(Pa, Pb, &blyp);
+        } break;
+
+        case DfXCFunctional::B3LYP: {
+            DfFunctional_B3LYP b3lyp;
+            Fxc = pCalcGrid->energyGradient(Pa, Pb, &b3lyp);
         } break;
 
         case DfXCFunctional::HF: {
