@@ -1556,6 +1556,246 @@ double DfCalcGridX::energyGradient_part(
     return ene_xc;
 }
 
+TlDenseGeneralMatrix_Lapack DfCalcGridX::energyGradient(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_GGA* pFunctional) {
+    this->log_.info("pure DFT XC energy (GGA UKS) gradient by grid method");
+    const int numOfAtoms = this->m_nNumOfAtoms;
+
+    TlDenseGeneralMatrix_Lapack Fxc_w(numOfAtoms, 3);  // weight derivative term
+    TlDenseGeneralMatrix_Lapack Fxc_f(numOfAtoms, 3);  // func term
+    const double ene_xc = this->energyGradient_part(
+        P_A, P_B, pFunctional, 0, numOfAtoms, &Fxc_f, &Fxc_w);
+
+    this->log_.info(TlUtils::format("XC ene = % 16.10f", ene_xc));
+
+    // debug
+    if (this->isSaveGrad_) {
+        Fxc_w.save("Fxc_w.mat");
+        Fxc_f.save("Fxc_f.mat");
+    }
+
+    return Fxc_w + Fxc_f;
+}
+
+double DfCalcGridX::energyGradient_part(
+    const TlDenseSymmetricMatrix_Lapack& P_A,
+    const TlDenseSymmetricMatrix_Lapack& P_B, DfFunctional_GGA* pFunctional,
+    const int startAtomIndex, const int endAtomIndex,
+    TlDenseGeneralMatrix_Lapack* pFxc_f, TlDenseGeneralMatrix_Lapack* pFxc_w) {
+    assert(pFxc_w != NULL);
+    assert(pFxc_f != NULL);
+
+    const int numOfAOs = this->m_nNumOfAOs;
+    const int numOfAtoms = this->m_nNumOfAtoms;
+    const double densityCutOffValue =
+        std::min(this->m_densityCutOffValueA, this->m_densityCutOffValueB);
+    const TlOrbitalInfo orbitalInfo((*this->pPdfParam_)["coordinates"],
+                                    (*this->pPdfParam_)["basis_set"]);
+    DfGenerateGrid dfGenGrid(this->pPdfParam_);
+    double ene_xc = 0.0;
+    for (int atomIndexA = startAtomIndex; atomIndexA < endAtomIndex;
+         ++atomIndexA) {
+        std::vector<TlPosition> grids;
+        std::vector<double> singleCenterWeights;
+        std::vector<double> partitioningWeights;
+        dfGenGrid.getGrids(atomIndexA, &grids, &singleCenterWeights,
+                           &partitioningWeights);
+
+        const int numOfGrids = grids.size();
+        assert(static_cast<int>(singleCenterWeights.size()) == numOfGrids);
+        assert(static_cast<int>(partitioningWeights.size()) == numOfGrids);
+
+        for (int gridIndex = 0; gridIndex < numOfGrids; ++gridIndex) {
+            const TlPosition gridPosition = grids[gridIndex];
+            const double singleCenterWeight = singleCenterWeights[gridIndex];
+            const double partitioningWeight = partitioningWeights[gridIndex];
+
+            // calc AO
+            std::vector<double> AO_values;
+            this->getAOs(gridPosition, &AO_values);
+
+            std::vector<double> dAO_dx_values;
+            std::vector<double> dAO_dy_values;
+            std::vector<double> dAO_dz_values;
+            this->getDAOs(gridPosition, &dAO_dx_values, &dAO_dy_values,
+                          &dAO_dz_values);
+
+            std::vector<double> d2AO_dxdx_values;
+            std::vector<double> d2AO_dxdy_values;
+            std::vector<double> d2AO_dxdz_values;
+            std::vector<double> d2AO_dydy_values;
+            std::vector<double> d2AO_dydz_values;
+            std::vector<double> d2AO_dzdz_values;
+            this->getD2AOs(gridPosition, &d2AO_dxdx_values, &d2AO_dxdy_values,
+                           &d2AO_dxdz_values, &d2AO_dydy_values,
+                           &d2AO_dydz_values, &d2AO_dzdz_values);
+
+            // calc rho
+            double rhoA = 0.0;
+            this->getRhoAtGridPoint(P_A, AO_values, &rhoA);
+            double rhoB = 0.0;
+            this->getRhoAtGridPoint(P_B, AO_values, &rhoB);
+
+            double gradRhoAX = 0.0;
+            double gradRhoAY = 0.0;
+            double gradRhoAZ = 0.0;
+            this->getGradRhoAtGridPoint(P_A, AO_values, dAO_dx_values,
+                                        dAO_dy_values, dAO_dz_values,
+                                        &gradRhoAX, &gradRhoAY, &gradRhoAZ);
+
+            double gradRhoBX = 0.0;
+            double gradRhoBY = 0.0;
+            double gradRhoBZ = 0.0;
+            this->getGradRhoAtGridPoint(P_B, AO_values, dAO_dx_values,
+                                        dAO_dy_values, dAO_dz_values,
+                                        &gradRhoBX, &gradRhoBY, &gradRhoBZ);
+
+            if ((rhoA > densityCutOffValue) || (rhoB > densityCutOffValue)) {
+                const double w = partitioningWeight * singleCenterWeight;
+                const double gammaAA = gradRhoAX * gradRhoAX +
+                                       gradRhoAY * gradRhoAY +
+                                       gradRhoAZ * gradRhoAZ;
+                const double gammaAB = gradRhoAX * gradRhoBX +
+                                       gradRhoAY * gradRhoBY +
+                                       gradRhoAZ * gradRhoBZ;
+                const double gammaBB = gradRhoBX * gradRhoBX +
+                                       gradRhoBY * gradRhoBY +
+                                       gradRhoBZ * gradRhoBZ;
+
+                // calc energy
+                const double ene = pFunctional->getFunctional(
+                    rhoA, rhoB, gammaAA, gammaAB, gammaBB);
+                ene_xc += w * ene;
+
+                // calc func derivative
+                double dF_dRhoA = 0.0;
+                double dF_dRhoB = 0.0;
+                double dF_dGammaAA = 0.0;
+                double dF_dGammaAB = 0.0;
+                double dF_dGammaBB = 0.0;
+                pFunctional->getDerivativeFunctional(
+                    rhoA, rhoB, gammaAA, gammaAB, gammaBB, &dF_dRhoA, &dF_dRhoB,
+                    &dF_dGammaAA, &dF_dGammaAB, &dF_dGammaBB);
+
+                const double coef_ax =
+                    2.0 * dF_dGammaAA * gradRhoAX + dF_dGammaAB * gradRhoBX;
+                const double coef_ay =
+                    2.0 * dF_dGammaAA * gradRhoAY + dF_dGammaAB * gradRhoBY;
+                const double coef_az =
+                    2.0 * dF_dGammaAA * gradRhoAZ + dF_dGammaAB * gradRhoBZ;
+
+                const double coef_bx =
+                    2.0 * dF_dGammaBB * gradRhoBX + dF_dGammaAB * gradRhoAX;
+                const double coef_by =
+                    2.0 * dF_dGammaBB * gradRhoBY + dF_dGammaAB * gradRhoAY;
+                const double coef_bz =
+                    2.0 * dF_dGammaBB * gradRhoBZ + dF_dGammaAB * gradRhoAZ;
+
+                // functional derivative term
+                for (int i = 0; i < numOfAOs; ++i) {
+                    const double dx = dAO_dx_values[i];
+                    const double dy = dAO_dy_values[i];
+                    const double dz = dAO_dz_values[i];
+                    const double dxdx = d2AO_dxdx_values[i];
+                    const double dxdy = d2AO_dxdy_values[i];
+                    const double dxdz = d2AO_dxdz_values[i];
+                    const double dydy = d2AO_dydy_values[i];
+                    const double dydz = d2AO_dydz_values[i];
+                    const double dzdz = d2AO_dzdz_values[i];
+
+                    double raoA = 0.0;
+                    double rdxA = 0.0;
+                    double rdyA = 0.0;
+                    double rdzA = 0.0;
+
+                    double raoB = 0.0;
+                    double rdxB = 0.0;
+                    double rdyB = 0.0;
+                    double rdzB = 0.0;
+
+                    for (int j = 0; j < numOfAOs; ++j) {
+                        const double PijA = P_A.get(i, j);
+                        raoA += PijA * AO_values[j];
+                        rdxA += PijA * dAO_dx_values[j];
+                        rdyA += PijA * dAO_dy_values[j];
+                        rdzA += PijA * dAO_dz_values[j];
+
+                        const double PijB = P_B.get(i, j);
+                        raoB += PijB * AO_values[j];
+                        rdxB += PijB * dAO_dx_values[j];
+                        rdyB += PijB * dAO_dy_values[j];
+                        rdzB += PijB * dAO_dz_values[j];
+                    }
+
+                    // LDA
+                    double gradxA = dF_dRhoA * dx * raoA;
+                    double gradyA = dF_dRhoA * dy * raoA;
+                    double gradzA = dF_dRhoA * dz * raoA;
+
+                    double gradxB = dF_dRhoB * dx * raoB;
+                    double gradyB = dF_dRhoB * dy * raoB;
+                    double gradzB = dF_dRhoB * dz * raoB;
+
+                    // GGA
+                    gradxA += coef_ax * (dxdx * raoA + dx * rdxA) +
+                              coef_ay * (dxdy * raoA + dx * rdyA) +
+                              coef_az * (dxdz * raoA + dx * rdzA);
+                    gradyA += coef_ax * (dxdy * raoA + dy * rdxA) +
+                              coef_ay * (dydy * raoA + dy * rdyA) +
+                              coef_az * (dydz * raoA + dy * rdzA);
+                    gradzA += coef_ax * (dxdz * raoA + dz * rdxA) +
+                              coef_ay * (dydz * raoA + dz * rdyA) +
+                              coef_az * (dzdz * raoA + dz * rdzA);
+
+                    gradxB += coef_bx * (dxdx * raoB + dx * rdxB) +
+                              coef_by * (dxdy * raoB + dx * rdyB) +
+                              coef_bz * (dxdz * raoB + dx * rdzB);
+                    gradyB += coef_bx * (dxdy * raoB + dy * rdxB) +
+                              coef_by * (dydy * raoB + dy * rdyB) +
+                              coef_bz * (dydz * raoB + dy * rdzB);
+                    gradzB += coef_bx * (dxdz * raoB + dz * rdxB) +
+                              coef_by * (dydz * raoB + dz * rdyB) +
+                              coef_bz * (dzdz * raoB + dz * rdzB);
+
+                    double gradx = (gradxA + gradxB) * (-2.0 * w);
+                    double grady = (gradyA + gradyB) * (-2.0 * w);
+                    double gradz = (gradzA + gradzB) * (-2.0 * w);
+
+                    const int atomIndexB = orbitalInfo.getAtomIndex(i);
+                    pFxc_f->add(atomIndexB, 0, gradx);
+                    pFxc_f->add(atomIndexA, 0, -gradx);
+                    pFxc_f->add(atomIndexB, 1, grady);
+                    pFxc_f->add(atomIndexA, 1, -grady);
+                    pFxc_f->add(atomIndexB, 2, gradz);
+                    pFxc_f->add(atomIndexA, 2, -gradz);
+                }
+
+                // weight derivative term
+                for (int atomIndexB = 0; atomIndexB < numOfAtoms;
+                     ++atomIndexB) {
+                    if (atomIndexA != atomIndexB) {
+                        const TlDenseVector_Lapack nablaB_omegaA =
+                            dfGenGrid.JGP_nablaB_omegaA(atomIndexA, atomIndexB,
+                                                        gridPosition);
+                        const TlDenseVector_Lapack E_nablaB_omegaAi =
+                            nablaB_omegaA * singleCenterWeight * ene;
+
+                        for (int i = 0; i < 3; ++i) {
+                            pFxc_w->add(atomIndexB, i, E_nablaB_omegaAi.get(i));
+                            pFxc_w->add(
+                                atomIndexA, i,
+                                -E_nablaB_omegaAi.get(i));  // 作用反作用
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return ene_xc;
+}
+
 // experimental code -----------------------------------------------------------
 // void DfCalcGridX::calcRhoVals_LDA(const std::vector<index_type>&
 // P_rowIndexes,

@@ -90,8 +90,12 @@ class DfCalcGridX : public DfObject {
     virtual TlDenseGeneralMatrix_Lapack energyGradient(
         const TlDenseSymmetricMatrix_Lapack& P_A,
         DfFunctional_GGA* pFunctional);
+    virtual TlDenseGeneralMatrix_Lapack energyGradient(
+        const TlDenseSymmetricMatrix_Lapack& P_A,
+        const TlDenseSymmetricMatrix_Lapack& P_B,
+        DfFunctional_GGA* pFunctional);
 
-   protected:
+protected:
     TlDenseGeneralMatrix_Lapack selectGridMatrixByAtom(
         const TlDenseGeneralMatrix_Lapack& globalGridMat, const int atomIndex);
 
@@ -312,8 +316,14 @@ protected:
                                const int startAtomIndex, const int endAtomIndex,
                                TlDenseGeneralMatrix_Lapack* pFxc_f,
                                TlDenseGeneralMatrix_Lapack* pFxc_w);
+    double energyGradient_part(const TlDenseSymmetricMatrix_Lapack& P_A,
+                               const TlDenseSymmetricMatrix_Lapack& P_B,
+                               DfFunctional_GGA* pFunctional,
+                               const int startAtomIndex, const int endAtomIndex,
+                               TlDenseGeneralMatrix_Lapack* pFxc_f,
+                               TlDenseGeneralMatrix_Lapack* pFxc_w);
 
-   protected:
+protected:
     static const double TOOBIG;
     static const double EPS;
     static const double INV_SQRT3;   // = 1.0 / sqrt(3.0);
