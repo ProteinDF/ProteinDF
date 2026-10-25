@@ -1911,37 +1911,11 @@ void DfGenerateGrid::calcMultiCenterWeight_SS(
                     // const double R_n =
                     // this->getCovalentRadiiForBecke(atomicNumber_n);
 
-                    double u_ij =
+                    const double u_ij =
                         (rr[m] - rr[n]) * this->invDistanceMatrix_.get(m, n);
 
-                    // if (this->isAtomicSizeAdjustments_) {
-                    //     double au_ij = (R_m - R_n) / (R_m + R_n);
-                    //     double a = au_ij / (au_ij * au_ij - 1.0);
-
-                    //     if (a < -0.50) {
-                    //         a = -0.50;
-                    //     } else if (a > 0.50) {
-                    //         a = 0.50;
-                    //     }
-                    //     u_ij = u_ij + a * (1.0 - u_ij * u_ij);
-                    // }
-
-                    // zeta
-                    double g = 0.0;
-                    static const double a = 0.64;
-                    if (u_ij < -a) {
-                        g = -1.0;
-                    } else if (u_ij > a) {
-                        g = 1.0;
-                    } else {
-                        const double ua = u_ij / a;
-                        const double ua2 = ua * ua;
-                        const double ua3 = ua2 * ua;
-                        const double ua5 = ua2 * ua3;
-                        g = (1.0 / 16.0) * (35.0 * ua - 35.0 * ua3 +
-                                            21.0 * ua5 - 5.0 * ua5 * ua2);
-                    }
-                    const double s = 0.5 * (1.0 - g);
+                    double s = 0.0;
+                    this->calcCellFunction_SS(u_ij, &s, nullptr);
 
                     Psuij *= s;
                 }
@@ -1980,6 +1954,40 @@ double DfGenerateGrid::Becke_f1(const double x) {
 
 double DfGenerateGrid::Becke_f3(const double x) {
     return this->Becke_f1(this->Becke_f1(this->Becke_f1(x)));
+}
+
+void DfGenerateGrid::calcCellFunction_SS(const double u, double* s,
+                                         double* ds_du) {
+    static const double a = 0.64;
+    double g = 0.0;
+    double dg_du = 0.0;
+
+    if (u < -a) {
+        g = -1.0;
+        dg_du = 0.0;
+    } else if (u > a) {
+        g = 1.0;
+        dg_du = 0.0;
+    } else {
+        const double ua = u / a;
+        const double ua2 = ua * ua;
+        const double ua3 = ua2 * ua;
+        const double ua5 = ua2 * ua3;
+        const double ua7 = ua5 * ua2;
+        g = (1.0 / 16.0) * (35.0 * ua - 35.0 * ua3 + 21.0 * ua5 - 5.0 * ua7);
+
+        const double one_minus_ua2 = 1.0 - ua2;
+        const double one_minus_ua2_3 =
+            one_minus_ua2 * one_minus_ua2 * one_minus_ua2;
+        dg_du = (35.0 / (16.0 * a)) * one_minus_ua2_3;
+    }
+
+    if (s != nullptr) {
+        *s = 0.5 * (1.0 - g);
+    }
+    if (ds_du != nullptr) {
+        *ds_du = -0.5 * dg_du;
+    }
 }
 
 void DfGenerateGrid::screeningGridsByWeight0(std::vector<TlPosition>* pGrids,
@@ -2060,28 +2068,33 @@ double DfGenerateGrid::Ps_uij(const int atomIndex_m,
             const int atomicNumber_n = TlAtom::getElementNumber(
                 this->flGeometry_.getAtomSymbol(atomIndex_n));
             if (atomicNumber_n > 0) {
-                const double R_n =
-                    this->getCovalentRadiiForBecke(atomicNumber_n);
                 const double rr_n =
                     gridpoint.distanceFrom(this->coord_[atomIndex_n]);
 
                 double u_ij = (rr_m - rr_n) * this->invDistanceMatrix_.get(
                                                   atomIndex_m, atomIndex_n);
 
-                if (this->isAtomicSizeAdjustments_) {
-                    double au_ij = (R_m - R_n) / (R_m + R_n);
-                    double a = au_ij / (au_ij * au_ij - 1.0);
+                double s = 0.0;
+                if (this->partitioningMethod_ == Partitioning_SSWeight) {
+                    this->calcCellFunction_SS(u_ij, &s, nullptr);
+                } else {
+                    if (this->isAtomicSizeAdjustments_) {
+                        const double R_n =
+                            this->getCovalentRadiiForBecke(atomicNumber_n);
+                        double au_ij = (R_m - R_n) / (R_m + R_n);
+                        double a = au_ij / (au_ij * au_ij - 1.0);
 
-                    if (a < -0.50) {
-                        a = -0.50;
-                    } else if (a > 0.50) {
-                        a = 0.50;
+                        if (a < -0.50) {
+                            a = -0.50;
+                        } else if (a > 0.50) {
+                            a = 0.50;
+                        }
+                        u_ij = u_ij + a * (1.0 - u_ij * u_ij);
                     }
-                    u_ij = u_ij + a * (1.0 - u_ij * u_ij);
-                }
 
-                const double f3 = this->Becke_f3(u_ij);
-                const double s = 0.5 * (1.0 - f3);
+                    const double f3 = this->Becke_f3(u_ij);
+                    s = 0.5 * (1.0 - f3);
+                }
 
                 Ps_uij *= s;
             }
@@ -2098,13 +2111,6 @@ void DfGenerateGrid::getGrids(const int atomIndex,
                               std::vector<TlPosition>* pGrids,
                               std::vector<double>* pSingleCenterWeights,
                               std::vector<double>* pPartitioningWeights) {
-    if (this->partitioningMethod_ == Partitioning_SSWeight) {
-        if (atomIndex == 0) {
-            this->log_.warn(
-                "grid weight derivative for SSWeight partitioning is not "
-                "implemented (using Becke derivative).");
-        }
-    }
     this->getGrids_sub(atomIndex, this->m_gridType, this->nrgrid,
                        this->radialGridType_, this->nOgrid,
                        this->partitioningMethod_, pGrids, pSingleCenterWeights,
@@ -2317,11 +2323,15 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_PA(
     if (PA > 1.0E-10) {
         const int numOfAtoms = this->m_nNumOfAtoms;
         const int atomicNumber_A =
-            this->isAtomicSizeAdjustments_
+            (this->partitioningMethod_ != Partitioning_SSWeight &&
+             this->isAtomicSizeAdjustments_)
                 ? TlAtom::getElementNumber(
                       this->flGeometry_.getAtomSymbol(atomIndexA))
                 : 0;
-        const double R_A = (this->isAtomicSizeAdjustments_ && atomicNumber_A > 0)
+        const double R_A = (this->partitioningMethod_ !=
+                                Partitioning_SSWeight &&
+                            this->isAtomicSizeAdjustments_ &&
+                            atomicNumber_A > 0)
                                ? this->getCovalentRadiiForBecke(atomicNumber_A)
                                : 0.0;
 
@@ -2340,7 +2350,8 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaA_PA(
 
                 double myu = myu_AB;
                 double dnu_dmu = 1.0;
-                if (this->isAtomicSizeAdjustments_ && atomicNumber_A > 0) {
+                if (this->partitioningMethod_ != Partitioning_SSWeight &&
+                    this->isAtomicSizeAdjustments_ && atomicNumber_A > 0) {
                     const int atomicNumber_B = TlAtom::getElementNumber(
                         this->flGeometry_.getAtomSymbol(atomIndexB));
                     if (atomicNumber_B > 0) {
@@ -2395,7 +2406,8 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaB_PA(
 
         double myu = myu_AB;
         double dnu_dmu = 1.0;
-        if (this->isAtomicSizeAdjustments_) {
+        if (this->partitioningMethod_ != Partitioning_SSWeight &&
+            this->isAtomicSizeAdjustments_) {
             const int atomicNumber_A = TlAtom::getElementNumber(
                 this->flGeometry_.getAtomSymbol(atomIndexA));
             const int atomicNumber_B = TlAtom::getElementNumber(
@@ -2430,17 +2442,27 @@ TlDenseVector_Lapack DfGenerateGrid::JGP_nablaB_PA(
 // B.G.John, et.al., J. Chem. Phys., 98, 5612 (1993).
 // eq. B9
 double DfGenerateGrid::JGP_t(const double myu) {
-    static const double coef = -27.0 / 16.0;
-    // static const double coef = - 81.0 / 32.0;
-
     double answer = 0.0;
-    if ((1.0 - std::fabs(myu)) > 1.0E-16) {
-        const double p1 = this->Becke_f1(myu);
-        const double p2 = this->Becke_f1(p1);
-        const double p3 = this->Becke_f1(p2);
-        const double s = 0.5 * (1.0 - p3);  // B4
+    if (this->partitioningMethod_ == Partitioning_SSWeight) {
+        double s = 0.0;
+        double ds_dmyu = 0.0;
+        this->calcCellFunction_SS(myu, &s, &ds_dmyu);
+        if (s > 1.0E-16) {
+            answer = ds_dmyu / s;
+        }
+    } else {
+        static const double coef = -27.0 / 16.0;
+        // static const double coef = - 81.0 / 32.0;
 
-        answer = coef * (1.0 - p2 * p2) * (1.0 - p1 * p1) * (1.0 - myu * myu) / s;
+        if ((1.0 - std::fabs(myu)) > 1.0E-16) {
+            const double p1 = this->Becke_f1(myu);
+            const double p2 = this->Becke_f1(p1);
+            const double p3 = this->Becke_f1(p2);
+            const double s = 0.5 * (1.0 - p3);  // B4
+
+            answer = coef * (1.0 - p2 * p2) * (1.0 - p1 * p1) *
+                     (1.0 - myu * myu) / s;
+        }
     }
 
     return answer;
