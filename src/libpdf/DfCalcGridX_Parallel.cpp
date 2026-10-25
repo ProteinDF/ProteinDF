@@ -209,6 +209,7 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_LDA* pFunctional,
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(pF_A);
+    rComm.allReduce_SUM(pF_B);
     rComm.allReduce_SUM(energy);
     return energy;
 }
@@ -234,6 +235,7 @@ double DfCalcGridX_Parallel::buildVxc(DfFunctional_GGA* pFunctional,
 
     TlCommunicate& rComm = TlCommunicate::getInstance();
     rComm.allReduce_SUM(pF_A);
+    rComm.allReduce_SUM(pF_B);
     rComm.allReduce_SUM(energy);
     return energy;
 }
