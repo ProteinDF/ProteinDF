@@ -29,6 +29,7 @@ set(PDF_XTEST_SOURCES
 
   TlPositionTest.cpp
   TlSerializeDataTest.cpp
+  TlMsgPackTest.cpp
   PdfXCFunctionalDefaultTest.cpp
   TlStlUtilsTest.cpp
   TlStringTokenizerTest.cpp
