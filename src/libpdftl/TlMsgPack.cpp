@@ -248,6 +248,8 @@ TlSerializeData TlMsgPack::unpack_bin8(std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
@@ -267,6 +269,8 @@ TlSerializeData TlMsgPack::unpack_bin16(std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
@@ -286,6 +290,8 @@ TlSerializeData TlMsgPack::unpack_bin32(std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
@@ -494,6 +500,8 @@ TlSerializeData TlMsgPack::unpack_fixraw(const char in, std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
@@ -514,6 +522,8 @@ TlSerializeData TlMsgPack::unpack_str8(std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
@@ -534,6 +544,8 @@ TlSerializeData TlMsgPack::unpack_str16(std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
@@ -555,6 +567,8 @@ TlSerializeData TlMsgPack::unpack_str32(std::istream& ifs) {
 
         delete[] pBuf;
         pBuf = NULL;
+    } else {
+        ans.set(std::string());
     }
 
     return ans;
