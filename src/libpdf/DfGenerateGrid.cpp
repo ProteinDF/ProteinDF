@@ -1608,10 +1608,11 @@ void DfGenerateGrid::getRadialAbscissaAndWeight_EulerMaclaurin(
     const double Nr1i = double(Nr + 1 - i);
     const double inv_Nr1i = 1.0 / Nr1i;
 
-    const double ri = R * double(i * i) * inv_Nr1i * inv_Nr1i;
+    const double di = double(i);
+    const double ri = R * di * di * inv_Nr1i * inv_Nr1i;
     *p_ri = ri;
 
-    *pWeight = 2.0 * R * R * R * double(Nr + 1) * double(i * i * i * i * i) *
+    *pWeight = 2.0 * R * R * R * double(Nr + 1) * (di * di * di * di * di) *
                inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i * inv_Nr1i *
                inv_Nr1i * 4.0 * M_PI;
 }
