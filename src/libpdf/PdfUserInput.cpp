@@ -827,10 +827,20 @@ bool PdfUserInput::check() {
     bool bAnswer = true;
 
     std::string xc = "";
-    if (this->data_.hasKey("xc_functional") == true) {
+    if (this->data_.hasKey("xc_functional") == true &&
+        !this->data_["xc_functional"].getStr().empty()) {
         xc = this->data_["xc_functional"].getStr();
-    } else if (this->data_.hasKey("xc-potential") == true) {
+    } else if (this->data_.hasKey("xc-potential") == true &&
+               !this->data_["xc-potential"].getStr().empty()) {
         xc = this->data_["xc-potential"].getStr();
+    }
+
+    if (xc.empty()) {
+        CnErr.abort("PdfUserInput", "", "check",
+                    "'xc_functional' or 'xc-potential' is required. "
+                    "Specify one of the supported functionals: "
+                    "(svwn~|svwn|blyp|b3lyp) or hf.");
+        bAnswer = false;
     }
 
     if (!xc.empty() && xc[xc.length() - 1] == '~') {

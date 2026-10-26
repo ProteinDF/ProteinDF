@@ -69,7 +69,7 @@ namespace {
 
 }  // namespace
 
-TEST(PdfXCFunctionalDefault, OmittedXCDefaultB3LYP) {
+TEST(PdfXCFunctionalDefault, OmittedXCAborts) {
     ScopedPdfHome scopedPdfHome;
 
     const std::string filename = "test_userInput_omitted.txt";
@@ -79,21 +79,9 @@ TEST(PdfXCFunctionalDefault, OmittedXCDefaultB3LYP) {
         ofs.close();
     }
 
-    PdfKeyword pdfKwd;
-    TlSerializeData param = pdfKwd.getDefault();
-
     PdfUserInput userInput(filename);
-    userInput.load();
-    TlSerializeData inputParam = userInput.getSerializeData();
-    pdfKwd.convertAlias(&inputParam);
-
-    // Verify omitted detection
-    EXPECT_FALSE(inputParam.hasKey("xc_functional"));
-
-    param.merge(inputParam);
+    EXPECT_DEATH(userInput.load(), ".*'xc_functional' or 'xc-potential' is required.*");
     std::remove(filename.c_str());
-
-    EXPECT_EQ(std::string("b3lyp"), param["xc_functional"].getStr());
 }
 
 TEST(PdfXCFunctionalDefault, ExplicitXCPotentialPreserved) {
