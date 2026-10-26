@@ -14,12 +14,20 @@ PySCF calculations require a Python environment with pyscf installed
 """
 
 import argparse
+import math
 import os
 import re
 import sqlite3
 import subprocess
 import sys
 from pathlib import Path
+
+try:
+    import h5py
+
+    HAS_H5PY = True
+except ImportError:
+    HAS_H5PY = False
 
 # Periodic table symbol to atomic number mapping
 ATOMIC_NUMBERS = {
@@ -151,16 +159,24 @@ def parse_fl_userinput(input_path):
 
     atom_lines = []
     atoms = []
+    mm_charges = []
     for line in m_geom.group(1).splitlines():
         line = line.strip()
-        if not line or line.startswith("#"):
+        if not line or line.startswith("#") or line.startswith("//"):
             continue
         parts = line.split()
         if len(parts) >= 4:
             sym = parts[0]
-            x, y, z = parts[1], parts[2], parts[3]
-            atom_lines.append(f"{sym} {x} {y} {z}")
-            atoms.append(sym)
+            if sym.upper() == "X":
+                x = float(parts[1])
+                y = float(parts[2])
+                z = float(parts[3])
+                chg = float(parts[4]) if len(parts) >= 5 else 0.0
+                mm_charges.append((x, y, z, chg))
+            else:
+                x, y, z = parts[1], parts[2], parts[3]
+                atom_lines.append(f"{sym} {x} {y} {z}")
+                atoms.append(sym)
 
     # Orbital basis sets
     m_basis = re.search(r"basis-set/orbital\s*=\s*\{([^}]+)\}", content, re.IGNORECASE)
@@ -219,6 +235,7 @@ def parse_fl_userinput(input_path):
         "unit": unit,
         "atom_str": "; ".join(atom_lines),
         "atoms": atoms,
+        "mm_charges": mm_charges,
         "basis_map": basis_map,
         "method": method_str,
         "xc": xc_str,
@@ -265,6 +282,103 @@ def read_proteindf_db(db_path):
         "iterations": iters,
         "total_energy": total_energy,
     }
+
+
+def read_proteindf_h5(h5_path):
+    """Read conditions and converged total energy from ProteinDF reference.h5."""
+    if not HAS_H5PY:
+        raise RuntimeError("h5py is not installed")
+    if not os.path.isfile(h5_path):
+        raise FileNotFoundError(f"HDF5 file not found: {h5_path}")
+
+    with h5py.File(h5_path, "r") as f:
+        # Total energy: last value of TEs
+        if "TEs" in f and len(f["TEs"]) > 0:
+            total_energy = float(f["TEs"][-1])
+        else:
+            total_energy = None
+
+        def _get_attr(attr_name):
+            val = f.attrs.get(attr_name)
+            if val is None and "control" in f:
+                val = f["control"].attrs.get(attr_name)
+            if val is not None:
+                if isinstance(val, (bytes, bytearray)):
+                    val = val.decode("utf-8")
+                return val
+            return None
+
+        num_atoms = _get_attr("num_of_atoms")
+        if num_atoms is None and "molecule/xyzc" in f:
+            num_atoms = len(f["molecule/xyzc"])
+        if num_atoms is not None:
+            num_atoms = int(num_atoms)
+
+        num_aos = _get_attr("num_of_AOs")
+        if num_aos is not None:
+            num_aos = int(num_aos)
+
+        method = _get_attr("method")
+        if method is not None:
+            method = str(method)
+
+        xc_func = _get_attr("xc_functional")
+        if xc_func is not None:
+            xc_func = str(xc_func)
+
+        iters = _get_attr("iterations")
+        if iters is None and "TEs" in f:
+            iters = len(f["TEs"])
+        if iters is not None:
+            iters = int(iters)
+
+    return {
+        "num_atoms": num_atoms,
+        "num_aos": num_aos,
+        "method": method,
+        "xc_functional": xc_func,
+        "iterations": iters,
+        "total_energy": total_energy,
+    }
+
+
+def read_proteindf_reference(entry_dir, ref_mode="auto", db_override=None):
+    """Read ProteinDF reference data from HDF5 or SQLite DB.
+
+    ref_mode can be 'auto', 'h5', or 'db'.
+    If db_override is given, SQLite DB is used directly.
+    Returns a tuple of (data_dict, ref_format_used).
+    """
+    if db_override:
+        return read_proteindf_db(db_override), "db"
+
+    h5_path = os.path.join(entry_dir, "reference.h5")
+    db_path = os.path.join(entry_dir, "pdfresults_std.db")
+
+    if ref_mode == "auto":
+        if HAS_H5PY and os.path.isfile(h5_path):
+            return read_proteindf_h5(h5_path), "h5"
+        elif os.path.isfile(db_path):
+            return read_proteindf_db(db_path), "db"
+        else:
+            entry_name = os.path.basename(entry_dir)
+            raise FileNotFoundError(
+                f"Neither reference.h5 nor pdfresults_std.db found in {entry_name}"
+            )
+    elif ref_mode == "h5":
+        if not HAS_H5PY:
+            raise RuntimeError("h5py is not installed but --ref h5 was requested")
+        if not os.path.isfile(h5_path):
+            entry_name = os.path.basename(entry_dir)
+            raise FileNotFoundError(f"reference.h5 not found in {entry_name}")
+        return read_proteindf_h5(h5_path), "h5"
+    elif ref_mode == "db":
+        if not os.path.isfile(db_path):
+            entry_name = os.path.basename(entry_dir)
+            raise FileNotFoundError(f"pdfresults_std.db not found in {entry_name}")
+        return read_proteindf_db(db_path), "db"
+    else:
+        raise ValueError(f"Unknown ref_mode: {ref_mode}")
 
 
 def resolve_xc_functional(xc_name, vwn_variant=None, custom_xc=None):
@@ -351,7 +465,33 @@ def run_pyscf_calc(parsed_input, basis_file, xc_override=None, vwn_variant=None,
 
     calc.conv_tol = 1e-11
     calc.max_cycle = 150
+
+    mm_list = parsed_input.get("mm_charges", [])
+    mm_self_energy = 0.0
+    if mm_list:
+        from pyscf import qmmm
+
+        coords = [(x, y, z) for x, y, z, q in mm_list]
+        charges = [q for x, y, z, q in mm_list]
+        calc = qmmm.mm_charge(calc, coords, charges, unit=parsed_input["unit"])
+        if len(mm_list) > 1:
+            to_bohr = (
+                1.0 / 0.529177210903
+                if parsed_input["unit"].lower().startswith("ang")
+                else 1.0
+            )
+            for i in range(len(mm_list)):
+                for j in range(i + 1, len(mm_list)):
+                    dx = (coords[i][0] - coords[j][0]) * to_bohr
+                    dy = (coords[i][1] - coords[j][1]) * to_bohr
+                    dz = (coords[i][2] - coords[j][2]) * to_bohr
+                    r = math.sqrt(dx * dx + dy * dy + dz * dz)
+                    if r > 1e-12:
+                        mm_self_energy += (charges[i] * charges[j]) / r
+
     energy = calc.kernel()
+    if mm_self_energy != 0.0:
+        energy += mm_self_energy
 
     s2_val = None
     mult_val = None
@@ -370,14 +510,112 @@ def run_pyscf_calc(parsed_input, basis_file, xc_override=None, vwn_variant=None,
     }
 
 
-def compare_entry(entry_dir, basis_file, db_override=None, xc_override=None,
-                  vwn_variant=None, grid_levels=(3,)):
+def compare_entry(entry_dir, basis_file, db_override=None, ref_mode="auto",
+                  xc_override=None, vwn_variant=None, grid_levels=(3,)):
     """Compare a single test entry between ProteinDF and PySCF across grid levels."""
     userinput_path = os.path.join(entry_dir, "fl_Userinput")
-    db_path = db_override or os.path.join(entry_dir, "pdfresults_std.db")
 
-    parsed_input = parse_fl_userinput(userinput_path)
-    pdf_res = read_proteindf_db(db_path)
+    try:
+        parsed_input = parse_fl_userinput(userinput_path)
+    except Exception as e:
+        return [{
+            "entry": os.path.basename(entry_dir),
+            "ref_format": "-",
+            "method": "-",
+            "xc_input": "-",
+            "xc_used": "-",
+            "grid_level": None,
+            "pdf_nao": None,
+            "pyscf_nao": None,
+            "nao_match": False,
+            "pdf_energy": None,
+            "pyscf_energy": None,
+            "diff": None,
+            "converged": False,
+            "spin": None,
+            "s2": None,
+            "mult": None,
+            "n_alpha": None,
+            "n_beta": None,
+            "status": f"SKIP: {e}",
+        }]
+
+    # Reference data reading (HDF5 or DB)
+    try:
+        pdf_res, ref_format = read_proteindf_reference(
+            entry_dir, ref_mode=ref_mode, db_override=db_override
+        )
+    except Exception as e:
+        return [{
+            "entry": os.path.basename(entry_dir),
+            "ref_format": "-",
+            "method": (parsed_input.get("method") or "-").upper(),
+            "xc_input": parsed_input.get("xc") or "HF",
+            "xc_used": "-",
+            "grid_level": None,
+            "pdf_nao": None,
+            "pyscf_nao": None,
+            "nao_match": False,
+            "pdf_energy": None,
+            "pyscf_energy": None,
+            "diff": None,
+            "converged": False,
+            "spin": parsed_input.get("spin"),
+            "s2": None,
+            "mult": None,
+            "n_alpha": parsed_input.get("n_alpha"),
+            "n_beta": parsed_input.get("n_beta"),
+            "status": f"SKIP: {e}",
+        }]
+
+    # Check for XC fitting (~ in XC functional)
+    xc_in = parsed_input.get("xc") or ""
+    xc_ref = pdf_res.get("xc_functional") or ""
+    if "~" in xc_in or "~" in xc_ref:
+        return [{
+            "entry": os.path.basename(entry_dir),
+            "ref_format": ref_format,
+            "method": (parsed_input.get("method") or pdf_res.get("method") or "-").upper(),
+            "xc_input": xc_in or "HF",
+            "xc_used": "-",
+            "grid_level": None,
+            "pdf_nao": pdf_res.get("num_aos"),
+            "pyscf_nao": None,
+            "nao_match": False,
+            "pdf_energy": pdf_res.get("total_energy"),
+            "pyscf_energy": None,
+            "diff": None,
+            "converged": False,
+            "spin": parsed_input.get("spin"),
+            "s2": None,
+            "mult": None,
+            "n_alpha": parsed_input.get("n_alpha"),
+            "n_beta": parsed_input.get("n_beta"),
+            "status": "SKIP: XC fitting (~) not supported in PySCF",
+        }]
+
+    if parsed_input.get("method") == "roks":
+        return [{
+            "entry": os.path.basename(entry_dir),
+            "ref_format": ref_format,
+            "method": "ROKS",
+            "xc_input": xc_in or "HF",
+            "xc_used": "-",
+            "grid_level": None,
+            "pdf_nao": pdf_res.get("num_aos"),
+            "pyscf_nao": None,
+            "nao_match": False,
+            "pdf_energy": pdf_res.get("total_energy"),
+            "pyscf_energy": None,
+            "diff": None,
+            "converged": False,
+            "spin": parsed_input.get("spin"),
+            "s2": None,
+            "mult": None,
+            "n_alpha": parsed_input.get("n_alpha"),
+            "n_beta": parsed_input.get("n_beta"),
+            "status": "SKIP: ROKS not supported in PySCF comparison",
+        }]
 
     results = []
     for g_lvl in grid_levels:
@@ -389,9 +627,14 @@ def compare_entry(entry_dir, basis_file, db_override=None, xc_override=None,
             grid_level=g_lvl,
         )
 
-        diff = pyscf_res["energy"] - pdf_res["total_energy"]
+        diff = (
+            pyscf_res["energy"] - pdf_res["total_energy"]
+            if (pyscf_res["energy"] is not None and pdf_res["total_energy"] is not None)
+            else None
+        )
         results.append({
             "entry": os.path.basename(entry_dir),
+            "ref_format": ref_format,
             "method": pyscf_res["method_label"],
             "xc_input": parsed_input["xc"] or "HF",
             "xc_used": pyscf_res["xc_used"],
@@ -408,6 +651,7 @@ def compare_entry(entry_dir, basis_file, db_override=None, xc_override=None,
             "mult": pyscf_res["mult"],
             "n_alpha": parsed_input["n_alpha"],
             "n_beta": parsed_input["n_beta"],
+            "status": "OK",
         })
 
     return results
@@ -420,7 +664,7 @@ def check_vwn_variants(suite_dir, basis_file, output_format="table"):
     # 1. Ne_SVWN5
     ne_svwn5_dir = os.path.join(suite_dir, "Ne_SVWN5")
     parsed_svwn5 = parse_fl_userinput(os.path.join(ne_svwn5_dir, "fl_Userinput"))
-    pdf_svwn5 = read_proteindf_db(os.path.join(ne_svwn5_dir, "pdfresults_std.db"))
+    pdf_svwn5, _ = read_proteindf_reference(ne_svwn5_dir, ref_mode="auto")
 
     svwn_candidates = [
         ("LDA_C_VWN (VWN5)", "LDA_X, LDA_C_VWN"),
@@ -446,7 +690,7 @@ def check_vwn_variants(suite_dir, basis_file, output_format="table"):
     # 2. Ne_B3LYP
     ne_b3lyp_dir = os.path.join(suite_dir, "Ne_B3LYP")
     parsed_b3lyp = parse_fl_userinput(os.path.join(ne_b3lyp_dir, "fl_Userinput"))
-    pdf_b3lyp = read_proteindf_db(os.path.join(ne_b3lyp_dir, "pdfresults_std.db"))
+    pdf_b3lyp, _ = read_proteindf_reference(ne_b3lyp_dir, ref_mode="auto")
 
     b3lyp_candidates = [
         ("B3LYP (default, VWN_RPA)", "B3LYP"),
@@ -495,30 +739,160 @@ def print_results_table(results_list, output_format="table", show_spin=False):
     """Print results in plain table or markdown format."""
     if output_format == "markdown":
         if show_spin:
-            print("| Entry | Method | 2S (α, β) | <S^2> | Mult (2S+1) | PySCF Energy (Eh) | PDF Energy (Eh) | Diff (Eh) |")
-            print("|:---|:---:|:---:|:---:|:---:|:---|:---|:---|")
+            print(
+                "| Entry | Ref | Method | 2S (α, β) | <S^2> | Mult (2S+1) | "
+                "PySCF Energy (Eh) | PDF Energy (Eh) | Diff (Eh) | Status |"
+            )
+            print("|:---|:---:|:---:|:---:|:---:|:---:|:---|:---|:---|:---|")
             for r in results_list:
-                spin_str = f"{r['spin']} ({r['n_alpha']}, {r['n_beta']})"
-                s2_str = f"{r['s2']:.4f}" if r["s2"] is not None else "-"
-                mult_str = f"{r['mult']:.4f}" if r["mult"] is not None else "-"
-                print(f"| {r['entry']} | {r['method']} | {spin_str} | {s2_str} | {mult_str} | {r['pyscf_energy']:.10f} | {r['pdf_energy']:.10f} | {r['diff']:+.10e} |")
+                ref_str = r.get("ref_format", "-")
+                spin_str = (
+                    f"{r['spin']} ({r['n_alpha']}, {r['n_beta']})"
+                    if r.get("spin") is not None and r.get("n_alpha") is not None
+                    else "-"
+                )
+                s2_str = f"{r['s2']:.4f}" if r.get("s2") is not None else "-"
+                mult_str = f"{r['mult']:.4f}" if r.get("mult") is not None else "-"
+                pyscf_e_str = (
+                    f"{r['pyscf_energy']:.10f}"
+                    if r.get("pyscf_energy") is not None
+                    else "-"
+                )
+                pdf_e_str = (
+                    f"{r['pdf_energy']:.10f}"
+                    if r.get("pdf_energy") is not None
+                    else "-"
+                )
+                diff_str = (
+                    f"{r['diff']:+.10e}"
+                    if r.get("diff") is not None
+                    else "-"
+                )
+                status_str = r.get("status", "OK")
+                print(
+                    f"| {r['entry']} | {ref_str} | {r['method']} | {spin_str} | "
+                    f"{s2_str} | {mult_str} | {pyscf_e_str} | {pdf_e_str} | {diff_str} | {status_str} |"
+                )
         else:
-            print("| Entry | Method | XC (PySCF) | Grid | AO (PDF/PySCF) | PDF Energy (Eh) | PySCF Energy (Eh) | Diff (Eh) | Conv |")
-            print("|:---|:---|:---|:---:|:---:|:---|:---|:---|:---:|")
+            print(
+                "| Entry | Ref | Method | XC (PySCF) | Grid | AO (PDF/PySCF) | "
+                "PDF Energy (Eh) | PySCF Energy (Eh) | Diff (Eh) | Status |"
+            )
+            print("|:---|:---:|:---|:---|:---:|:---:|:---|:---|:---|:---|")
             for r in results_list:
-                grid_str = str(r["grid_level"]) if r["grid_level"] is not None else "-"
-                ao_str = f"{r['pdf_nao']}/{r['pyscf_nao']}"
-                conv_str = "YES" if r["converged"] else "NO"
-                print(f"| {r['entry']} | {r['method']} | {r['xc_used']} | {grid_str} | {ao_str} | {r['pdf_energy']:.10f} | {r['pyscf_energy']:.10f} | {r['diff']:+.10e} | {conv_str} |")
+                ref_str = r.get("ref_format", "-")
+                grid_str = (
+                    str(r["grid_level"])
+                    if r.get("grid_level") is not None
+                    else "-"
+                )
+                if r.get("pdf_nao") is not None and r.get("pyscf_nao") is not None:
+                    ao_str = f"{r['pdf_nao']}/{r['pyscf_nao']}"
+                elif r.get("pdf_nao") is not None:
+                    ao_str = f"{r['pdf_nao']}/-"
+                else:
+                    ao_str = "-"
+                pdf_e_str = (
+                    f"{r['pdf_energy']:.10f}"
+                    if r.get("pdf_energy") is not None
+                    else "-"
+                )
+                pyscf_e_str = (
+                    f"{r['pyscf_energy']:.10f}"
+                    if r.get("pyscf_energy") is not None
+                    else "-"
+                )
+                diff_str = (
+                    f"{r['diff']:+.10e}"
+                    if r.get("diff") is not None
+                    else "-"
+                )
+                status_str = r.get("status", "OK")
+                if status_str == "OK" and not r.get("converged", True):
+                    status_str = "NOT_CONV"
+                print(
+                    f"| {r['entry']} | {ref_str} | {r['method']} | {r['xc_used']} | "
+                    f"{grid_str} | {ao_str} | {pdf_e_str} | {pyscf_e_str} | {diff_str} | {status_str} |"
+                )
     else:
-        header = f"{'Entry':16s} {'Method':6s} {'XC (PySCF)':22s} {'Grid':4s} {'AO(PDF/Py)':10s} {'PDF Energy (Eh)':18s} {'PySCF Energy (Eh)':18s} {'Diff (Eh)':16s} {'Conv':4s}"
-        print(header)
-        print("-" * len(header))
-        for r in results_list:
-            grid_str = str(r["grid_level"]) if r["grid_level"] is not None else "-"
-            ao_str = f"{r['pdf_nao']}/{r['pyscf_nao']}"
-            conv_str = "YES" if r["converged"] else "NO"
-            print(f"{r['entry']:16s} {r['method']:6s} {r['xc_used'][:22]:22s} {grid_str:4s} {ao_str:10s} {r['pdf_energy']:18.10f} {r['pyscf_energy']:18.10f} {r['diff']:+16.10e} {conv_str:4s}")
+        if show_spin:
+            header = (
+                f"{'Entry':25s} {'Ref':5s} {'Method':6s} {'2S (α, β)':12s} {'<S^2>':7s} "
+                f"{'Mult':7s} {'PySCF Energy (Eh)':18s} {'PDF Energy (Eh)':18s} {'Diff (Eh)':16s} {'Status':s}"
+            )
+            print(header)
+            print("-" * len(header))
+            for r in results_list:
+                ref_str = r.get("ref_format", "-")
+                spin_str = (
+                    f"{r['spin']} ({r['n_alpha']}, {r['n_beta']})"
+                    if r.get("spin") is not None and r.get("n_alpha") is not None
+                    else "-"
+                )
+                s2_str = f"{r['s2']:.4f}" if r.get("s2") is not None else "-"
+                mult_str = f"{r['mult']:.4f}" if r.get("mult") is not None else "-"
+                pyscf_e_str = (
+                    f"{r['pyscf_energy']:18.10f}"
+                    if r.get("pyscf_energy") is not None
+                    else f"{'-':>18s}"
+                )
+                pdf_e_str = (
+                    f"{r['pdf_energy']:18.10f}"
+                    if r.get("pdf_energy") is not None
+                    else f"{'-':>18s}"
+                )
+                diff_str = (
+                    f"{r['diff']:+16.10e}"
+                    if r.get("diff") is not None
+                    else f"{'-':>16s}"
+                )
+                status_str = r.get("status", "OK")
+                print(
+                    f"{r['entry']:25s} {ref_str:5s} {r['method']:6s} {spin_str:12s} "
+                    f"{s2_str:7s} {mult_str:7s} {pyscf_e_str} {pdf_e_str} {diff_str} {status_str}"
+                )
+        else:
+            header = (
+                f"{'Entry':25s} {'Ref':5s} {'Method':6s} {'XC (PySCF)':22s} {'Grid':4s} "
+                f"{'AO(PDF/Py)':10s} {'PDF Energy (Eh)':18s} {'PySCF Energy (Eh)':18s} {'Diff (Eh)':16s} {'Status':s}"
+            )
+            print(header)
+            print("-" * len(header))
+            for r in results_list:
+                ref_str = r.get("ref_format", "-")
+                grid_str = (
+                    str(r["grid_level"])
+                    if r.get("grid_level") is not None
+                    else "-"
+                )
+                if r.get("pdf_nao") is not None and r.get("pyscf_nao") is not None:
+                    ao_str = f"{r['pdf_nao']}/{r['pyscf_nao']}"
+                elif r.get("pdf_nao") is not None:
+                    ao_str = f"{r['pdf_nao']}/-"
+                else:
+                    ao_str = "-"
+                pdf_e_str = (
+                    f"{r['pdf_energy']:18.10f}"
+                    if r.get("pdf_energy") is not None
+                    else f"{'-':>18s}"
+                )
+                pyscf_e_str = (
+                    f"{r['pyscf_energy']:18.10f}"
+                    if r.get("pyscf_energy") is not None
+                    else f"{'-':>18s}"
+                )
+                diff_str = (
+                    f"{r['diff']:+16.10e}"
+                    if r.get("diff") is not None
+                    else f"{'-':>16s}"
+                )
+                status_str = r.get("status", "OK")
+                if status_str == "OK" and not r.get("converged", True):
+                    status_str = "NOT_CONV"
+                print(
+                    f"{r['entry']:25s} {ref_str:5s} {r['method']:6s} {r['xc_used'][:22]:22s} "
+                    f"{grid_str:4s} {ao_str:10s} {pdf_e_str} {pyscf_e_str} {diff_str} {status_str}"
+                )
 
 
 def main():
@@ -531,6 +905,12 @@ def main():
     parser.add_argument("--all", action="store_true", help="Run all entries in suite")
     parser.add_argument("--test-dir", help="Path to ProteinDF_test directory")
     parser.add_argument("--basis-file", help="Path to data/basis2 file")
+    parser.add_argument(
+        "--ref",
+        choices=["auto", "h5", "db"],
+        default="auto",
+        help="Reference data format (auto: prefer h5 if available, else db; h5: require h5; db: require db)",
+    )
     parser.add_argument("--db", help="Path to specific calculation DB (default: pdfresults_std.db in entry)")
     parser.add_argument("--xc", help="Override XC functional string for PySCF")
     parser.add_argument("--vwn", default=None, help="VWN variant for SVWN/B3LYP (options: VWN, VWN_RPA, VWN_3, etc.)")
@@ -587,6 +967,7 @@ def main():
                 entry_dir,
                 basis_file,
                 db_override=args.db,
+                ref_mode=args.ref,
                 xc_override=args.xc,
                 vwn_variant=args.vwn,
                 grid_levels=grid_levels,
