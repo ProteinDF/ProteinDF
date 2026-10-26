@@ -25,6 +25,7 @@
 #include "TlGetopt.h"
 #include "TlMsgPack.h"
 #include "TlSerializeData.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
 #include "tl_dense_vector_lapack.h"
 
 void usage();
@@ -53,7 +54,7 @@ std::vector<std::vector<int> > getGroupsOfAtoms(const std::string& mpacPath) {
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "hi:m:vs:");
+    TlGetopt opt(argc, argv, "hi:m:p:s:vP:S:D:");
 
     std::string paramPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {
@@ -69,16 +70,25 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
 
-    TlMsgPack mpac;
-    mpac.load(paramPath);
-    TlSerializeData param = mpac.getSerializeData();
+    const std::string pMatrixPath = opt["P"];
+    const std::string sMatrixPath = opt["S"];
+    const std::string dMatrixPath = opt["D"];
 
-    int iteration = 0;
-    if (opt["i"].empty() != true) {
-        iteration = std::atoi(opt["i"].c_str());
-    } else {
-        iteration = param["num_of_iterations"].getInt();
+    if (pMatrixPath.empty() && !sMatrixPath.empty()) {
+        std::cerr << "-S requires -P option." << std::endl;
+        return EXIT_FAILURE;
     }
+    if (pMatrixPath.empty() && !dMatrixPath.empty()) {
+        std::cerr << "-D requires -P option." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    TlMsgPack mpac;
+    if (!mpac.load(paramPath)) {
+        std::cerr << "cannot open parameter file: " << paramPath << std::endl;
+        return EXIT_FAILURE;
+    }
+    TlSerializeData param = mpac.getSerializeData();
 
     std::vector<std::vector<int> > groups_atom;
     if (!opt["m"].empty()) {
@@ -86,13 +96,71 @@ int main(int argc, char* argv[]) {
         groups_atom = getGroupsOfAtoms(mpacPath);
     }
 
-    if (isVerbose == true) {
-        std::cerr << "iteration = " << iteration << std::endl;
-    }
-
     DfPopulation dfPop(&param);
-    dfPop.exec(iteration);
-    dfPop.getReport(iteration, std::cout);
+
+    if (!pMatrixPath.empty()) {
+        TlDenseSymmetricMatrix_Lapack P;
+        try {
+            P.load(pMatrixPath);
+        } catch (const std::exception& e) {
+            std::cerr << "cannot load P matrix file: " << pMatrixPath << " (" << e.what() << ")" << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        const int numOfAOs = dfPop.getNumOfAOs();
+        if (P.getNumOfRows() != numOfAOs) {
+            std::cerr << "P matrix dimension does not match number of AOs: " << P.getNumOfRows() << " != " << numOfAOs
+                      << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        TlDenseSymmetricMatrix_Lapack S;
+        if (!sMatrixPath.empty()) {
+            try {
+                S.load(sMatrixPath);
+            } catch (const std::exception& e) {
+                std::cerr << "cannot load S matrix file: " << sMatrixPath << " (" << e.what() << ")" << std::endl;
+                return EXIT_FAILURE;
+            }
+        } else {
+            try {
+                S = dfPop.getSpqMatrix<TlDenseSymmetricMatrix_Lapack>();
+            } catch (const std::exception& e) {
+                std::cerr << "cannot load default Spq matrix (" << e.what() << ")" << std::endl;
+                return EXIT_FAILURE;
+            }
+        }
+
+        if (S.getNumOfRows() != numOfAOs) {
+            std::cerr << "S matrix dimension does not match number of AOs: " << S.getNumOfRows() << " != " << numOfAOs
+                      << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        TlDenseSymmetricMatrix_Lapack PS;
+        dfPop.calcPop(P, S, !dMatrixPath.empty() ? &PS : NULL);
+        if (!dMatrixPath.empty()) {
+            if (!PS.save(dMatrixPath)) {
+                std::cerr << "cannot save D matrix file: " << dMatrixPath << std::endl;
+                return EXIT_FAILURE;
+            }
+        }
+        dfPop.getReportRKS(std::cout);
+    } else {
+        int iteration = 0;
+        if (opt["i"].empty() != true) {
+            iteration = std::atoi(opt["i"].c_str());
+        } else {
+            iteration = param["num_of_iterations"].getInt();
+        }
+
+        if (isVerbose == true) {
+            std::cerr << "iteration = " << iteration << std::endl;
+        }
+
+        dfPop.exec(iteration);
+        dfPop.getReport(iteration, std::cout);
+    }
 
     // if (savePath.empty() != true) {
     //   // const TlDenseGeneralMatrix_Lapack mtx =
@@ -126,8 +194,12 @@ void usage() {
     std::cerr << "usage: pdf-pop-mulliken [options] " << std::endl;
     std::cerr << std::endl;
     std::cerr << "calculation Mulliken Population." << std::endl;
-    std::cerr << "  -p param:\n";
+    std::cerr << "  -p param:  parameter file (default: pdfparam.mpac)\n";
     std::cerr << "  -i num:    set SCF iteration to get Mulliken Population\n";
+    std::cerr << "  -P path:   total density matrix file\n";
+    std::cerr << "  -S path:   overlap matrix file (default: Spq.mat in work dir)\n";
+    std::cerr << "  -D path:   save P.*S matrix file (requires -P)\n";
+    std::cerr << "  -m path:   grouping mpac file\n";
     std::cerr << "  -s path:   save atom population data as pdf matrix file\n";
     std::cerr << "  -h:        show help(this)\n";
     std::cerr << "  -v:        verbose\n";

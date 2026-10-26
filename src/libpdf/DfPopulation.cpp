@@ -28,6 +28,12 @@
 DfPopulation::DfPopulation(TlSerializeData* pPdfParam)
     : DfObject(pPdfParam),
       orbitalInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]) {
+    if (this->m_nNumOfAOs == 0) {
+        this->m_nNumOfAOs = this->orbitalInfo_.getNumOfOrbitals();
+    }
+    if (this->m_nNumOfAtoms == 0) {
+        this->m_nNumOfAtoms = this->orbitalInfo_.getNumOfAtoms();
+    }
     this->setNucleiCharges();
 }
 
