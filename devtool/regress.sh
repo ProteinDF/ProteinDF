@@ -12,6 +12,11 @@
 #                           auto: use reference.h5 if present, else pdfresults_std.db
 #                           h5:   require reference.h5 (SKIP if missing)
 #                           db:   require pdfresults_std.db (SKIP if missing)
+#   --energy-threshold <val>
+#                         Total energy comparison threshold passed to
+#                         pdf-test-h5.py and pdf-test.py (default: derived from
+#                         fl_Userinput's threshold-energy clamped to max(val, 1e-8)
+#                         for h5, pytools default for db)
 #   --keep-work-dir <dir> Copy each entry's work directory (fl_Userinput,
 #                           pdfresults.h5/.db, logs, ...) into <dir>/<entry>/
 #                           after the run, instead of discarding it with the
@@ -38,7 +43,7 @@
 set -uo pipefail
 
 show_help() {
-    sed -n '2,/^# Python Environment Compatibility Patches/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
+    sed -n '2,/^set -uo pipefail/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
     exit 0
 }
 
@@ -49,6 +54,7 @@ install_dir=""
 do_build=1
 jobs=$(nproc 2>/dev/null || echo 4)
 ref_format="auto"
+energy_threshold_opt=""
 keep_work_dir=""
 full=0
 
@@ -66,6 +72,8 @@ while (($#)); do
             do_build=0; shift ;;
         --format)
             ref_format="$2"; shift 2 ;;
+        --energy-threshold)
+            energy_threshold_opt="$2"; shift 2 ;;
         --keep-work-dir)
             keep_work_dir="$2"; shift 2 ;;
         --full)
@@ -319,6 +327,7 @@ declare -a result_iter=()
 declare -a result_calc_te=()
 declare -a result_std_te=()
 declare -a result_diff_te=()
+declare -a result_thr=()
 declare -a result_notes=()
 
 total_tests=${#entries[@]}
@@ -339,6 +348,7 @@ for idx in "${!entries[@]}"; do
         result_calc_te+=("N/A")
         result_std_te+=("N/A")
         result_diff_te+=("N/A")
+        result_thr+=("-")
         result_notes+=("entry directory does not exist")
         overall_pass=0
         continue
@@ -432,6 +442,8 @@ for idx in "${!entries[@]}"; do
     std_te="N/A"
     diff_te="N/A"
     iter_str="-"
+    thr_str="-"
+    entry_thr=""
     note=""
 
     # Extract Total Energy and iterations via proteindf_tools
@@ -519,12 +531,60 @@ PYEOF
         test_status="SKIP"
         note="no reference"
     else
+        entry_thr=""
+        if [[ -n "$energy_threshold_opt" ]]; then
+            entry_thr="$energy_threshold_opt"
+            thr_str="$energy_threshold_opt"
+        elif [[ "$ref_format_used" = "h5" ]]; then
+            userinput_file="$entry_work_dir/fl_Userinput"
+            if [[ -f "$userinput_file" ]]; then
+                parsed_thr=$("$venv_dir/bin/python" - "$userinput_file" << 'PYEOF'
+import sys
+import re
+
+path = sys.argv[1]
+pattern = re.compile(r"^\s*convergence/threshold-energy\s*=\s*([^\s#;]+)", re.IGNORECASE)
+val = None
+try:
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            m = pattern.match(line)
+            if m:
+                val = m.group(1)
+                break
+    if val is not None:
+        clamped = max(float(val), 1e-8)
+        m_str, exp_str = f"{clamped:.8e}".split("e")
+        m_str = m_str.rstrip("0").rstrip(".")
+        exp = int(exp_str)
+        print(f"{m_str}e{exp}")
+except Exception:
+    pass
+PYEOF
+)
+                if [[ -n "$parsed_thr" ]]; then
+                    entry_thr="$parsed_thr"
+                    thr_str="$parsed_thr"
+                else
+                    thr_str="default"
+                fi
+            else
+                thr_str="default"
+            fi
+        else
+            thr_str="default"
+        fi
+
         (
             cd "$entry_work_dir"
+            thr_args=()
+            [[ -n "$entry_thr" ]] && thr_args=(--energy-threshold "$entry_thr")
             if [[ "$ref_format_used" = "h5" ]]; then
-                pdf-test-h5.py -v "$calc_file" "$ref_file" >> "$log_file" 2>&1
+                echo "energy threshold: $thr_str" >> "$log_file"
+                pdf-test-h5.py -v "${thr_args[@]}" "$calc_file" "$ref_file" >> "$log_file" 2>&1
             else
-                pdf-test.py "$calc_file" "$ref_file" >> "$log_file" 2>&1
+                echo "energy threshold: $thr_str" >> "$log_file"
+                pdf-test.py "${thr_args[@]}" "$calc_file" "$ref_file" >> "$log_file" 2>&1
             fi
         ) || test_exit=$?
 
@@ -570,6 +630,7 @@ PYEOF
     result_calc_te+=("$calc_te")
     result_std_te+=("$std_te")
     result_diff_te+=("$diff_te")
+    result_thr+=("$thr_str")
     result_notes+=("$note")
 done
 
@@ -584,8 +645,8 @@ echo "=== Regression Test Summary ==="
 echo "Suite: $suite | Total: $total_tests | Time: ${total_elapsed}s"
 echo
 
-printf "%-4s %-22s %-8s %-4s %-6s %-18s %-18s %-11s %s\n" "No." "Entry" "Status" "Fmt" "Iter" "Calc TE (a.u.)" "Std TE (a.u.)" "Diff" "Note"
-printf '%0.s-' {1..110}
+printf "%-4s %-22s %-8s %-4s %-6s %-18s %-18s %-11s %-8s %s\n" "No." "Entry" "Status" "Fmt" "Iter" "Calc TE (a.u.)" "Std TE (a.u.)" "Diff" "Thr" "Note"
+printf '%0.s-' {1..120}
 echo
 
 for idx in "${!entries[@]}"; do
@@ -598,17 +659,18 @@ for idx in "${!entries[@]}"; do
     cte="${result_calc_te[$idx]}"
     ste="${result_std_te[$idx]}"
     dte="${result_diff_te[$idx]}"
+    thr="${result_thr[$idx]}"
     nt="${result_notes[$idx]}"
 
     # compact view: PASS rows are folded into the count below (--full shows them)
     if ((!full)) && [[ "$status" == "PASS" ]]; then
         continue
     fi
-    printf "%2d.  %-22s %-8s %-4s %-6s %-18s %-18s %-11s %s\n" \
-        "$num" "$entry" "$status" "$fmt" "$istr" "$cte" "$ste" "$dte" "$nt"
+    printf "%2d.  %-22s %-8s %-4s %-6s %-18s %-18s %-11s %-8s %s\n" \
+        "$num" "$entry" "$status" "$fmt" "$istr" "$cte" "$ste" "$dte" "$thr" "$nt"
 done
 
-printf '%0.s-' {1..110}
+printf '%0.s-' {1..120}
 echo
 if ((!full)); then
     echo "(PASS rows are hidden; use --full to list all $total_tests entries)"
