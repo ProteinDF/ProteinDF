@@ -47,13 +47,28 @@ public:
 
     double getCharge(int atomIndex);
 
+    index_type getNumOfAOs() const {
+        return this->m_nNumOfAOs;
+    }
+
+    template <class SymmetricMatrixType>
+    SymmetricMatrixType getSpqMatrix() {
+        return DfObject::getSpqMatrix<SymmetricMatrixType>();
+    }
+
 public:
     template <class SymmetricMatrixType>
     double getSumOfElectrons(const SymmetricMatrixType& P);
 
+    template <class SymmetricMatrixType>
+    void calcPop(const SymmetricMatrixType& P, const SymmetricMatrixType& S);
+
 public:
     template <typename T>
     void getReport(const int iteration, T& out);
+
+    template <typename T>
+    void getReportRKS(T& out);
 
 protected:
     // init
@@ -75,6 +90,9 @@ protected:
 
     template <class SymmetricMatrixType>
     std::valarray<double> getPS(const SymmetricMatrixType& P);
+
+    template <class SymmetricMatrixType>
+    std::valarray<double> getPS(const SymmetricMatrixType& P, const SymmetricMatrixType& S);
 
     std::valarray<double> getGrossAtomPop(const std::valarray<double>& grossOrbPop);
 
@@ -151,6 +169,12 @@ std::valarray<double> DfPopulation::getAtomPopulation_runtype(const RUN_TYPE run
 }
 
 template <class SymmetricMatrixType>
+void DfPopulation::calcPop(const SymmetricMatrixType& P, const SymmetricMatrixType& S) {
+    this->grossOrbPopA_ = this->getPS<SymmetricMatrixType>(P, S);
+    this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
+}
+
+template <class SymmetricMatrixType>
 void DfPopulation::calcPop(const int iteration) {
     switch (this->m_nMethodType) {
         case METHOD_RKS: {
@@ -194,6 +218,12 @@ std::valarray<double> DfPopulation::getGrossOrbPop(const DfObject::RUN_TYPE runT
 template <class SymmetricMatrixType>
 std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P) {
     SymmetricMatrixType PS = DfObject::getSpqMatrix<SymmetricMatrixType>();
+    return this->getPS<SymmetricMatrixType>(P, PS);
+}
+
+template <class SymmetricMatrixType>
+std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P, const SymmetricMatrixType& S) {
+    SymmetricMatrixType PS = S;
 
     PS.dotInPlace(P);
 
@@ -206,6 +236,26 @@ std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P) {
     }
 
     return answer;
+}
+
+template <typename T>
+void DfPopulation::getReportRKS(T& out) {
+    const double nucleiCharge = this->getSumOfNucleiCharges();
+
+    out << " Mulliken Population\n";
+    const double elecCharge = this->grossOrbPopA_.sum();
+    const double netCharge = nucleiCharge - elecCharge;
+
+    out << TlUtils::format(" total atomic charge = %7.2lf\n", nucleiCharge);
+    out << TlUtils::format("          Net charge = %7.2lf\n", netCharge);
+    out << "\n";
+
+    out << " Gross atom population\n";
+    this->getAtomPopStr(this->grossAtomPopA_, true, out);
+    out << "\n";
+
+    out << " Mulliken population analysis (orbial population)\n";
+    this->getOrbPopStr(grossOrbPopA_, out);
 }
 
 template <typename T>
