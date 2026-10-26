@@ -61,7 +61,7 @@ public:
     double getSumOfElectrons(const SymmetricMatrixType& P);
 
     template <class SymmetricMatrixType>
-    void calcPop(const SymmetricMatrixType& P, const SymmetricMatrixType& S);
+    void calcPop(const SymmetricMatrixType& P, const SymmetricMatrixType& S, SymmetricMatrixType* pPS = NULL);
 
 public:
     template <typename T>
@@ -92,7 +92,8 @@ protected:
     std::valarray<double> getPS(const SymmetricMatrixType& P);
 
     template <class SymmetricMatrixType>
-    std::valarray<double> getPS(const SymmetricMatrixType& P, const SymmetricMatrixType& S);
+    std::valarray<double> getPS(const SymmetricMatrixType& P, const SymmetricMatrixType& S,
+                                SymmetricMatrixType* pPS = NULL);
 
     std::valarray<double> getGrossAtomPop(const std::valarray<double>& grossOrbPop);
 
@@ -169,8 +170,8 @@ std::valarray<double> DfPopulation::getAtomPopulation_runtype(const RUN_TYPE run
 }
 
 template <class SymmetricMatrixType>
-void DfPopulation::calcPop(const SymmetricMatrixType& P, const SymmetricMatrixType& S) {
-    this->grossOrbPopA_ = this->getPS<SymmetricMatrixType>(P, S);
+void DfPopulation::calcPop(const SymmetricMatrixType& P, const SymmetricMatrixType& S, SymmetricMatrixType* pPS) {
+    this->grossOrbPopA_ = this->getPS<SymmetricMatrixType>(P, S, pPS);
     this->grossAtomPopA_ = this->getGrossAtomPop(this->grossOrbPopA_);
 }
 
@@ -222,7 +223,8 @@ std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P) {
 }
 
 template <class SymmetricMatrixType>
-std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P, const SymmetricMatrixType& S) {
+std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P, const SymmetricMatrixType& S,
+                                          SymmetricMatrixType* pPS) {
     SymmetricMatrixType PS = S;
 
     PS.dotInPlace(P);
@@ -233,6 +235,10 @@ std::valarray<double> DfPopulation::getPS(const SymmetricMatrixType& P, const Sy
         const std::vector<double> v = PS.getColVector(i);
         answer[i] = std::accumulate(v.begin(), v.end(), 0.0);
         // answer[i] = v.sum();
+    }
+
+    if (pPS != NULL) {
+        *pPS = PS;
     }
 
     return answer;

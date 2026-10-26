@@ -54,7 +54,7 @@ std::vector<std::vector<int> > getGroupsOfAtoms(const std::string& mpacPath) {
 }
 
 int main(int argc, char* argv[]) {
-    TlGetopt opt(argc, argv, "hi:m:p:s:vP:S:");
+    TlGetopt opt(argc, argv, "hi:m:p:s:vP:S:D:");
 
     std::string paramPath = "pdfparam.mpac";
     if (opt["p"].empty() != true) {
@@ -72,9 +72,14 @@ int main(int argc, char* argv[]) {
 
     const std::string pMatrixPath = opt["P"];
     const std::string sMatrixPath = opt["S"];
+    const std::string dMatrixPath = opt["D"];
 
     if (pMatrixPath.empty() && !sMatrixPath.empty()) {
         std::cerr << "-S requires -P option." << std::endl;
+        return EXIT_FAILURE;
+    }
+    if (pMatrixPath.empty() && !dMatrixPath.empty()) {
+        std::cerr << "-D requires -P option." << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -132,7 +137,14 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        dfPop.calcPop(P, S);
+        TlDenseSymmetricMatrix_Lapack PS;
+        dfPop.calcPop(P, S, !dMatrixPath.empty() ? &PS : NULL);
+        if (!dMatrixPath.empty()) {
+            if (!PS.save(dMatrixPath)) {
+                std::cerr << "cannot save D matrix file: " << dMatrixPath << std::endl;
+                return EXIT_FAILURE;
+            }
+        }
         dfPop.getReportRKS(std::cout);
     } else {
         int iteration = 0;
@@ -186,6 +198,7 @@ void usage() {
     std::cerr << "  -i num:    set SCF iteration to get Mulliken Population\n";
     std::cerr << "  -P path:   total density matrix file\n";
     std::cerr << "  -S path:   overlap matrix file (default: Spq.mat in work dir)\n";
+    std::cerr << "  -D path:   save P.*S matrix file (requires -P)\n";
     std::cerr << "  -m path:   grouping mpac file\n";
     std::cerr << "  -s path:   save atom population data as pdf matrix file\n";
     std::cerr << "  -h:        show help(this)\n";
