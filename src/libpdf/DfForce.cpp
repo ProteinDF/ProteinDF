@@ -120,12 +120,9 @@ void DfForce::calcForce() {
     } else if (this->m_nMethodType == METHOD_UKS) {
         this->calcForceFromWS_UKS();
 
-        TlDenseSymmetricMatrix_Lapack Pa =
-            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
-                                                              iteration);
-        TlDenseSymmetricMatrix_Lapack Pb =
-            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
-                                                              iteration);
+        TlDenseSymmetricMatrix_Lapack Pa;
+        TlDenseSymmetricMatrix_Lapack Pb;
+        this->getDensityMatrices_UKS(&Pa, &Pb);
         TlDenseSymmetricMatrix_Lapack P_total = Pa + Pb;
 
         this->calcForceFromHpq(P_total);
@@ -146,17 +143,11 @@ void DfForce::calcForce() {
             }
         }
     } else if (this->m_nMethodType == METHOD_ROKS) {
-        TlDenseSymmetricMatrix_Lapack P_closed =
-            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
-                                                              iteration);
-        TlDenseSymmetricMatrix_Lapack P_open =
-            this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
-                                                              iteration);
-
-        TlDenseSymmetricMatrix_Lapack Pc = 0.5 * P_closed;
-        TlDenseSymmetricMatrix_Lapack Po = P_open;
-        TlDenseSymmetricMatrix_Lapack Pa = Pc + Po;
-        TlDenseSymmetricMatrix_Lapack Pb = Pc;
+        TlDenseSymmetricMatrix_Lapack Pc;
+        TlDenseSymmetricMatrix_Lapack Po;
+        TlDenseSymmetricMatrix_Lapack Pa;
+        TlDenseSymmetricMatrix_Lapack Pb;
+        this->getDensityMatrices_ROKS(&Pc, &Po, &Pa, &Pb);
         TlDenseSymmetricMatrix_Lapack P_total = Pa + Pb;
 
         this->calcForceFromWS_ROKS(Pc, Po);
@@ -493,6 +484,40 @@ void DfForce::calcForceFromWS_ROKS(
     }
 
     this->force_ += F_WS;
+}
+
+void DfForce::getDensityMatrices_UKS(
+    TlDenseSymmetricMatrix_Lapack* pPa,
+    TlDenseSymmetricMatrix_Lapack* pPb) {
+    assert(pPa != NULL);
+    assert(pPb != NULL);
+    const int iteration = this->m_nIteration;
+    *pPa = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_ALPHA,
+                                                             iteration);
+    *pPb = this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_UKS_BETA,
+                                                             iteration);
+}
+
+void DfForce::getDensityMatrices_ROKS(
+    TlDenseSymmetricMatrix_Lapack* pPc,
+    TlDenseSymmetricMatrix_Lapack* pPo,
+    TlDenseSymmetricMatrix_Lapack* pPa,
+    TlDenseSymmetricMatrix_Lapack* pPb) {
+    assert(pPc != NULL);
+    assert(pPo != NULL);
+    assert(pPa != NULL);
+    assert(pPb != NULL);
+    const int iteration = this->m_nIteration;
+    const TlDenseSymmetricMatrix_Lapack P_closed =
+        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_CLOSED,
+                                                          iteration);
+    const TlDenseSymmetricMatrix_Lapack P_open =
+        this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(RUN_ROKS_OPEN,
+                                                          iteration);
+    *pPc = 0.5 * P_closed;
+    *pPo = P_open;
+    *pPa = *pPc + *pPo;
+    *pPb = *pPc;
 }
 
 TlDenseGeneralMatrix_Lapack DfForce::getEnergyWeightedDensityMatrix(

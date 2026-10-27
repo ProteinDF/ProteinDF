@@ -53,9 +53,9 @@ class DfForce : public DfObject {
 
     /// Weighted ...
     virtual void calcForceFromWS(RUN_TYPE runType);
-    void calcForceFromWS_UKS();
-    void calcForceFromWS_ROKS(const TlDenseSymmetricMatrix_Lapack& Pc,
-                              const TlDenseSymmetricMatrix_Lapack& Po);
+    virtual void calcForceFromWS_UKS();
+    virtual void calcForceFromWS_ROKS(const TlDenseSymmetricMatrix_Lapack& Pc,
+                                      const TlDenseSymmetricMatrix_Lapack& Po);
     TlDenseGeneralMatrix_Lapack getEnergyWeightedDensityMatrix(
         RUN_TYPE runType);
 
@@ -67,20 +67,29 @@ class DfForce : public DfObject {
     virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
     void calcForceFromCoulomb_UKS(
         const TlDenseSymmetricMatrix_Lapack& P_total);
-    void calcForceFromCoulomb_exact_UKS(
+    virtual void calcForceFromCoulomb_exact_UKS(
         const TlDenseSymmetricMatrix_Lapack& P_total);
-    void calcForceFromCoulomb_RIJ_UKS(
+    virtual void calcForceFromCoulomb_RIJ_UKS(
         const TlDenseSymmetricMatrix_Lapack& P_total);
 
     virtual void calcForceFromK(RUN_TYPE runType);
-    void calcForceFromK_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
-                            const TlDenseSymmetricMatrix_Lapack& Pb);
+    virtual void calcForceFromK_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
+                                    const TlDenseSymmetricMatrix_Lapack& Pb);
 
     void calcForceFromPureXC(RUN_TYPE runType);
     void calcForceFromPureXC_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
                                  const TlDenseSymmetricMatrix_Lapack& Pb);
     void calcForceFromPureXC_gridfree(RUN_TYPE runType);
     virtual DfCalcGridX* getCalcGridObj();
+
+    virtual void getDensityMatrices_UKS(
+        TlDenseSymmetricMatrix_Lapack* pPa,
+        TlDenseSymmetricMatrix_Lapack* pPb);
+    virtual void getDensityMatrices_ROKS(
+        TlDenseSymmetricMatrix_Lapack* pPc,
+        TlDenseSymmetricMatrix_Lapack* pPo,
+        TlDenseSymmetricMatrix_Lapack* pPa,
+        TlDenseSymmetricMatrix_Lapack* pPb);
 
     TlDenseGeneralMatrix_Lapack getTransformMatrix(
         const TlDenseGeneralMatrix_Lapack& force);
