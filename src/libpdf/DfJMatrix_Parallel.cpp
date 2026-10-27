@@ -151,8 +151,8 @@ void DfJMatrix_Parallel::getJ_RI_local(TlDenseSymmetricMatrix_Lapack* pJ) {
                         CnErr.abort();
                         break;
                 }
-                rComm.broadcast(&prevRho);
             }
+            rComm.broadcast(&prevRho);
 
             rho -= prevRho;
         }
