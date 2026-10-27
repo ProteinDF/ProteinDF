@@ -511,7 +511,8 @@ def run_pyscf_calc(parsed_input, basis_file, xc_override=None, vwn_variant=None,
 
 
 def compare_entry(entry_dir, basis_file, db_override=None, ref_mode="auto",
-                  xc_override=None, vwn_variant=None, grid_levels=(3,)):
+                  xc_override=None, vwn_variant=None, grid_levels=(3,),
+                  threshold=1e-4):
     """Compare a single test entry between ProteinDF and PySCF across grid levels."""
     userinput_path = os.path.join(entry_dir, "fl_Userinput")
 
@@ -632,6 +633,13 @@ def compare_entry(entry_dir, basis_file, db_override=None, ref_mode="auto",
             if (pyscf_res["energy"] is not None and pdf_res["total_energy"] is not None)
             else None
         )
+        if not pyscf_res["converged"]:
+            status = "NOT_CONV"
+        elif diff is not None and abs(diff) > threshold:
+            status = "FAIL"
+        else:
+            status = "OK"
+
         results.append({
             "entry": os.path.basename(entry_dir),
             "ref_format": ref_format,
@@ -651,7 +659,7 @@ def compare_entry(entry_dir, basis_file, db_override=None, ref_mode="auto",
             "mult": pyscf_res["mult"],
             "n_alpha": parsed_input["n_alpha"],
             "n_beta": parsed_input["n_beta"],
-            "status": "OK",
+            "status": status,
         })
 
     return results
@@ -808,8 +816,6 @@ def print_results_table(results_list, output_format="table", show_spin=False):
                     else "-"
                 )
                 status_str = r.get("status", "OK")
-                if status_str == "OK" and not r.get("converged", True):
-                    status_str = "NOT_CONV"
                 print(
                     f"| {r['entry']} | {ref_str} | {r['method']} | {r['xc_used']} | "
                     f"{grid_str} | {ao_str} | {pdf_e_str} | {pyscf_e_str} | {diff_str} | {status_str} |"
@@ -887,8 +893,6 @@ def print_results_table(results_list, output_format="table", show_spin=False):
                     else f"{'-':>16s}"
                 )
                 status_str = r.get("status", "OK")
-                if status_str == "OK" and not r.get("converged", True):
-                    status_str = "NOT_CONV"
                 print(
                     f"{r['entry']:25s} {ref_str:5s} {r['method']:6s} {r['xc_used'][:22]:22s} "
                     f"{grid_str:4s} {ao_str:10s} {pdf_e_str} {pyscf_e_str} {diff_str} {status_str}"
@@ -915,6 +919,12 @@ def main():
     parser.add_argument("--xc", help="Override XC functional string for PySCF")
     parser.add_argument("--vwn", default=None, help="VWN variant for SVWN/B3LYP (options: VWN, VWN_RPA, VWN_3, etc.)")
     parser.add_argument("--grid-level", default="3", help="Comma-separated PySCF grid levels (default: 3)")
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=1e-4,
+        help="Energy difference threshold in Hartree for FAIL status (default: 1e-4)",
+    )
     parser.add_argument("--check-vwn", action="store_true", help="Run analysis of candidate VWN variants on Ne_SVWN5 and Ne_B3LYP")
     parser.add_argument("--show-spin", action="store_true", help="Display spin multiplet and <S^2> details")
     parser.add_argument("--format", choices=["table", "markdown"], default="table", help="Output format")
@@ -971,6 +981,7 @@ def main():
                 xc_override=args.xc,
                 vwn_variant=args.vwn,
                 grid_levels=grid_levels,
+                threshold=args.threshold,
             )
             all_results.extend(res)
         except Exception as e:
@@ -978,6 +989,10 @@ def main():
 
     if all_results:
         print_results_table(all_results, output_format=args.format, show_spin=args.show_spin)
+
+    has_failure = any(r.get("status") in ("FAIL", "NOT_CONV") for r in all_results)
+    if has_failure:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
