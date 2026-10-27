@@ -146,11 +146,52 @@ void DfXCFunctional_Parallel::buildXC_LAPACK() {
             }
         } break;
 
-        case METHOD_ROKS:
-            CnErr.abort(
-                "sorry. ROKS method is not implemented. @ "
-                "DfXCFunctional_Parallel::buildXcMatrix()");
-            break;
+        case METHOD_ROKS: {
+            TlDenseSymmetricMatrix_Lapack PApq, PBpq;
+            if (rComm.isMaster() == true) {
+                if (this->m_bIsUpdateXC == true) {
+                    PApq =
+                        0.5 *
+                        this->getDiffDensityMatrix<
+                            TlDenseSymmetricMatrix_Lapack>(
+                            RUN_ROKS_CLOSED, this->m_nIteration);
+                    PBpq = PApq;
+                    PApq +=
+                        this->getDiffDensityMatrix<
+                            TlDenseSymmetricMatrix_Lapack>(
+                            RUN_ROKS_OPEN, this->m_nIteration);
+                } else {
+                    PApq = 0.5 * this->getPInMatrix<
+                                     TlDenseSymmetricMatrix_Lapack>(
+                                     RUN_ROKS_CLOSED, this->m_nIteration);
+                    PBpq = PApq;
+                    PApq += this->getPInMatrix<
+                        TlDenseSymmetricMatrix_Lapack>(
+                        RUN_ROKS_OPEN, this->m_nIteration);
+                }
+            }
+            rComm.broadcast(&PApq);
+            rComm.broadcast(&PBpq);
+
+            TlDenseSymmetricMatrix_Lapack FxcA(this->m_nNumOfAOs);
+            TlDenseSymmetricMatrix_Lapack FxcB(this->m_nNumOfAOs);
+            DfXCFunctional::getFxc(PApq, PBpq, &dfCalcGrid, &FxcA, &FxcB);
+            if (this->isSaveFxcPure_ == true) {
+                if (rComm.isMaster() == true) {
+                    this->saveFxcPureMatrix(RUN_ROKS_ALPHA, this->m_nIteration,
+                                            FxcA);
+                    this->saveFxcPureMatrix(RUN_ROKS_BETA, this->m_nIteration,
+                                            FxcB);
+                }
+            }
+
+            if (rComm.isMaster() == true) {
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_ROKS_ALPHA, this->m_nIteration, FxcA);
+                this->saveFxcMatrix<TlDenseSymmetricMatrix_Lapack>(
+                    RUN_ROKS_BETA, this->m_nIteration, FxcB);
+            }
+        } break;
         default:
             break;
     }
@@ -220,11 +261,41 @@ void DfXCFunctional_Parallel::buildXC_ScaLAPACK() {
                 RUN_UKS_BETA, this->m_nIteration, FxcB);
         } break;
 
-        case METHOD_ROKS:
-            CnErr.abort(
-                "sorry. ROKS method is not implemented. @ "
-                "DfXCFunctional_Parallel::buildXcMatrix()");
-            break;
+        case METHOD_ROKS: {
+            TlDenseSymmetricMatrix_Scalapack PApq, PBpq;
+            if (this->m_bIsUpdateXC == true) {
+                PApq = 0.5 * this->getDiffDensityMatrix<
+                                 TlDenseSymmetricMatrix_Scalapack>(
+                                 RUN_ROKS_CLOSED, this->m_nIteration);
+                PBpq = PApq;
+                PApq += this->getDiffDensityMatrix<
+                    TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_ROKS_OPEN, this->m_nIteration);
+            } else {
+                PApq = 0.5 * this->getPInMatrix<
+                                 TlDenseSymmetricMatrix_Scalapack>(
+                                 RUN_ROKS_CLOSED, this->m_nIteration);
+                PBpq = PApq;
+                PApq += this->getPInMatrix<
+                    TlDenseSymmetricMatrix_Scalapack>(
+                    RUN_ROKS_OPEN, this->m_nIteration);
+            }
+
+            TlDenseSymmetricMatrix_Scalapack FxcA(this->m_nNumOfAOs);
+            TlDenseSymmetricMatrix_Scalapack FxcB(this->m_nNumOfAOs);
+            DfXCFunctional::getFxc(PApq, PBpq, &dfCalcGrid, &FxcA, &FxcB);
+            if (this->isSaveFxcPure_ == true) {
+                this->saveFxcPureMatrix(RUN_ROKS_ALPHA, this->m_nIteration,
+                                        FxcA);
+                this->saveFxcPureMatrix(RUN_ROKS_BETA, this->m_nIteration,
+                                        FxcB);
+            }
+
+            this->saveFxcMatrix<TlDenseSymmetricMatrix_Scalapack>(
+                RUN_ROKS_ALPHA, this->m_nIteration, FxcA);
+            this->saveFxcMatrix<TlDenseSymmetricMatrix_Scalapack>(
+                RUN_ROKS_BETA, this->m_nIteration, FxcB);
+        } break;
         default:
             break;
     }
