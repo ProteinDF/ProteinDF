@@ -87,17 +87,58 @@ TlDenseVector_Lapack DfDensityFittingX_Parallel::getTalpha(
 
 void DfDensityFittingX_Parallel::getTalpha_ROKS(
     TlDenseVector_Lapack* pT_alphaA, TlDenseVector_Lapack* pT_alphaB) {
+    assert(pT_alphaA != NULL);
+    assert(pT_alphaB != NULL);
+
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    if (rComm.isMaster() == true) {
-        DfDensityFittingTmpl<TlDenseSymmetricMatrix_Lapack,
-                             TlDenseVector_Lapack,
-                             DfEriX_Parallel>::getTalpha_ROKS(pT_alphaA,
-                                                              pT_alphaB);
-    }
+    if (this->m_bDiskUtilization == false) {
+        if (this->isUpdateMethod_ == false) {
+            TlDenseSymmetricMatrix_Lapack PA;
+            TlDenseSymmetricMatrix_Lapack PB;
+            if (rComm.isMaster() == true) {
+                const TlDenseSymmetricMatrix_Lapack Pc =
+                    this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(
+                        RUN_ROKS_CLOSED, this->m_nIteration);
+                const TlDenseSymmetricMatrix_Lapack Po =
+                    this->getPInMatrix<TlDenseSymmetricMatrix_Lapack>(
+                        RUN_ROKS_OPEN, this->m_nIteration);
+                PB = 0.5 * Pc;
+                PA = PB + Po;
+            }
+            rComm.broadcast(&PA);
+            rComm.broadcast(&PB);
 
-    rComm.broadcast(pT_alphaA);
-    rComm.broadcast(pT_alphaB);
+            *pT_alphaA = this->calcTAlpha_DIRECT(PA);
+            *pT_alphaB = this->calcTAlpha_DIRECT(PB);
+        } else {
+            const TlDenseSymmetricMatrix_Lapack dPc =
+                this->getDiffDensityMatrix(RUN_ROKS_CLOSED);
+            const TlDenseSymmetricMatrix_Lapack dPo =
+                this->getDiffDensityMatrix(RUN_ROKS_OPEN);
+            const TlDenseSymmetricMatrix_Lapack dPB = 0.5 * dPc;
+            const TlDenseSymmetricMatrix_Lapack dPA = dPB + dPo;
+
+            *pT_alphaA = this->calcTAlpha_DIRECT(dPA);
+            *pT_alphaB = this->calcTAlpha_DIRECT(dPB);
+            if (this->m_nIteration > 1) {
+                *pT_alphaA +=
+                    this->getTalpha(RUN_UKS_ALPHA, this->m_nIteration - 1);
+                *pT_alphaB +=
+                    this->getTalpha(RUN_UKS_BETA, this->m_nIteration - 1);
+            }
+        }
+
+        if (rComm.isMaster() == true) {
+            pT_alphaA->save(
+                this->getTalphaPath(RUN_UKS_ALPHA, this->m_nIteration));
+            pT_alphaB->save(
+                this->getTalphaPath(RUN_UKS_BETA, this->m_nIteration));
+        }
+        rComm.barrier();
+    } else {
+        abort();
+    }
 }
 
 TlDenseSymmetricMatrix_Lapack DfDensityFittingX_Parallel::getDiffDensityMatrix(
