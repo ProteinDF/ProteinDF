@@ -17,10 +17,13 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfFockMatrix_Parallel.h"
+
 #include "DfEriX_Parallel.h"
 #include "DfOverlapX_Parallel.h"
 #include "TlCommunicate.h"
+#include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
+#include "tl_dense_vector_scalapack.h"
 
 DfFockMatrix_Parallel::DfFockMatrix_Parallel(TlSerializeData* pPdfParam)
     : DfFockMatrix(pPdfParam) {
@@ -124,17 +127,14 @@ void DfFockMatrix_Parallel::mainDIRECT_UKS() {
 
     if (this->m_bUsingSCALAPACK == true) {
         // ScaLAPACK
-        if (rComm.isMaster() == true) {
-            this->logger("buid KS matrix using ScaLAPACK.\n");
-        }
-        std::cout << "do implement!" << std::endl;
-        std::abort();
+        this->log_.info("buid KS matrix using ScaLAPACK.");
+        DfFockMatrix::mainDIRECT_UKS<TlDenseSymmetricMatrix_Scalapack>();
     } else {
         // LAPACK
+        this->log_.info("buid KS matrix using LAPACK.");
         if (rComm.isMaster() == true) {
-            this->logger("buid KS matrix using LAPACK.\n");
+            DfFockMatrix::mainDIRECT_UKS();
         }
-        DfFockMatrix::mainDIRECT_UKS();
     }
 }
 
@@ -143,17 +143,18 @@ void DfFockMatrix_Parallel::mainDIRECT_ROKS() {
 
     if (this->m_bUsingSCALAPACK == true) {
         // ScaLAPACK
-        if (rComm.isMaster() == true) {
-            this->logger("buid KS matrix using ScaLAPACK.\n");
-        }
-        std::cout << "do implement!" << std::endl;
-        std::abort();
+        this->log_.info("buid KS matrix using ScaLAPACK.");
+        DfFockMatrix::mainDIRECT_ROKS<TlDenseGeneralMatrix_Scalapack,
+                                      TlDenseSymmetricMatrix_Scalapack,
+                                      TlDenseVector_Scalapack,
+                                      DfEriX_Parallel,
+                                      DfOverlapX_Parallel>();
     } else {
         // LAPACK
+        this->log_.info("buid KS matrix using LAPACK.");
         if (rComm.isMaster() == true) {
-            this->logger("buid KS matrix using LAPACK.\n");
+            DfFockMatrix::mainDIRECT_ROKS();
         }
-        DfFockMatrix::mainDIRECT_ROKS();
     }
 }
 
