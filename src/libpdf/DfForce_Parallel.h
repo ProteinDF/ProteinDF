@@ -32,6 +32,9 @@ class DfForce_Parallel : public DfForce {
    protected:
     virtual void calcForceFromNuclei();
     virtual void calcForceFromWS(RUN_TYPE runType);
+    virtual void calcForceFromWS_UKS();
+    virtual void calcForceFromWS_ROKS(const TlDenseSymmetricMatrix_Lapack& Pc,
+                                      const TlDenseSymmetricMatrix_Lapack& Po);
     virtual void calcForceFromHpq(const TlDenseSymmetricMatrix_Lapack& P);
 
     virtual void calcForceFromCoulomb_exact(const RUN_TYPE runType);
@@ -40,8 +43,24 @@ class DfForce_Parallel : public DfForce {
     virtual void calcForceFromCoulomb_RIJ(const RUN_TYPE runType);
     void calcForceFromCoulomb_RIJ_DC(const RUN_TYPE runType);
 
+    virtual void calcForceFromCoulomb_exact_UKS(
+        const TlDenseSymmetricMatrix_Lapack& P_total);
+    virtual void calcForceFromCoulomb_RIJ_UKS(
+        const TlDenseSymmetricMatrix_Lapack& P_total);
+
     virtual void calcForceFromK(const RUN_TYPE runType);
     void calcForceFromK_replicated(const RUN_TYPE runType);
+    virtual void calcForceFromK_UKS(const TlDenseSymmetricMatrix_Lapack& Pa,
+                                    const TlDenseSymmetricMatrix_Lapack& Pb);
+
+    virtual void getDensityMatrices_UKS(
+        TlDenseSymmetricMatrix_Lapack* pPa,
+        TlDenseSymmetricMatrix_Lapack* pPb);
+    virtual void getDensityMatrices_ROKS(
+        TlDenseSymmetricMatrix_Lapack* pPc,
+        TlDenseSymmetricMatrix_Lapack* pPo,
+        TlDenseSymmetricMatrix_Lapack* pPa,
+        TlDenseSymmetricMatrix_Lapack* pPb);
 
     virtual DfCalcGridX* getCalcGridObj();
 

@@ -144,8 +144,12 @@ class DfCalcGridX_Parallel : public DfCalcGridX {
     virtual TlDenseGeneralMatrix_Lapack energyGradient(
         const TlDenseSymmetricMatrix_Lapack& P_A,
         DfFunctional_GGA* pFunctional);
+    virtual TlDenseGeneralMatrix_Lapack energyGradient(
+        const TlDenseSymmetricMatrix_Lapack& P_A,
+        const TlDenseSymmetricMatrix_Lapack& P_B,
+        DfFunctional_GGA* pFunctional);
 
-   protected:
+protected:
     void defineCutOffValues(const TlDenseSymmetricMatrix_Scalapack& P);
     void defineCutOffValues(const TlDenseSymmetricMatrix_Scalapack& PA,
                             const TlDenseSymmetricMatrix_Scalapack& PB);
