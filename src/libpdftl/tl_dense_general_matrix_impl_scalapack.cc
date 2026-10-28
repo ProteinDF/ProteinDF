@@ -803,19 +803,23 @@ bool TlDenseGeneralMatrix_ImplScalapack::save(const std::string& filePath) const
             rComm.iReceiveDataFromAnySource(bufSize, tag);
             rComm.wait(&bufSize, &src);
 
-            std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
-            rComm.receiveDataX(&(buf[0]), bufSize, src, TAG_SAVE_DATA);
-
-            this->saveElements(&fm, buf);
+            if (bufSize > 0) {
+                std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
+                rComm.receiveDataX(buf.data(), bufSize, src, TAG_SAVE_DATA);
+                this->saveElements(&fm, buf);
+            }
         }
     } else {
         // slave: send submatrix
         const int root = 0;
-        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
+        const std::vector<TlMatrixObject::MatrixElement> buf =
+            this->getMatrixElementsInLocal2();
         const TlMatrixObject::size_type bufSize = buf.size();
         rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
-        rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
-        rComm.wait(&(buf[0]));
+        if (bufSize > 0) {
+            rComm.iSendDataX(buf.data(), buf.size(), root, TAG_SAVE_DATA);
+            rComm.wait(buf.data());
+        }
     }
 
     rComm.broadcast(answer);

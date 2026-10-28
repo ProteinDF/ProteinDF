@@ -131,10 +131,10 @@ void DfFockMatrix_Parallel::mainDIRECT_UKS() {
         DfFockMatrix::mainDIRECT_UKS<TlDenseSymmetricMatrix_Scalapack>();
     } else {
         // LAPACK
-        this->log_.info("buid KS matrix using LAPACK.");
         if (rComm.isMaster() == true) {
-            DfFockMatrix::mainDIRECT_UKS();
+            this->logger("buid KS matrix using LAPACK.\n");
         }
+        DfFockMatrix::mainDIRECT_UKS();
     }
 }
 
@@ -151,10 +151,10 @@ void DfFockMatrix_Parallel::mainDIRECT_ROKS() {
                                       DfOverlapX_Parallel>();
     } else {
         // LAPACK
-        this->log_.info("buid KS matrix using LAPACK.");
         if (rComm.isMaster() == true) {
-            DfFockMatrix::mainDIRECT_ROKS();
+            this->logger("buid KS matrix using LAPACK.\n");
         }
+        DfFockMatrix::mainDIRECT_ROKS();
     }
 }
 

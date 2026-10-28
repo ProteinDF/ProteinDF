@@ -1872,7 +1872,7 @@ void DfCD_Parallel::getJ_D(TlDenseSymmetricMatrix_Scalapack* pJ) {
 TlDenseVector_Lapack DfCD_Parallel::getScreenedDensityMatrixD(const PQ_PairArray& I2PQ) {
     TlCommunicate& rComm = TlCommunicate::getInstance();
 
-    const TlDenseSymmetricMatrix_Scalapack P = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Scalapack>(RUN_RKS, this->m_nIteration);
+    const TlDenseSymmetricMatrix_Scalapack P = DfCD::getPMatrix<TlDenseSymmetricMatrix_Scalapack>();
     const std::size_t numOfI = I2PQ.size();
     TlDenseVector_Lapack answer(numOfI);
 
