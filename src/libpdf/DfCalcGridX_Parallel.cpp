@@ -483,10 +483,14 @@ void DfCalcGridX_Parallel::calcRho_GGA(
 void DfCalcGridX_Parallel::calcRho_LDA(
     const TlDenseGeneralMatrix_Scalapack& P_A,
     TlDenseGeneralMatrix_Lapack* pGridMat) {
-    TlDenseGeneralMatrix_Lapack localP_A;
-    P_A.getLocalMatrix(&localP_A);
     const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
     const std::vector<index_type> colIndeces = P_A.getColIndexTable();
+    if (rowIndeces.empty() || colIndeces.empty()) {
+        return;
+    }
+
+    TlDenseGeneralMatrix_Lapack localP_A;
+    P_A.getLocalMatrix(&localP_A);
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
@@ -513,12 +517,16 @@ void DfCalcGridX_Parallel::calcRho_LDA(
     const TlDenseGeneralMatrix_Scalapack& P_A,
     const TlDenseGeneralMatrix_Scalapack& P_B,
     TlDenseGeneralMatrix_Lapack* pGridMat) {
+    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
+    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
+    if (rowIndeces.empty() || colIndeces.empty()) {
+        return;
+    }
+
     TlDenseGeneralMatrix_Lapack localP_A;
     P_A.getLocalMatrix(&localP_A);
     TlDenseGeneralMatrix_Lapack localP_B;
     P_B.getLocalMatrix(&localP_B);
-    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
-    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
     // rowIndexes, colIndexes はP_Bと共通
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
@@ -548,10 +556,14 @@ void DfCalcGridX_Parallel::calcRho_LDA(
 void DfCalcGridX_Parallel::calcRho_GGA(
     const TlDenseGeneralMatrix_Scalapack& P_A,
     TlDenseGeneralMatrix_Lapack* pGridMat) {
-    TlDenseGeneralMatrix_Lapack localP_A;
-    P_A.getLocalMatrix(&localP_A);
     const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
     const std::vector<index_type> colIndeces = P_A.getColIndexTable();
+    if (rowIndeces.empty() || colIndeces.empty()) {
+        return;
+    }
+
+    TlDenseGeneralMatrix_Lapack localP_A;
+    P_A.getLocalMatrix(&localP_A);
 
     const index_type numOfGrids = pGridMat->getNumOfRows();
 #pragma omp parallel for schedule(runtime)
@@ -600,12 +612,16 @@ void DfCalcGridX_Parallel::calcRho_GGA(
     const TlDenseGeneralMatrix_Scalapack& P_A,
     const TlDenseGeneralMatrix_Scalapack& P_B,
     TlDenseGeneralMatrix_Lapack* pGridMat) {
+    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
+    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
+    if (rowIndeces.empty() || colIndeces.empty()) {
+        return;
+    }
+
     TlDenseGeneralMatrix_Lapack localP_A;
     P_A.getLocalMatrix(&localP_A);
     TlDenseGeneralMatrix_Lapack localP_B;
     P_B.getLocalMatrix(&localP_B);
-    const std::vector<index_type> rowIndeces = P_A.getRowIndexTable();
-    const std::vector<index_type> colIndeces = P_A.getColIndexTable();
     // rowIndexes, colIndexes はP_Bと共通
 
     const index_type numOfGrids = pGridMat->getNumOfRows();

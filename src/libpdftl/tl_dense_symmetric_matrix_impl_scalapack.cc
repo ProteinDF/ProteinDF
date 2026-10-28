@@ -369,8 +369,14 @@ std::vector<TlMatrixObject::MatrixElement> TlDenseSymmetricMatrix_ImplScalapack:
     // TlMatrixObject::size_type count = 0;
     for (TlMatrixObject::index_type localRow = 0; localRow < localRows; ++localRow) {
         const TlMatrixObject::index_type globalRow = this->getLocal2Global_row(localRow);
+        if (globalRow >= this->getNumOfRows()) {
+            continue;
+        }
         for (TlMatrixObject::index_type localCol = 0; localCol < localCols; ++localCol) {
             const TlMatrixObject::index_type globalCol = this->getLocal2Global_col(localCol);
+            if (globalCol >= this->getNumOfCols()) {
+                continue;
+            }
 
             if (globalRow >= globalCol) {
                 answer.push_back(
@@ -553,7 +559,9 @@ bool diagonalByScaLapack_QR(const TlDenseSymmetricMatrix_ImplScalapack& inMatrix
         return false;
     }
 
-    LWORK = (int)pWorkSizeCheck[0];
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    LWORK = static_cast<int>(pWorkSizeCheck[0]);
+    rComm.allReduce_MAX(LWORK);
     double* pWork = new double[LWORK];
 
     delete[] pWorkSizeCheck;
@@ -615,7 +623,14 @@ bool diagonalByScaLapack_DC(const TlDenseSymmetricMatrix_ImplScalapack& inMatrix
         return false;
     }
 
-    LWORK = (int)pWorkSizeCheck[0];
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int NB = inMatrix.blockSize_;
+    const int nStartProc = 0;
+    const int NP = numroc_(&N, &NB, &(inMatrix.m_nMyProcRow), &nStartProc, &(inMatrix.procGridRow_));
+    const int NQ = numroc_(&N, &NB, &(inMatrix.m_nMyProcCol), &nStartProc, &(inMatrix.procGridCol_));
+    const int sizeMQRLeft = std::max((NB * (NB - 1)) / 2, (NP + NQ) * NB) + NB * NB;
+    LWORK = std::max(static_cast<int>(pWorkSizeCheck[0]), sizeMQRLeft + 2 * N);
+    rComm.allReduce_MAX(LWORK);
     double* pWork = new double[LWORK];
 
     delete[] pWorkSizeCheck;
