@@ -8,17 +8,15 @@
 #   --build-dir <dir>     CMake build directory (default: build-regress)
 #   --install-dir <dir>   Install prefix (default: <build-dir>/install)
 #   --no-build            Skip build and install (use existing binaries)
-#   --format <fmt>        Reference format: auto|h5|db (default: auto)
-#                           auto: use reference.h5 if present, else pdfresults_std.db
+#   --format <fmt>        Reference format: auto|h5 (default: auto)
+#                           auto: same as h5 (reference.h5)
 #                           h5:   require reference.h5 (SKIP if missing)
-#                           db:   require pdfresults_std.db (SKIP if missing)
 #   --energy-threshold <val>
 #                         Total energy comparison threshold passed to
-#                         pdf-test-h5.py and pdf-test.py (default: derived from
-#                         fl_Userinput's threshold-energy clamped to max(val, 1e-8)
-#                         for h5, pytools default for db)
+#                         pdf-test-h5.py (default: derived from
+#                         fl_Userinput's threshold-energy clamped to max(val, 1e-8))
 #   --keep-work-dir <dir> Copy each entry's work directory (fl_Userinput,
-#                           pdfresults.h5/.db, logs, ...) into <dir>/<entry>/
+#                           pdfresults.h5, logs, ...) into <dir>/<entry>/
 #                           after the run, instead of discarding it with the
 #                           temporary workspace. Useful for inspecting a run
 #                           or harvesting pdfresults.h5 as a new reference.h5.
@@ -89,9 +87,9 @@ while (($#)); do
 done
 
 case "$ref_format" in
-    auto|h5|db) ;;
+    auto|h5) ;;
     *)
-        echo "ERROR: --format must be one of: auto, h5, db" >&2
+        echo "ERROR: --format must be one of: auto, h5 (SQLite db is no longer supported)" >&2
         exit 1 ;;
 esac
 
@@ -167,9 +165,8 @@ echo "--- 1. Setting up Python environment ---"
 t_py_start=$(date +%s)
 
 venv_ready=0
-if [[ -x "$venv_dir/bin/python" && -x "$venv_dir/bin/pdf-archive.py" && -x "$venv_dir/bin/pdf-test.py" \
-        && -x "$venv_dir/bin/pdf-archive-h5.py" && -x "$venv_dir/bin/pdf-test-h5.py" ]]; then
-    if "$venv_dir/bin/python" -c "import proteindf_tools as p; import proteindf_bridge as b; import numpy as np; import h5py; assert hasattr(p, 'PdfArchive')" >/dev/null 2>&1; then
+if [[ -x "$venv_dir/bin/python" && -x "$venv_dir/bin/pdf-archive-h5.py" && -x "$venv_dir/bin/pdf-test-h5.py" ]]; then
+    if "$venv_dir/bin/python" -c "import proteindf_tools as p; import proteindf_bridge as b; import numpy as np; import h5py" >/dev/null 2>&1; then
         # a venv made by an older version of this script carries sitecustomize.py patches
         sp_dir=$("$venv_dir/bin/python" -c "import site; print(site.getsitepackages()[0])")
         [[ -e "$sp_dir/sitecustomize.py" ]] || venv_ready=1
@@ -380,63 +377,27 @@ for idx in "${!entries[@]}"; do
         PDF.x >> "$log_file" 2>&1
     ) || pdf_exit=$?
 
-    # Determine reference format for this entry (per --format option)
+    # Reference: reference.h5 (SKIP when missing)
     ref_h5="$entry_work_dir/reference.h5"
-    ref_db="$entry_work_dir/pdfresults_std.db"
     ref_format_used=""
-    case "$ref_format" in
-        h5)
-            [[ -f "$ref_h5" ]] && ref_format_used="h5"
-            ;;
-        db)
-            [[ -f "$ref_db" ]] && ref_format_used="db"
-            ;;
-        auto)
-            if [[ -f "$ref_h5" ]]; then
-                ref_format_used="h5"
-            elif [[ -f "$ref_db" ]]; then
-                ref_format_used="db"
-            fi
-            ;;
-    esac
-
-    # Format used to archive calc results: follow the reference format when
-    # one was found; otherwise fall back to the explicit --format (or h5 for auto).
-    if [[ -n "$ref_format_used" ]]; then
-        archive_format="$ref_format_used"
-    elif [[ "$ref_format" = "db" ]]; then
-        archive_format="db"
-    else
-        archive_format="h5"
+    if [[ -f "$ref_h5" ]]; then
+        ref_format_used="h5"
     fi
 
-    # Step C: Archive results (HDF5 or SQLite db, depending on archive_format)
+    # Step C: Archive results (HDF5)
     archive_exit=0
-    if [[ "$archive_format" = "h5" ]]; then
-        calc_file="$entry_work_dir/pdfresults.h5"
-    else
-        calc_file="$entry_work_dir/pdfresults.db"
-    fi
+    calc_file="$entry_work_dir/pdfresults.h5"
     if [[ $pdf_exit -eq 0 ]]; then
         (
             cd "$entry_work_dir"
-            if [[ "$archive_format" = "h5" ]]; then
-                pdf-archive-h5.py >> "$log_file" 2>&1
-            else
-                pdf-archive.py >> "$log_file" 2>&1
-            fi
+            pdf-archive-h5.py >> "$log_file" 2>&1
         ) || archive_exit=$?
     fi
 
     # Step D: Check results and compare with the reference file
     test_exit=0
-    if [[ "$ref_format_used" = "h5" ]]; then
-        ref_file="$ref_h5"
-    elif [[ "$ref_format_used" = "db" ]]; then
-        ref_file="$ref_db"
-    else
-        ref_file=""
-    fi
+    ref_file=""
+    [[ -n "$ref_format_used" ]] && ref_file="$ref_h5"
 
     calc_te="N/A"
     std_te="N/A"
@@ -447,31 +408,27 @@ for idx in "${!entries[@]}"; do
     note=""
 
     # Extract Total Energy and iterations via proteindf_tools
-    # (PdfParam_H5 for h5, PdfArchive for db), same quantity pdf-test(-h5).py compares.
+    # (PdfParam_H5), same quantity pdf-test-h5.py compares.
     if [[ -f "$calc_file" || -f "$ref_file" ]]; then
         c_file_arg=""
         s_file_arg=""
         [[ -f "$calc_file" ]] && c_file_arg="$calc_file"
         [[ -f "$ref_file" ]] && s_file_arg="$ref_file"
 
-        py_res=$("$venv_dir/bin/python" - "$archive_format" "$c_file_arg" "$s_file_arg" << 'PYEOF'
+        py_res=$("$venv_dir/bin/python" - "$c_file_arg" "$s_file_arg" << 'PYEOF'
 import sys
 import proteindf_tools as p
 
-fmt = sys.argv[1]
-calc_path = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
-std_path = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else None
+calc_path = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else None
+std_path = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
 
 c_te, s_te, d_te, i_str = "N/A", "N/A", "N/A", "-"
 c_iter, s_iter = None, None
 
 
 def load(path):
-    if fmt == "h5":
-        obj = p.PdfParam_H5()
-        obj.open(path)
-    else:
-        obj = p.PdfArchive(path)
+    obj = p.PdfParam_H5()
+    obj.open(path)
     itr = obj.iterations
     return itr, obj.get_total_energy(itr)
 
@@ -521,11 +478,7 @@ PYEOF
         overall_pass=0
     elif [[ $archive_exit -ne 0 || ! -f "$calc_file" ]]; then
         test_status="FAIL"
-        if [[ "$archive_format" = "h5" ]]; then
-            note="pdf-archive-h5.py failed"
-        else
-            note="pdf-archive.py failed"
-        fi
+        note="pdf-archive-h5.py failed"
         overall_pass=0
     elif [[ -z "$ref_format_used" ]]; then
         test_status="SKIP"
@@ -579,13 +532,8 @@ PYEOF
             cd "$entry_work_dir"
             thr_args=()
             [[ -n "$entry_thr" ]] && thr_args=(--energy-threshold "$entry_thr")
-            if [[ "$ref_format_used" = "h5" ]]; then
-                echo "energy threshold: $thr_str" >> "$log_file"
-                pdf-test-h5.py -v "${thr_args[@]}" "$calc_file" "$ref_file" >> "$log_file" 2>&1
-            else
-                echo "energy threshold: $thr_str" >> "$log_file"
-                pdf-test.py "${thr_args[@]}" "$calc_file" "$ref_file" >> "$log_file" 2>&1
-            fi
+            echo "energy threshold: $thr_str" >> "$log_file"
+            pdf-test-h5.py -v "${thr_args[@]}" "$calc_file" "$ref_file" >> "$log_file" 2>&1
         ) || test_exit=$?
 
         if [[ $test_exit -eq 0 ]]; then
