@@ -335,19 +335,23 @@ bool TlDenseSymmetricMatrix_ImplScalapack::save(const std::string& sFilePath) co
             rComm.iReceiveDataFromAnySource(bufSize, tag);
             rComm.wait(&bufSize, &src);
 
-            std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
-            rComm.receiveDataX(&(buf[0]), bufSize, src, TAG_SAVE_DATA);
-
-            TlDenseGeneralMatrix_ImplScalapack::saveElements(&fm, buf);
+            if (bufSize > 0) {
+                std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
+                rComm.receiveDataX(buf.data(), bufSize, src, TAG_SAVE_DATA);
+                TlDenseGeneralMatrix_ImplScalapack::saveElements(&fm, buf);
+            }
         }
     } else {
         // slave: send submatrix
         const int root = 0;
-        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
+        const std::vector<TlMatrixObject::MatrixElement> buf =
+            this->getMatrixElementsInLocal2();
         const TlMatrixObject::size_type bufSize = buf.size();
         rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
-        rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
-        rComm.wait(&(buf[0]));
+        if (bufSize > 0) {
+            rComm.iSendDataX(buf.data(), buf.size(), root, TAG_SAVE_DATA);
+            rComm.wait(buf.data());
+        }
     }
 
     rComm.broadcast(answer);
@@ -365,8 +369,14 @@ std::vector<TlMatrixObject::MatrixElement> TlDenseSymmetricMatrix_ImplScalapack:
     // TlMatrixObject::size_type count = 0;
     for (TlMatrixObject::index_type localRow = 0; localRow < localRows; ++localRow) {
         const TlMatrixObject::index_type globalRow = this->getLocal2Global_row(localRow);
+        if (globalRow >= this->getNumOfRows()) {
+            continue;
+        }
         for (TlMatrixObject::index_type localCol = 0; localCol < localCols; ++localCol) {
             const TlMatrixObject::index_type globalCol = this->getLocal2Global_col(localCol);
+            if (globalCol >= this->getNumOfCols()) {
+                continue;
+            }
 
             if (globalRow >= globalCol) {
                 answer.push_back(
@@ -549,7 +559,9 @@ bool diagonalByScaLapack_QR(const TlDenseSymmetricMatrix_ImplScalapack& inMatrix
         return false;
     }
 
-    LWORK = (int)pWorkSizeCheck[0];
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    LWORK = static_cast<int>(pWorkSizeCheck[0]);
+    rComm.allReduce_MAX(LWORK);
     double* pWork = new double[LWORK];
 
     delete[] pWorkSizeCheck;
@@ -611,7 +623,14 @@ bool diagonalByScaLapack_DC(const TlDenseSymmetricMatrix_ImplScalapack& inMatrix
         return false;
     }
 
-    LWORK = (int)pWorkSizeCheck[0];
+    TlCommunicate& rComm = TlCommunicate::getInstance();
+    const int NB = inMatrix.blockSize_;
+    const int nStartProc = 0;
+    const int NP = numroc_(&N, &NB, &(inMatrix.m_nMyProcRow), &nStartProc, &(inMatrix.procGridRow_));
+    const int NQ = numroc_(&N, &NB, &(inMatrix.m_nMyProcCol), &nStartProc, &(inMatrix.procGridCol_));
+    const int sizeMQRLeft = std::max((NB * (NB - 1)) / 2, (NP + NQ) * NB) + NB * NB;
+    LWORK = std::max(static_cast<int>(pWorkSizeCheck[0]), sizeMQRLeft + 2 * N);
+    rComm.allReduce_MAX(LWORK);
     double* pWork = new double[LWORK];
 
     delete[] pWorkSizeCheck;

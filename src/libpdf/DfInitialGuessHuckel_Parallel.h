@@ -29,6 +29,9 @@ class DfInitialGuessHuckel_Parallel : public DfInitialGuessHuckel {
 
    public:
     virtual void createGuess();
+
+protected:
+    virtual DfDmatrix* getDfDmatrixObject(TlSerializeData* param);
 };
 
 #endif  // DFINITIALGUESSHUCKEL_PARALLEL_H

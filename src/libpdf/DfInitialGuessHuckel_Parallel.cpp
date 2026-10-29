@@ -17,8 +17,11 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfInitialGuessHuckel_Parallel.h"
+
 #include <iostream>
 #include <limits>
+
+#include "DfDmatrix_Parallel.h"
 #include "tl_dense_general_matrix_scalapack.h"
 #include "tl_dense_symmetric_matrix_scalapack.h"
 
@@ -31,4 +34,10 @@ DfInitialGuessHuckel_Parallel::~DfInitialGuessHuckel_Parallel() {}
 void DfInitialGuessHuckel_Parallel::createGuess() {
     DfInitialGuessHuckel::createGuess<TlDenseSymmetricMatrix_Scalapack,
                                       TlDenseGeneralMatrix_Scalapack>();
+}
+
+DfDmatrix* DfInitialGuessHuckel_Parallel::getDfDmatrixObject(
+    TlSerializeData* param) {
+    DfDmatrix* obj = new DfDmatrix_Parallel(param);
+    return obj;
 }

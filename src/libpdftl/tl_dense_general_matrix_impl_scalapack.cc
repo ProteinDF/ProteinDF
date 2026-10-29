@@ -537,6 +537,9 @@ void TlDenseGeneralMatrix_ImplScalapack::getLocalMatrix(TlDenseGeneralMatrixObje
     const std::vector<TlMatrixObject::index_type> colIndexes = this->getColIndexTable();
     const int numOfRowIndexes = rowIndexes.size();
     const int numOfColIndexes = colIndexes.size();
+    if (numOfRowIndexes == 0 || numOfColIndexes == 0) {
+        return;
+    }
     pOutMatrix->resize(numOfRowIndexes, numOfColIndexes);
 
     for (int rowIndex = 0; rowIndex < numOfRowIndexes; ++rowIndex) {
@@ -803,19 +806,23 @@ bool TlDenseGeneralMatrix_ImplScalapack::save(const std::string& filePath) const
             rComm.iReceiveDataFromAnySource(bufSize, tag);
             rComm.wait(&bufSize, &src);
 
-            std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
-            rComm.receiveDataX(&(buf[0]), bufSize, src, TAG_SAVE_DATA);
-
-            this->saveElements(&fm, buf);
+            if (bufSize > 0) {
+                std::vector<TlMatrixObject::MatrixElement> buf(bufSize);
+                rComm.receiveDataX(buf.data(), bufSize, src, TAG_SAVE_DATA);
+                this->saveElements(&fm, buf);
+            }
         }
     } else {
         // slave: send submatrix
         const int root = 0;
-        const std::vector<TlMatrixObject::MatrixElement> buf = this->getMatrixElementsInLocal2();
+        const std::vector<TlMatrixObject::MatrixElement> buf =
+            this->getMatrixElementsInLocal2();
         const TlMatrixObject::size_type bufSize = buf.size();
         rComm.sendData(bufSize, root, TAG_SAVE_HANDSHAKE);
-        rComm.iSendDataX(&(buf[0]), buf.size(), root, TAG_SAVE_DATA);
-        rComm.wait(&(buf[0]));
+        if (bufSize > 0) {
+            rComm.iSendDataX(buf.data(), buf.size(), root, TAG_SAVE_DATA);
+            rComm.wait(buf.data());
+        }
     }
 
     rComm.broadcast(answer);
@@ -1779,22 +1786,26 @@ void TlDenseGeneralMatrix_ImplScalapack::mergeMatrix_common(
 
 std::vector<TlMatrixObject::MatrixElement> TlDenseGeneralMatrix_ImplScalapack::getMatrixElementsInLocal2() const {
     const TlMatrixObject::size_type numOfMyElements = this->getNumOfMyElements();
-    std::vector<TlMatrixObject::MatrixElement> answer(numOfMyElements);
+    std::vector<TlMatrixObject::MatrixElement> answer;
+    answer.reserve(numOfMyElements);
 
     const TlMatrixObject::index_type localRows = this->myRows_;
     const TlMatrixObject::index_type localCols = this->myCols_;
-    TlMatrixObject::size_type count = 0;
     for (TlMatrixObject::index_type localRow = 0; localRow < localRows; ++localRow) {
         const TlMatrixObject::index_type globalRow = this->getLocal2Global_row(localRow);
+        if (globalRow >= this->getNumOfRows()) {
+            continue;
+        }
         for (TlMatrixObject::index_type localCol = 0; localCol < localCols; ++localCol) {
             const TlMatrixObject::index_type globalCol = this->getLocal2Global_col(localCol);
+            if (globalCol >= this->getNumOfCols()) {
+                continue;
+            }
 
-            answer[count] = TlMatrixObject::MatrixElement(globalRow, globalCol, this->getLocal(globalRow, globalCol));
-            ++count;
+            answer.push_back(
+                TlMatrixObject::MatrixElement(globalRow, globalCol, this->getLocal(globalRow, globalCol)));
         }
     }
-
-    assert(numOfMyElements == count);
 
     return answer;
 }
