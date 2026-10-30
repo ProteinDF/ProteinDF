@@ -60,6 +60,7 @@ class DfFunctional_Becke88 : public DfFunctional_GGA {
 
    protected:
     static const double EPS;
+    static const double X_MIN;
     static const double INV_3;
     static const double M_4_3;
     static const double G_PARAM;
