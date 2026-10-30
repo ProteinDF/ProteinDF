@@ -22,6 +22,7 @@ set(PDF_XTEST_SOURCES
 
   tl_dense_general_matrix_lapack_test.cc
   tl_dense_symmetric_matrix_lapack_test.cc
+  tl_dense_symmetric_matrix_pivoted_cholesky_test.cc
 
   #tl_sparse_matrix_test.cc
   #tl_sparse_symmetric_matrix_test.cc
