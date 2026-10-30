@@ -44,6 +44,16 @@ run() {
     echo "--- commits (develop..$branch)"
     git -C "$wt" log --oneline "develop..$branch"
     echo
+    echo "--- commit message check (no AI trailers such as Co-authored-by)"
+    msg_status=0
+    for c in $(git -C "$wt" rev-list "develop..$branch"); do
+        if git -C "$wt" show -s --format=%B "$c" | grep -qiE '^(co-authored-by|generated (by|with)):?'; then
+            echo "NG: $(git -C "$wt" log -n 1 --format='%h %s' "$c")"
+            msg_status=1
+        fi
+    done
+    ((msg_status == 0)) && echo "ok"
+    echo
     echo "--- diffstat"
     git -C "$wt" diff --stat "develop...$branch"
     echo
@@ -86,8 +96,8 @@ run() {
         rm -rf "$build"
     fi
     echo
-    echo "=== review: check.sh exit $check_status${mpi_filter:+, mpi exit $mpi_status}"
-    ((check_status == 0 && mpi_status == 0))
+    echo "=== review: check.sh exit $check_status${mpi_filter:+, mpi exit $mpi_status}${msg_status:+, message check exit $msg_status}"
+    ((check_status == 0 && mpi_status == 0 && msg_status == 0))
 }
 
 if ((verbose)); then
