@@ -17,13 +17,17 @@
 // along with ProteinDF.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "DfFunctional_Becke88.h"
+
+#include <algorithm>
 #include <cmath>
 #include <limits>
+
 #include "TlMath.h"
 #include "TlUtils.h"
 
 const double DfFunctional_Becke88::EPS =
     1.0E-16;  // std::numeric_limits<double>::epsilon();
+const double DfFunctional_Becke88::X_MIN = 1.0E-8;
 const double DfFunctional_Becke88::INV_3 = 1.0 / 3.0;
 const double DfFunctional_Becke88::M_4_3 = 4.0 / 3.0;
 const double DfFunctional_Becke88::G_PARAM =
@@ -215,9 +219,11 @@ TlDenseGeneralMatrix_Lapack DfFunctional_Becke88::getDerivativeFunctionalCore(
     // gammaAA = (rhoA^(4/3) * xA) * (rhoA^(4/3) * xA);
     // roundF_roundGammaAA = 0.5 * (1.0 / (rhoA^(4/3) * xA)) * g_primeA;
     //                     = [1.0 / rhoA^(4/3)] * [0.5 * (1.0 / xA) * g_primeA]
-    if ((rhoA > 1.0E-16) && (xA > 1.0E-16)) {
-        const double g_primeA = this->g_prime(xA);
-        const double inv_xA = 1.0 / xA;
+    if (rhoA > 1.0E-16) {
+        // g'(x)/x is finite at x = 0, so clamp x to keep it continuous
+        const double xA_eff = std::max(xA, X_MIN);
+        const double g_primeA = this->g_prime(xA_eff);
+        const double inv_xA = 1.0 / xA_eff;
 
         const double roundF_roundGammaAA_termR =
             1.0 / std::pow(rhoA, 4.0 / 3.0);
@@ -231,9 +237,11 @@ TlDenseGeneralMatrix_Lapack DfFunctional_Becke88::getDerivativeFunctionalCore(
         answer.set(GAB_R, 0, roundF_roundGammaAB_termR);
         answer.set(GAB_X, 0, roundF_roundGammaAB_termX);
     }
-    if ((rhoB > 1.0E-16) && (xB > 1.0E-16)) {
-        const double g_primeB = this->g_prime(xB);
-        const double inv_xB = 1.0 / xB;
+    if (rhoB > 1.0E-16) {
+        // g'(x)/x is finite at x = 0, so clamp x to keep it continuous
+        const double xB_eff = std::max(xB, X_MIN);
+        const double g_primeB = this->g_prime(xB_eff);
+        const double inv_xB = 1.0 / xB_eff;
 
         const double roundF_roundGammaBB_termR =
             1.0 / std::pow(rhoB, 4.0 / 3.0);

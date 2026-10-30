@@ -138,6 +138,8 @@ protected:
 
 protected:
     static const int MAX_SHELL_TYPE;
+    // eigenvalues below this are numerical noise (about 1e-14)
+    static constexpr double kEigenvalueThreshold = 1.0E-10;
     typedef std::vector<index_type> ShellArray;
     typedef std::vector<ShellArray> ShellArrayTable;
 
@@ -686,7 +688,7 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
             double v_13 = 0.0;
             const double v = lambda.get(i);
-            if (v > 1.0E-16) {
+            if (v > kEigenvalueThreshold) {
                 v_13 = std::pow(v, -ONE_THIRD);
             }
             lambda_13.set(i, i, v_13);
@@ -755,11 +757,11 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
     // for (index_type i = 0; i < numOfGfOrbs; ++i) {
     for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
         const double rho_value = lambda.get(i);
-        const double rho = (rho_value > 1.0E-16) ? rho_value : 0.0;
+        const double rho = (rho_value > kEigenvalueThreshold) ? rho_value : 0.0;
         rhoAs.set(i, rho);
 
         const double x2_value = x2.get(i);
-        const double x = (x2_value > 1.0E-16) ? std::sqrt(x2_value) : 0.0;
+        const double x = (x2_value > kEigenvalueThreshold) ? std::sqrt(x2_value) : 0.0;
         xAs.set(i, x);
     }
     const TlDenseVector_Lapack rhoBs = rhoAs;
@@ -778,7 +780,7 @@ void DfGridFreeXC::buildFxc_GGA_runtype(const RUN_TYPE runType) {
         TlDenseVector_Lapack rhoBB43(numOfGFOrthNormBasis);
         for (index_type i = 0; i < numOfGFOrthNormBasis; ++i) {
             const double rhoA = lambda.get(i);
-            if (rhoA > 1.0E-16) {
+            if (rhoA > kEigenvalueThreshold) {
                 const double rhoA43 = std::pow(rhoA, 4.0 / 3.0);
                 const double rhoB43 = rhoA43;  // RKS
                 rhoAA43.set(i, rhoA43);

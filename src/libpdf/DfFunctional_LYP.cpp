@@ -682,8 +682,7 @@ TlDenseGeneralMatrix_Lapack DfFunctional_LYP::getFunctionalCore(
     TlDenseGeneralMatrix_Lapack answer(F_DIM, this->getNumOfFunctionalTerms());
     assert(this->getNumOfFunctionalTerms() == 4);
 
-    if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && (rhoB > 1.0E-16) &&
-        (xB > 1.0E-16)) {
+    if ((rhoA > 1.0E-16) && (rhoB > 1.0E-16)) {
         const double rho = rhoA + rhoB;
         const double rhoAB = rhoA * rhoB;
 
@@ -751,8 +750,7 @@ TlDenseGeneralMatrix_Lapack DfFunctional_LYP::getDerivativeFunctionalCore(
     TlDenseGeneralMatrix_Lapack answer(
         D_DIM, this->getNumOfDerivativeFunctionalTerms());
 
-    if ((rhoA > 1.0E-16) && (xA > 1.0E-16) && (rhoB > 1.0E-16) &&
-        (xB > 1.0E-16)) {
+    if ((rhoA > 1.0E-16) && (rhoB > 1.0E-16)) {
         const double rhoA_43 = std::pow(rhoA, 4.0 / 3.0);
         const double rhoB_43 = std::pow(rhoB, 4.0 / 3.0);
 
