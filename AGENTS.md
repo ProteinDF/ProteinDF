@@ -21,6 +21,7 @@
 - 既存コードのスタイルに合わせる(`.clang-format`、`.editorconfig`)。変更した行だけを整形し、既存ファイル全体を整形し直さない。
 - エラーを握りつぶさない(黙ってデフォルト値に置き換えない)。コンパイラの警告・エラーを`-fpermissive`や`-Wno-*`で抑制して済ませない(指示書で許可された場合を除く)。
 - コミットは意味のある単位で分け、メッセージは既存の履歴に合わせる(`feat: ...`、`fix: ...`、`test: ...`、`docs: ...`、`style: ...`、英語)。
+- コミットメッセージに`Co-authored-by:`や`Generated with ...`など、AI生成を示す行を付けない(GitHub Copilot CLIは既定で`Co-authored-by: Copilot`を付ける。コミット後に`git log`で確認し、付いていたら`git commit --amend`で取り除く)。`devtool/review.sh`はこの行を検出すると失敗にする。
 
 ## コンテキストを節約する読み方・実行の仕方
 
