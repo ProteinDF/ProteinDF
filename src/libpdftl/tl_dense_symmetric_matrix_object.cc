@@ -210,11 +210,14 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(TlDenseGeneralMa
 
     pL->resize(N, N);
     TlMatrixObject::index_type m = 0;
-    while (error > threshold) {
+    while (m < N && error > threshold) {
         const TlMatrixObject::index_type argmax = argmax_pivot()(diagonals, pivot, m);
         std::swap(pivot[m], pivot[argmax]);
 
-        assert(diagonals[pivot[m]] >= 0.0);
+        // the remaining diagonals are non-positive (rank exhausted)
+        if (diagonals[pivot[m]] <= 0.0) {
+            break;
+        }
         const double l_m_pm = std::sqrt(diagonals[pivot[m]]);
         pL->set(m, pivot[m], l_m_pm);
 
@@ -231,8 +234,7 @@ void TlDenseSymmetricMatrixObject::pivotedCholeskyDecomposition(TlDenseGeneralMa
             diagonals[pivot[i]] -= l_m_pi * l_m_pi;
         }
 
-        error = accumulate()(diagonals, pivot, m);
-        // error = diagonals[pivot[m]];
+        error = accumulate()(diagonals, pivot, m + 1);
         ++m;
     }
 
