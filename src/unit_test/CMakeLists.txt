@@ -32,6 +32,7 @@ set(PDF_XTEST_SOURCES
   TlSerializeDataTest.cpp
   TlMsgPackTest.cpp
   PdfXCFunctionalDefaultTest.cpp
+  ScfEnergyDensityConsistencyTest.cpp
   TlStlUtilsTest.cpp
   TlStringTokenizerTest.cpp
   TlSystemTest.cpp
