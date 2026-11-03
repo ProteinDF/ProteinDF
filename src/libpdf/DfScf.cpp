@@ -42,6 +42,7 @@
 #include "DfScf.h"
 #include "DfSummary.h"
 #include "DfThreeindexintegrals.h"
+#include "TlFile.h"
 #include "TlUtils.h"
 #include "common.h"
 #include "df_converge_damping_anderson_lapack.h"
@@ -484,6 +485,8 @@ void DfScf::setScfRestartPoint(const std::string& str) {
 void DfScf::diffDensityMatrix() {
     if (this->m_nDampObject == DAMP_DENSITY_MATRIX) {
         this->converge();
+    } else if (this->m_nIteration > 1) {
+        this->copyPOutToPIn(this->m_nIteration);
     }
 
     if (this->m_bDiskUtilization == false) {
@@ -494,6 +497,38 @@ void DfScf::diffDensityMatrix() {
 
         this->loggerEndTitle();
         (*this->pPdfParam_)["stat"]["elapsed_time"]["diff_density_matrix"][this->m_nIteration] = timer.getElapseTime();
+    }
+}
+
+void DfScf::copyPOutToPIn(const int iteration) {
+    switch (this->m_nMethodType) {
+        case METHOD_RKS:
+            this->copyPOutToPIn(RUN_RKS, iteration);
+            break;
+
+        case METHOD_UKS:
+            this->copyPOutToPIn(RUN_UKS_ALPHA, iteration);
+            this->copyPOutToPIn(RUN_UKS_BETA, iteration);
+            break;
+
+        case METHOD_ROKS:
+            this->copyPOutToPIn(RUN_ROKS_CLOSED, iteration);
+            this->copyPOutToPIn(RUN_ROKS_OPEN, iteration);
+            break;
+
+        default:
+            CnErr.abort("DfScf::copyPOutToPIn(): unknown method type.");
+            break;
+    }
+}
+
+void DfScf::copyPOutToPIn(const RUN_TYPE runType, const int iteration) {
+    const std::string pOutPath = DfObject::getPOutMatrixPath(runType, iteration - 1);
+    if (TlFile::isExistFile(pOutPath)) {
+        const std::string pInPath = DfObject::getPInMatrixPath(runType, iteration);
+        TlFile::copy(pOutPath, pInPath);
+    } else {
+        CnErr.abort("file not found: " + pOutPath);
     }
 }
 

@@ -187,7 +187,7 @@ void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergePMatrix(const
     const int iteration = this->m_nIteration;
 
     this->log_.info(TlUtils::format("iteration = %d / %d", iteration, this->startIteration_));
-    if (iteration >= this->startIteration_) {
+    if ((iteration > 1) && (iteration >= this->startIteration_)) {
         this->log_.info(" damping to density matrix");
 
         SymmetricMatrix P0_in = DfObject::getPInMatrix<SymmetricMatrix>(runType, iteration - 1);
@@ -202,8 +202,10 @@ void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergePMatrix(const
         DfObject::savePInMatrix(runType, iteration, P0_in);
     } else {
         this->log_.info("damping to density matrix is skipped.");
-        // const SymmetricMatrix P0_out = DfObject::getPOutMatrix<SymmetricMatrix>(runType, iteration - 1);
-        // DfObject::savePInMatrix(runType, iteration, P0_out);
+        if (iteration > 1) {
+            const SymmetricMatrix P0_out = DfObject::getPOutMatrix<SymmetricMatrix>(runType, iteration - 1);
+            DfObject::savePInMatrix(runType, iteration, P0_out);
+        }
     }
 }
 

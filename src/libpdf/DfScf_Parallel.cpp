@@ -118,6 +118,12 @@ void DfScf_Parallel::diffDensityMatrix() {
     this->saveParam();
     if (this->m_nDampObject == DfScf::DAMP_DENSITY_MATRIX) {
         this->converge();
+    } else if (this->m_nIteration > 1) {
+        TlCommunicate& rComm = TlCommunicate::getInstance();
+        if (rComm.isMaster() == true) {
+            this->copyPOutToPIn(this->m_nIteration);
+        }
+        rComm.barrier();
     }
     // std::cout << TlUtils::format("after converge(): %d/%d", rComm.getRank(), rComm.getNumOfProcs()) << std::endl;
 

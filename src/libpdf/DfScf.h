@@ -153,6 +153,8 @@ protected:
 
     void converge();
     virtual DfConverge* getDfConverge();
+    void copyPOutToPIn(int iteration);
+    void copyPOutToPIn(RUN_TYPE runType, int iteration);
 
     virtual void cleanup();
 
