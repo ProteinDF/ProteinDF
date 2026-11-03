@@ -34,6 +34,7 @@ set(PDF_XTEST_SOURCES
   PdfXCFunctionalDefaultTest.cpp
   PdfKeywordSpellingTest.cpp
   ScfEnergyDensityConsistencyTest.cpp
+  DiisDensityMixingTest.cpp
   TlStlUtilsTest.cpp
   TlStringTokenizerTest.cpp
   TlSystemTest.cpp
@@ -147,7 +148,7 @@ add_test(
   COMMAND $<TARGET_FILE:pdf-xtest> ${PDF_XTEST_FLAG})
 set_property(TEST xtest PROPERTY LABELS xtest)
 set_property(TEST xtest PROPERTY RUN_SERIAL)
-set_property(TEST xtest PROPERTY TIMEOUT 600)
+set_property(TEST xtest PROPERTY TIMEOUT 1200)
 set_property(TEST xtest PROPERTY ENVIRONMENT "PDF_HOME=${PDF_HOME}")
 
 if (MPI_FOUND)
