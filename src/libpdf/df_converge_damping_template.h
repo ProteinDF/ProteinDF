@@ -130,7 +130,7 @@ template <class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeRhoTilde(const DfObject::RUN_TYPE runType) {
     const int iteration = this->m_nIteration;
 
-    if (iteration >= this->startIteration_) {
+    if ((iteration > 1) && (iteration >= this->startIteration_)) {
         this->log_.info("damping to cd coefficient");
 
         // read previous rho
@@ -160,7 +160,7 @@ template <class SymmetricMatrix, class Vector>
 void DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeKSMatrix(const DfObject::RUN_TYPE runType) {
     const int iteration = this->m_nIteration;
 
-    if (iteration >= this->startIteration_) {
+    if ((iteration > 1) && (iteration >= this->startIteration_)) {
         this->log_.info("damping to kohn-sham matrix");
 
         // Fpq damping
