@@ -17,12 +17,12 @@ class DfTotalEnergy_Parallel_tmpl
     virtual ~DfTotalEnergy_Parallel_tmpl();
 
    protected:
-    virtual SymmetricMatrix getSpinDensityMatrix(
-        const DfObject::RUN_TYPE runType, const int iteration);
-    virtual Vector getRho();
-    virtual Vector getEps(const DfObject::RUN_TYPE runType);
+       virtual SymmetricMatrix getPInMatrix(
+           const DfObject::RUN_TYPE runType, const int iteration);
+       virtual Vector getRho();
+       virtual Vector getEps(const DfObject::RUN_TYPE runType);
 
-    virtual void saveParams();
+       virtual void saveParams();
 };
 
 // ----------------------------------------------------------------------------
@@ -48,13 +48,14 @@ template <class GeneralMatrix, class SymmetricMatrix, class Vector,
           class DfOverlapType>
 SymmetricMatrix DfTotalEnergy_Parallel_tmpl<
     GeneralMatrix, SymmetricMatrix, Vector,
-    DfOverlapType>::getSpinDensityMatrix(const DfObject::RUN_TYPE runType,
-                                         const int iteration) {
+    DfOverlapType>::getPInMatrix(const DfObject::RUN_TYPE runType,
+                                 const int iteration) {
     SymmetricMatrix matrix;
     TlCommunicate& rComm = TlCommunicate::getInstance();
     if (rComm.isMaster()) {
-        matrix =
-            DfObject::getSpinDensityMatrix<SymmetricMatrix>(runType, iteration);
+        matrix = DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector,
+                                    DfOverlapType>::getPInMatrix(runType,
+                                                                 iteration);
     }
     rComm.broadcast(&matrix);
 
