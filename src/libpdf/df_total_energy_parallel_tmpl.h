@@ -16,7 +16,7 @@ class DfTotalEnergy_Parallel_tmpl
     DfTotalEnergy_Parallel_tmpl(TlSerializeData* pPdfParam);
     virtual ~DfTotalEnergy_Parallel_tmpl();
 
-   protected:
+protected:
     virtual SymmetricMatrix getPInMatrix(
         const DfObject::RUN_TYPE runType, const int iteration);
     virtual Vector getRho();
