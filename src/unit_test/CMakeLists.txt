@@ -32,6 +32,7 @@ set(PDF_XTEST_SOURCES
   TlSerializeDataTest.cpp
   TlMsgPackTest.cpp
   PdfXCFunctionalDefaultTest.cpp
+  PdfKeywordSpellingTest.cpp
   ScfEnergyDensityConsistencyTest.cpp
   TlStlUtilsTest.cpp
   TlStringTokenizerTest.cpp
@@ -118,8 +119,10 @@ add_executable(pdf-xtest ${PDF_XTEST_SOURCES})
 target_link_libraries(pdf-xtest libpdf libpdftl ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES} Threads::Threads)
 target_compile_definitions(pdf-xtest PRIVATE
   PDFKWD_MPAC_PATH="${CMAKE_BINARY_DIR}/data/pdfkwd.mpac"
-  ALIAS_MPAC_PATH="${PROJECT_SOURCE_DIR}/data/alias.mpac"
+  ALIAS_MPAC_PATH="${CMAKE_BINARY_DIR}/data/alias.mpac"
+  BASIS2_PATH="${PROJECT_SOURCE_DIR}/data/basis2"
 )
+add_dependencies(pdf-xtest generate_pdfkwd_mpac generate_alias_mpac)
 
 if (NOT DEFINED PDF_XTEST_FLAG)
   if (NOT DEFINED ENV{PDF_XTEST_FLAG})
