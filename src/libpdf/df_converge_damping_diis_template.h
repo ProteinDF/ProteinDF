@@ -216,6 +216,14 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
     this->log_.info(TlUtils::format("converge rho vector using DIIS. #%d", this->m_nIteration));
     const int itr = this->m_nIteration;
 
+    // backup current rho_out
+    {
+        const std::string outPath = DfObject::getRhoPath(runType, itr) + ".out";
+        Vector rhoOut;
+        rhoOut.load(DfObject::getRhoPath(runType, itr));
+        rhoOut.save(outPath);
+    }
+
     bool updateByDIIS = false;
     if (itr >= this->startIterationOfDIIS_) {
         // 残差ベクトルを求める
@@ -223,48 +231,70 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
 
         // 残差ベクトルの要素が閾値(0.1)よりも大きい場合はDIISは行わない
         const double maxError = r.getMaxAbsoluteElement();
-        this->log_.info(TlUtils::format("e_max = %e", maxError));
-        if (maxError < 0.1) {
-            int diis_e_max_pass_itr = (*this->pPdfParam_)["DIIS_e_max_pass_itr"].getInt();
-            if (diis_e_max_pass_itr == -1) {
-                (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = itr;
-                diis_e_max_pass_itr = itr;
+        this->log_.info(TlUtils::format("e_max = %e (%e)", maxError, this->e_max_));
+        if (maxError < this->e_max_) {
+            int e_max_pass_itr = -1;
+            if (this->pPdfParam_->hasKey("internal/dfconverge_damping_diis/rho_e_max_pass_itr")) {
+                e_max_pass_itr = (*this->pPdfParam_)["internal/dfconverge_damping_diis/rho_e_max_pass_itr"].getInt();
             }
-            this->log_.info(TlUtils::format("e_max pass itr = %d", diis_e_max_pass_itr));
+            if (e_max_pass_itr == -1) {
+                (*this->pPdfParam_)["internal/dfconverge_damping_diis/rho_e_max_pass_itr"] = itr;
+                e_max_pass_itr = itr;
+            }
+            this->log_.info(TlUtils::format("e_max_pass_itr = %d", e_max_pass_itr));
 
             int last = this->numOfLastItems_;
-            const int startItr = std::max(diis_e_max_pass_itr, itr - last + 1);  // 現itrを追加すると+1
-            last = std::min(last, itr - startItr + 1);
+            const int startItr = std::max(std::max(e_max_pass_itr, 1), itr - last);
+            last = std::min(last, itr - startItr);
             this->log_.info(TlUtils::format("itr=%d, start=%d, last=%d", itr, startItr, last));
 
-            // 係数行列の取得
-            const Matrix c = this->getCoef(runType, startItr - 1, last);
-            assert(c.getNumOfRows() == last + 1);  // +1 はラグランジュ未定乗数法のため
+            if (last > 0) {
+                // 係数行列の取得
+                const Matrix c = this->getCoef(runType, startItr, last);
+                assert(c.getNumOfRows() == last + 1);  // +1 はラグランジュ未定乗数法のため
 
-            this->log_.info("update rho using DIIS method.");
+                this->log_.info("update rho using DIIS method.");
 
-            Vector newRho(this->m_nNumOfAux);
-            Vector tmpRho;
-            for (int i = 0; i < last; ++i) {
-                const std::string inFilePath = DfObject::getRhoPath(runType, startItr + i);
-                assert(TlFile::isExistFile(inFilePath));
-                this->log_.info(inFilePath);
-                tmpRho.load(inFilePath);
+                const double dampingFactor = this->getDampingFactor();
+                const double beta = 1.0 - dampingFactor;
+                this->log_.info(TlUtils::format(" damping factor = %f", dampingFactor));
 
-                const double coef = c.get(i, 0);
-                this->log_.info(TlUtils::format("%d-th coef=% 8.3f", startItr + i, coef));
-                newRho += coef * tmpRho;
+                Vector newRho(this->m_nNumOfAux);
+                Vector rhoIn;
+                Vector rhoOut;
+                for (int i = 0; i < last; ++i) {
+                    const int m = startItr + i;
+                    const std::string inFilePath = DfObject::getRhoPath(runType, m);
+                    const std::string outFilePath = DfObject::getRhoPath(runType, m + 1) + ".out";
+                    assert(TlFile::isExistFile(inFilePath));
+                    assert(TlFile::isExistFile(outFilePath));
+
+                    rhoIn.load(inFilePath);
+                    rhoOut.load(outFilePath);
+
+                    const double coef = c.get(i, 0);
+                    this->log_.info(TlUtils::format("%d-th coef=% 8.3f", m, coef));
+
+                    rhoIn *= dampingFactor;
+                    rhoOut *= beta;
+                    rhoIn += rhoOut;
+                    newRho += coef * rhoIn;
+                }
+
+                this->log_.info(TlUtils::format("save new rho: %d", itr));
+                DfObject::saveRho(runType, itr, newRho);
+                updateByDIIS = true;
             }
-
-            this->log_.info(TlUtils::format("save new rho: %d", itr));
-            DfObject::saveRho(runType, itr, newRho);
-            updateByDIIS = true;
         } else {
-            (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = -1;
+            this->log_.info("e_max has not been satisfied.");
+            (*this->pPdfParam_)["internal/dfconverge_damping_diis/rho_e_max_pass_itr"] = -1;
         }
+    } else {
+        this->log_.info(TlUtils::format("the iteration, %d, is lower than start number, %d.", itr, this->startIterationOfDIIS_));
     }
 
     if (!updateByDIIS) {
+        this->log_.info("call damping algorithem.");
         DfConverge_Damping_Template<SymmetricMatrix, Vector>::convergeRhoTilde(runType);
     }
 }
@@ -377,19 +407,32 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
 
                 this->log_.info("update density matrix using DIIS method.");
 
+                const double dampingFactor = this->getDampingFactor();
+                const double beta = 1.0 - dampingFactor;
+                this->log_.info(TlUtils::format(" damping factor = %f", dampingFactor));
+
                 SymmetricMatrix newP(this->m_nNumOfAOs);
                 SymmetricMatrix Pi;
+                SymmetricMatrix Pout_i;
                 for (int i = 0; i < last; ++i) {
-                    const std::string inFilePath = DfObject::getPInMatrixPath(runType, startItr + i);
+                    const int targetItr = startItr + i;
+                    const std::string inFilePath = DfObject::getPInMatrixPath(runType, targetItr);
+                    const std::string outFilePath = DfObject::getPOutMatrixPath(runType, targetItr);
                     assert(TlFile::isExistFile(inFilePath));
+                    assert(TlFile::isExistFile(outFilePath));
                     Pi.load(inFilePath);
+                    Pout_i.load(outFilePath);
 
                     const double coef = c.get(i, 0);
-                    this->log_.info(TlUtils::format("%d-th coef=% 8.3f", startItr + i, coef));
+                    this->log_.info(TlUtils::format("%d-th coef=% 8.3f", targetItr, coef));
+
+                    Pi *= dampingFactor;
+                    Pout_i *= beta;
+                    Pi += Pout_i;
                     newP += coef * Pi;
                 }
 
-                this->log_.info(TlUtils::format("save new P matrix: %d", itr - 1));
+                this->log_.info(TlUtils::format("save new P matrix: %d", itr));
                 DfObject::savePInMatrix(runType, itr, newP);
                 updateByDIIS = true;
             }
