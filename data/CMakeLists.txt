@@ -22,11 +22,23 @@ add_custom_command(
 
 add_custom_target(generate_pdfkwd_mpac ALL DEPENDS "${PDFKWD_MPAC}")
 
+set(ALIAS_YAML "${CMAKE_CURRENT_SOURCE_DIR}/alias.yaml")
+set(ALIAS_MPAC "${CMAKE_CURRENT_BINARY_DIR}/alias.mpac")
+
+add_custom_command(
+  OUTPUT "${ALIAS_MPAC}"
+  COMMAND "${YML2MPAC_EXECUTABLE}" "${ALIAS_YAML}" "${ALIAS_MPAC}"
+  DEPENDS "${ALIAS_YAML}"
+  COMMENT "Generating ${ALIAS_MPAC} from ${ALIAS_YAML}"
+  VERBATIM
+)
+
+add_custom_target(generate_alias_mpac ALL DEPENDS "${ALIAS_MPAC}")
+
 set(DATA_FILES
   basis2
-  alias.mpac
   harris.mpac
   )
 
 install(FILES ${DATA_FILES} DESTINATION data)
-install(FILES "${PDFKWD_MPAC}" DESTINATION data)
+install(FILES "${PDFKWD_MPAC}" "${ALIAS_MPAC}" DESTINATION data)

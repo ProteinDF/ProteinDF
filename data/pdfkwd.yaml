@@ -151,7 +151,7 @@
     description: block size for integrals
     hidden: false
     syntax: (integer > 0)
-- keyword: charge-extrapolate-number
+- keyword: charge_extrapolate_number
   property:
     default: '1'
     desc_jp: ダミー電荷を段階的に外挿する回数
@@ -387,7 +387,7 @@
     description: ''
     hidden: false
     syntax: (real)
-- keyword: scf_acceleration/daming/start
+- keyword: scf_acceleration/damping/start
   property:
     default: '0'
     desc_jp: damping法を開始するイテレーション
