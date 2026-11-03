@@ -17,12 +17,12 @@ class DfTotalEnergy_Parallel_tmpl
     virtual ~DfTotalEnergy_Parallel_tmpl();
 
    protected:
-       virtual SymmetricMatrix getPInMatrix(
-           const DfObject::RUN_TYPE runType, const int iteration);
-       virtual Vector getRho();
-       virtual Vector getEps(const DfObject::RUN_TYPE runType);
+    virtual SymmetricMatrix getPInMatrix(
+        const DfObject::RUN_TYPE runType, const int iteration);
+    virtual Vector getRho();
+    virtual Vector getEps(const DfObject::RUN_TYPE runType);
 
-       virtual void saveParams();
+    virtual void saveParams();
 };
 
 // ----------------------------------------------------------------------------
