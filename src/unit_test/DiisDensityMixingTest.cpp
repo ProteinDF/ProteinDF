@@ -20,6 +20,9 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include <cmath>
 #include <cstdio>
@@ -75,6 +78,31 @@ namespace {
         closedir(dir);
         rmdir(dirPath.c_str());
     }
+
+    // Limit OpenMP threads for small molecular unit tests to avoid heavy
+    // initialization overhead of thread-local ERI engines.
+    class ScopedOmpNumThreads {
+    public:
+        explicit ScopedOmpNumThreads(int threads) {
+#ifdef _OPENMP
+            original_ = omp_get_max_threads();
+            omp_set_num_threads(threads);
+#else
+            (void)threads;
+#endif
+        }
+
+        ~ScopedOmpNumThreads() {
+#ifdef _OPENMP
+            omp_set_num_threads(original_);
+#endif
+        }
+
+    private:
+#ifdef _OPENMP
+        int original_ = 1;
+#endif
+    };
 
     class ScopedPdfHomeWithBasis {
     public:
@@ -229,17 +257,17 @@ namespace {
         text += "orbital_independence_threshold/lowdin = 0.00\n";
         text += "orbital-overlap-correspondence = off\n";
         text += "orbital-overlap-correspondence-first = off\n";
-        text += "max-iteration = 10\n";
+        text += "max-iteration = 25\n";
         text += "method = rks\n";
         text += "method/rks/electron-number = 10\n";
         text += "method/rks/occlevel = [ 1 - 5 ]\n";
         text += "convergence/type = density\n";
-        text += "convergence/threshold/rms = 0.1\n";
-        text += "convergence/threshold = 0.4\n";
-        text += "convergence/threshold-energy = 2.5\n";
+        text += "convergence/threshold = 1.0e-3\n";
+        text += "convergence/threshold-energy = 1.0e-5\n";
         text += "scf-acceleration = " + scfAcc + "\n";
         text += "scf-acceleration/damping/damping-factor = 0.50\n";
         text += "scf-acceleration/damping/damping-type = " + dampType + "\n";
+        text += "scf_acceleration/diis/start = 2\n";
         text += "xc_functional = hf\n";
         text += "J_engine = RI_J\n";
         text += "K_engine = CD\n";
@@ -271,6 +299,7 @@ namespace {
 }  // namespace
 
 TEST(DiisDensityMixingTest, H2OHfCdDensityMatrixDiisConverges) {
+    ScopedOmpNumThreads scopedOmp(1);
     DfTotalEnergyResetter::reset();
     ScopedPdfHomeWithBasis scopedPdfHome;
     ScopedTempWorkDir workDir;
@@ -287,7 +316,13 @@ TEST(DiisDensityMixingTest, H2OHfCdDensityMatrixDiisConverges) {
     const TlSerializeData param = loadPdfParam("pdfparam.mpac");
     EXPECT_TRUE(param["control"]["scf_converged"].getBoolean());
 
+    // Verify DIIS was actually activated
+    EXPECT_TRUE(param.hasKey("internal/dfconverge_damping_diis/e_max_pass_itr"));
+    EXPECT_NE(-1, param["internal/dfconverge_damping_diis/e_max_pass_itr"].getInt());
+
     const int lastItr = param["num_of_iterations"].getInt();
+    // DIIS converges faster than damping-only (20 iterations)
+    EXPECT_LT(lastItr, 20);
     const std::string lastItrKey = TlUtils::format("%d", lastItr);
     const double convergedTE = param["TEs"][lastItrKey].getDouble();
 
@@ -296,6 +331,7 @@ TEST(DiisDensityMixingTest, H2OHfCdDensityMatrixDiisConverges) {
 }
 
 TEST(DiisDensityMixingTest, H2ORiJDftDensityDiisConverges) {
+    ScopedOmpNumThreads scopedOmp(1);
     DfTotalEnergyResetter::reset();
     ScopedPdfHomeWithBasis scopedPdfHome;
     ScopedTempWorkDir workDir;
@@ -312,10 +348,16 @@ TEST(DiisDensityMixingTest, H2ORiJDftDensityDiisConverges) {
     const TlSerializeData param = loadPdfParam("pdfparam.mpac");
     EXPECT_TRUE(param["control"]["scf_converged"].getBoolean());
 
+    // Verify DIIS was actually activated for rho
+    EXPECT_TRUE(param.hasKey("internal/dfconverge_damping_diis/rho_e_max_pass_itr"));
+    EXPECT_NE(-1, param["internal/dfconverge_damping_diis/rho_e_max_pass_itr"].getInt());
+
     const int lastItr = param["num_of_iterations"].getInt();
+    // DIIS converges faster than damping-only (17 iterations)
+    EXPECT_LT(lastItr, 17);
     const std::string lastItrKey = TlUtils::format("%d", lastItr);
     const double convergedTE = param["TEs"][lastItrKey].getDouble();
 
-    // Baseline damping energy: -74.87157688 Ha (actual diff with DIIS is 1.1e-13 Ha)
-    EXPECT_NEAR(convergedTE, -74.87157688, 1.0e-8);
+    // Baseline damping energy: -74.9684817181 Ha (actual diff with DIIS is 4.4e-7 Ha)
+    EXPECT_NEAR(convergedTE, -74.9684817181, 1.0e-6);
 }
