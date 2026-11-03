@@ -1,5 +1,7 @@
 # Claude(レビュー担当)向けルール
 
+> `devtool/` の作業スクリプトのうち `flow.sh`・`review.sh`・`delegate.sh`・`tasks.sh` は、公開リポジトリには含まれない。非公開リポジトリの共有フォルダ `common/devtool/` にあり、プロジェクトごとの設定は git 管理の外の `devtool.conf` に書く(手順は共有フォルダの README を参照)。以下に出てくるこの4つは、共有フォルダのものを指す。`check.sh`・`regress.sh` などは、このリポジトリの `devtool/` にある。
+
 このリポジトリでは、**Claudeはレビュー担当**であり、実装はagy / GitHub Copilotに任せる。全体の流れは`CONTRIBUTING.md`、実装担当のルールは`AGENTS.md`を参照。
 
 ## Claudeがやること
@@ -9,7 +11,7 @@
 2. **実装を依頼する**: ユーザーの指示があれば`devtool/delegate.sh private/tasks/TASK_<name>.md`を実行する(時間がかかるのでバックグラウンドで実行する)。ユーザー自身がagy / Copilotに渡す場合もある。
    - agyが利用上限で止まると`delegate.sh`は終了コード75で終わる。再開の方法(上限のリセットを待って`-c`で続ける、`-W`で自動的に待つ、`-a copilot`に切り替える)はユーザーに確認する。
 3. **レビューする**: ブランチのworktree(`devtool/flow.sh path <branch>`)で`/code-review`を使い、あわせて次を行う。
-   - `devtool/review.sh <branch>`を**自分で実行する**(新しいビルドディレクトリで`PDF_HOME`を外して`check.sh`を実行し、出力を`.git/review-logs/`に保存する。MPIのテストを確かめるときは`--mpi '<gtest filter>'`で4プロセスの結果を集計する)。実装担当の完了報告の数字・出力を鵜呑みにしない。
+   - `devtool/review.sh <branch>`を**自分で実行する**(新しいビルドディレクトリで`PDF_HOME`を外して`check.sh`を実行し、出力を`.git/review-logs/`に保存する。MPIのテストを確かめるときは`devtool/review.sh <branch> --mpi '<gtest filter>'`のようにブランチ名の後ろに付け、4プロセスの結果を集計する)。実装担当の完了報告の数字・出力を鵜呑みにしない。
    - タスク指示書の「完了の定義」を1項目ずつ照合する。
    - スコープ外の変更、警告の抑制、エラーの握りつぶし、変更していない行の整形がないか確認する。
 4. **レビュー結果を書く**: タスク指示書の末尾に`## レビュー結果(N回目、YYYY-MM-DD、要修正|収束)`として追記し、非公開リポジトリにコミットする。要修正なら番号付きの修正依頼と「完了の定義(修正後)」を書く。実装担当は同じブランチに追加コミットする。

@@ -1,5 +1,7 @@
 # 実装担当エージェント(agy / GitHub Copilot)向けルール
 
+> `devtool/` の作業スクリプトのうち `flow.sh`・`review.sh`・`delegate.sh`・`tasks.sh` は、公開リポジトリには含まれない。非公開リポジトリの共有フォルダ `common/devtool/` にあり、プロジェクトごとの設定は git 管理の外の `devtool.conf` に書く(手順は共有フォルダの README を参照)。以下に出てくるこの4つは、共有フォルダのものを指す。`check.sh`・`regress.sh` などは、このリポジトリの `devtool/` にある。
+
 このリポジトリでは、**実装はagyまたはGitHub Copilot、レビューはClaude、マージの承認はユーザー**が担当する。
 全体の流れは`CONTRIBUTING.md`を参照。ここには実装担当が守るべきことだけを書く。
 
