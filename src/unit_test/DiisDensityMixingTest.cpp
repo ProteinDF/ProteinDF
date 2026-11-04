@@ -214,6 +214,7 @@ namespace {
         text += "scf-acceleration = " + scfAcc + "\n";
         text += "scf-acceleration/damping/damping-factor = 0.50\n";
         text += "scf-acceleration/damping/damping-type = " + dampType + "\n";
+        text += "scf_acceleration/diis/last_items = 3\n";
         text += "xc_functional = hf\n";
         text += "J_engine = CD\n";
         text += "K_engine = CD\n";
@@ -267,7 +268,7 @@ namespace {
         text += "scf-acceleration = " + scfAcc + "\n";
         text += "scf-acceleration/damping/damping-factor = 0.50\n";
         text += "scf-acceleration/damping/damping-type = " + dampType + "\n";
-        text += "scf_acceleration/diis/start = 2\n";
+        text += "scf_acceleration/diis/last_items = 3\n";
         text += "xc_functional = hf\n";
         text += "J_engine = RI_J\n";
         text += "K_engine = CD\n";

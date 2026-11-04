@@ -225,7 +225,7 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
     }
 
     bool updateByDIIS = false;
-    if (itr >= this->startIterationOfDIIS_) {
+    if ((itr >= 2) && (itr >= this->startIterationOfDIIS_)) {
         // 残差ベクトルを求める
         Matrix r = this->getResidual(runType, itr - 1);  // 一つ前
 
@@ -381,7 +381,7 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
     const int itr = this->m_nIteration;
 
     bool updateByDIIS = false;
-    if (itr >= this->startIterationOfDIIS_) {
+    if ((itr >= 2) && (itr >= this->startIterationOfDIIS_)) {
         // 残差ベクトルを求める
         Matrix r = this->getResidual(runType, itr - 1);
 
