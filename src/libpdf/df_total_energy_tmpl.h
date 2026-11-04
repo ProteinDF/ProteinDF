@@ -85,8 +85,8 @@ protected:
     DfOverlapType* pDfOverlapObject_;
 
     static const double TOO_SMALL;
-    static double E_nuc_;
-    static double E_nuc_X_;
+    double E_nuc_;
+    double E_nuc_X_;
     double E_total_;
     double E_h_;
     double E_h_X_;
@@ -115,12 +115,6 @@ protected:
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 const double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::TOO_SMALL = 1.0E-16;
 
-template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
-double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::E_nuc_ = 0.0;
-
-template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
-double DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::E_nuc_X_ = 0.0;
-
 // constructor & destructor ---------------------------------------------------
 template <class GeneralMatrix, class SymmetricMatrix, class Vector, class DfOverlapType>
 DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::DfTotalEnergy_tmpl(
@@ -129,6 +123,8 @@ DfTotalEnergy_tmpl<GeneralMatrix, SymmetricMatrix, Vector, DfOverlapType>::DfTot
       orbInfo_((*pPdfParam)["coordinates"], (*pPdfParam)["basis_set"]),
       pDfXCFunctionalObject_(NULL),
       pDfOverlapObject_(NULL),
+      E_nuc_(0.0),
+      E_nuc_X_(0.0),
       E_total_(0.0),
       E_h_(0.0),
       E_h_X_(0.0),

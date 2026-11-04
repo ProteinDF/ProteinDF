@@ -43,16 +43,6 @@
 
 namespace {
 
-    // DfTotalEnergy_tmpl caches E_nuc_ across runs in a static variable;
-    // reset it before each test so a prior calculation with different geometry
-    // (e.g. H2) does not corrupt the nuclear repulsion energy of H2O.
-    struct DfTotalEnergyResetter : public DfTotalEnergy_Lapack {
-        static void reset() {
-            E_nuc_ = 0.0;
-            E_nuc_X_ = 0.0;
-        }
-    };
-
     void removeDirectoryRecursive(const std::string& dirPath) {
         DIR* dir = opendir(dirPath.c_str());
         if (dir == NULL) {
@@ -301,7 +291,6 @@ namespace {
 
 TEST(DiisDensityMixingTest, H2OHfCdDensityMatrixDiisConverges) {
     ScopedOmpNumThreads scopedOmp(1);
-    DfTotalEnergyResetter::reset();
     ScopedPdfHomeWithBasis scopedPdfHome;
     ScopedTempWorkDir workDir;
     ASSERT_FALSE(workDir.path().empty());
@@ -333,7 +322,6 @@ TEST(DiisDensityMixingTest, H2OHfCdDensityMatrixDiisConverges) {
 
 TEST(DiisDensityMixingTest, H2ORiJDftDensityDiisConverges) {
     ScopedOmpNumThreads scopedOmp(1);
-    DfTotalEnergyResetter::reset();
     ScopedPdfHomeWithBasis scopedPdfHome;
     ScopedTempWorkDir workDir;
     ASSERT_FALSE(workDir.path().empty());
