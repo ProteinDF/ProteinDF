@@ -60,9 +60,9 @@
   old_kwd: scf-acceleration/anderson/start-number
 - new_kwd: scf_acceleration/anderson/damping_factor
   old_kwd: scf-acceleration/anderson/damping-factor
-- new_kwd: scf_acceleration/DIIS/start
+- new_kwd: scf_acceleration/diis/start
   old_kwd: scf-acceleration/DIIS/start
-- new_kwd: scf_acceleration/DIIS/last_items
+- new_kwd: scf_acceleration/diis/last_items
   old_kwd: scf-acceleration/DIIS/last-items
 - new_kwd: convergence/threshold_energy
   old_kwd: convergence/threshold-energy

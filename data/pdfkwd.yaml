@@ -424,17 +424,24 @@
     syntax: (real)
 - keyword: scf_acceleration/diis/start
   property:
-    default: 3
+    default: 0
     desc_jp: DIIS法を開始するイテレーション
     description: start iteration number of the DIIS method
     hidden: false
     syntax: (integer >= 0)
 - keyword: scf_acceleration/diis/last_items
   property:
-    default: '3'
+    default: 8
     description: ''
     hidden: false
     syntax: (integer)
+- keyword: scf_acceleration/diis/e_max
+  property:
+    default: 0.1
+    desc_jp: DIIS法を適用する残差ベクトルの最大絶対値の閾値
+    description: threshold of maximum absolute residual error for DIIS
+    hidden: false
+    syntax: (real)
 - keyword: level_shift
   property:
     default: 'no'

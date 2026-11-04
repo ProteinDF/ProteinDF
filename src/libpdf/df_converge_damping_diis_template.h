@@ -40,14 +40,14 @@ template <class Matrix, class SymmetricMatrix, class Vector>
 DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::DfConverge_Damping_Diis_Template(TlSerializeData* pPdfParam)
     : DfConverge_Damping_Template<SymmetricMatrix, Vector>(pPdfParam) {
     // start (DIIS)
-    this->startIterationOfDIIS_ = 2;
+    this->startIterationOfDIIS_ = 0;
     if (!(*pPdfParam)["scf_acceleration/diis/start"].getStr().empty()) {
         this->startIterationOfDIIS_ = (*pPdfParam)["scf_acceleration/diis/start"].getInt();
         this->log_.info(TlUtils::format("update start iteration (DIIS) = %d", this->startIterationOfDIIS_));
     }
 
     // numOfLastItems
-    this->numOfLastItems_ = 5;
+    this->numOfLastItems_ = 8;
     if (!(*pPdfParam)["scf_acceleration/diis/last_items"].getStr().empty()) {
         this->numOfLastItems_ = (*pPdfParam)["scf_acceleration/diis/last_items"].getInt();
         this->log_.info(TlUtils::format("update DIIS items = %d", this->numOfLastItems_));
@@ -56,7 +56,7 @@ DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::DfConverge_Da
     // e_max
     this->e_max_ = 0.1;
     if (!(*pPdfParam)["scf_acceleration/diis/e_max"].getStr().empty()) {
-        this->e_max_ = (*pPdfParam)["scf_acceleration/diis/e_max"].getInt();
+        this->e_max_ = (*pPdfParam)["scf_acceleration/diis/e_max"].getDouble();
     }
 
     // residual type
@@ -322,17 +322,20 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
 
         // 残差ベクトルの要素が閾値(0.1)よりも大きい場合はDIISは行わない
         const double maxError = r.getMaxAbsoluteElement();
-        this->log_.info(TlUtils::format("e_max = %e", maxError));
-        if (maxError < 0.1) {
-            int diis_e_max_pass_itr = (*this->pPdfParam_)["DIIS_e_max_pass_itr"].getInt();
-            if (diis_e_max_pass_itr == -1) {
-                (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = itr;
-                diis_e_max_pass_itr = itr;
+        this->log_.info(TlUtils::format("e_max = %e (%e)", maxError, this->e_max_));
+        if (maxError < this->e_max_) {
+            int e_max_pass_itr = -1;
+            if (this->pPdfParam_->hasKey("internal/dfconverge_damping_diis/e_max_pass_itr")) {
+                e_max_pass_itr = (*this->pPdfParam_)["internal/dfconverge_damping_diis/e_max_pass_itr"].getInt();
             }
-            this->log_.info(TlUtils::format("e_max pass itr = %d", diis_e_max_pass_itr));
+            if (e_max_pass_itr == -1) {
+                (*this->pPdfParam_)["internal/dfconverge_damping_diis/e_max_pass_itr"] = itr;
+                e_max_pass_itr = itr;
+            }
+            this->log_.info(TlUtils::format("e_max pass itr = %d", e_max_pass_itr));
 
             int last = this->numOfLastItems_;
-            const int startItr = std::max(diis_e_max_pass_itr, itr - last + 1);
+            const int startItr = std::max(e_max_pass_itr, itr - last + 1);
             last = std::min(last, itr - startItr + 1);
             this->log_.info(TlUtils::format("itr=%d, start=%d, last=%d", itr, startItr, last));
 
@@ -359,7 +362,8 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
             DfObject::saveFpqMatrix(runType, itr, newF);
             updateByDIIS = true;
         } else {
-            (*this->pPdfParam_)["DIIS_e_max_pass_itr"] = -1;
+            this->log_.info("e_max has not been satisfied.");
+            (*this->pPdfParam_)["internal/dfconverge_damping_diis/e_max_pass_itr"] = -1;
         }
     }
 
