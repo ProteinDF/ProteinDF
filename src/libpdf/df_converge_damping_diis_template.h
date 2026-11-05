@@ -262,6 +262,9 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
                 Vector newRho(this->m_nNumOfAux);
                 Vector rhoIn;
                 Vector rhoOut;
+                SymmetricMatrix newP(this->m_nNumOfAOs);
+                SymmetricMatrix Pi;
+                SymmetricMatrix Pout_i;
                 for (int i = 0; i < last; ++i) {
                     const int m = startItr + i;
                     const std::string inFilePath = DfObject::getRhoPath(runType, m);
@@ -272,6 +275,13 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
                     rhoIn.load(inFilePath);
                     rhoOut.load(outFilePath);
 
+                    const std::string pInFilePath = DfObject::getPInMatrixPath(runType, m);
+                    const std::string pOutFilePath = DfObject::getPOutMatrixPath(runType, m);
+                    assert(TlFile::isExistFile(pInFilePath));
+                    assert(TlFile::isExistFile(pOutFilePath));
+                    Pi.load(pInFilePath);
+                    Pout_i.load(pOutFilePath);
+
                     const double coef = c.get(i, 0);
                     this->log_.info(TlUtils::format("%d-th coef=% 8.3f", m, coef));
 
@@ -279,10 +289,17 @@ void DfConverge_Damping_Diis_Template<Matrix, SymmetricMatrix, Vector>::converge
                     rhoOut *= beta;
                     rhoIn += rhoOut;
                     newRho += coef * rhoIn;
+
+                    Pi *= dampingFactor;
+                    Pout_i *= beta;
+                    Pi += Pout_i;
+                    newP += coef * Pi;
                 }
 
                 this->log_.info(TlUtils::format("save new rho: %d", itr));
                 DfObject::saveRho(runType, itr, newRho);
+                this->log_.info(TlUtils::format("save new P matrix: %d", itr));
+                DfObject::savePInMatrix(runType, itr, newP);
                 updateByDIIS = true;
             }
         } else {

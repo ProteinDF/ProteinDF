@@ -485,6 +485,42 @@ void DfScf::setScfRestartPoint(const std::string& str) {
 void DfScf::diffDensityMatrix() {
     if (this->m_nDampObject == DAMP_DENSITY_MATRIX) {
         this->converge();
+    } else if (this->m_nDampObject == DAMP_DENSITY) {
+        if (this->m_nIteration > 1) {
+            int startIteration = 2;
+            if (!(*this->pPdfParam_)["scf_acceleration/damping/start"].getStr().empty()) {
+                startIteration = (*this->pPdfParam_)["scf_acceleration/damping/start"].getInt();
+            }
+            if (this->m_nIteration >= startIteration) {
+                const double dampingFactor = (*this->pPdfParam_)["scf_acceleration/damping/damping_factor"].getDouble();
+                auto dampP = [&](const RUN_TYPE runType) {
+                    TlDenseSymmetricMatrix_Lapack P0_in = DfObject::getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, this->m_nIteration - 1);
+                    TlDenseSymmetricMatrix_Lapack P0_out = DfObject::getPOutMatrix<TlDenseSymmetricMatrix_Lapack>(runType, this->m_nIteration - 1);
+                    P0_in *= dampingFactor;
+                    P0_out *= (1.0 - dampingFactor);
+                    P0_in += P0_out;
+                    DfObject::savePInMatrix(runType, this->m_nIteration, P0_in);
+                };
+                switch (this->m_nMethodType) {
+                    case METHOD_RKS:
+                        dampP(RUN_RKS);
+                        break;
+                    case METHOD_UKS:
+                        dampP(RUN_UKS_ALPHA);
+                        dampP(RUN_UKS_BETA);
+                        break;
+                    case METHOD_ROKS:
+                        dampP(RUN_ROKS_CLOSED);
+                        dampP(RUN_ROKS_OPEN);
+                        break;
+                    default:
+                        CnErr.abort("DfScf::diffDensityMatrix(): unknown method type.");
+                        break;
+                }
+            } else {
+                this->copyPOutToPIn(this->m_nIteration);
+            }
+        }
     } else if (this->m_nIteration > 1) {
         this->copyPOutToPIn(this->m_nIteration);
     }
@@ -550,6 +586,34 @@ void DfScf::doDensityFitting() {
         TlTime timer(true);
         this->loggerStartTitle("Density Fitting");
 
+        if ((this->m_nDampObject == DAMP_DENSITY) && (this->m_nIteration > 1) && (this->m_bDiskUtilization == false)) {
+            auto saveUnmixedDiffP = [&](const RUN_TYPE runType) {
+                TlDenseSymmetricMatrix_Lapack dP = DfObject::getPOutMatrix<TlDenseSymmetricMatrix_Lapack>(runType, this->m_nIteration - 1);
+                if (this->m_nIteration == 2) {
+                    dP -= DfObject::getPInMatrix<TlDenseSymmetricMatrix_Lapack>(runType, 1);
+                } else {
+                    dP -= DfObject::getPOutMatrix<TlDenseSymmetricMatrix_Lapack>(runType, this->m_nIteration - 2);
+                }
+                this->saveDiffDensityMatrix(runType, this->m_nIteration, dP);
+            };
+            switch (this->m_nMethodType) {
+                case METHOD_RKS:
+                    saveUnmixedDiffP(RUN_RKS);
+                    break;
+                case METHOD_UKS:
+                    saveUnmixedDiffP(RUN_UKS_ALPHA);
+                    saveUnmixedDiffP(RUN_UKS_BETA);
+                    break;
+                case METHOD_ROKS:
+                    saveUnmixedDiffP(RUN_ROKS_CLOSED);
+                    saveUnmixedDiffP(RUN_ROKS_OPEN);
+                    break;
+                default:
+                    CnErr.abort("DfScf::doDensityFitting(): unknown method type.");
+                    break;
+            }
+        }
+
         DfDensityFittingObject* pDfDensityFitting = this->getDfDensityFittingObject();
         pDfDensityFitting->exec();
         delete pDfDensityFitting;
@@ -560,6 +624,10 @@ void DfScf::doDensityFitting() {
 
         if (this->m_nDampObject == DAMP_DENSITY) {
             this->converge();
+            if ((this->m_nIteration > 1) && (this->m_bDiskUtilization == false)) {
+                DfDiffDensityMatrix dddm(this->pPdfParam_);
+                dddm.exec();
+            }
         }
     }
 
