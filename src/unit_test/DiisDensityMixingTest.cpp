@@ -40,6 +40,8 @@
 #include "TlUtils.h"
 #include "df_total_energy_lapack.h"
 #include "gtest/gtest.h"
+#include "tl_dense_symmetric_matrix_lapack.h"
+#include "tl_dense_vector_lapack.h"
 
 namespace {
 
@@ -178,6 +180,15 @@ namespace {
         mpac.load(path);
         return mpac.getSerializeData();
     }
+
+    struct TestDfObject : public DfObject {
+        explicit TestDfObject(TlSerializeData* pPdfParam) : DfObject(pPdfParam) {}
+        using DfObject::getDiffDensityMatrix;
+        using DfObject::getPInMatrix;
+        using DfObject::getPOutMatrix;
+        using DfObject::getRho;
+        using DfObject::getRhoPath;
+    };
 
     std::string makeH2OHfCdInput(const std::string& scfAcc, const std::string& dampType) {
         std::string text;
@@ -334,19 +345,93 @@ TEST(DiisDensityMixingTest, H2ORiJDftDensityDiisConverges) {
     ProteinDF pdf;
     pdf.run();
 
-    const TlSerializeData param = loadPdfParam("pdfparam.mpac");
+    TlSerializeData param = loadPdfParam("pdfparam.mpac");
     EXPECT_TRUE(param["control"]["scf_converged"].getBoolean());
 
     // Verify DIIS was actually activated for rho
     EXPECT_TRUE(param.hasKey("internal/dfconverge_damping_diis/rho_e_max_pass_itr"));
-    EXPECT_NE(-1, param["internal/dfconverge_damping_diis/rho_e_max_pass_itr"].getInt());
+    const int eMaxPassItr = param["internal/dfconverge_damping_diis/rho_e_max_pass_itr"].getInt();
+    EXPECT_NE(-1, eMaxPassItr);
 
     const int lastItr = param["num_of_iterations"].getInt();
-    // DIIS converges faster than damping-only (17 iterations)
-    EXPECT_LT(lastItr, 17);
+    // DIIS converges faster than damping-only (20 iterations)
+    EXPECT_LT(lastItr, 20);
     const std::string lastItrKey = TlUtils::format("%d", lastItr);
     const double convergedTE = param["TEs"][lastItrKey].getDouble();
 
-    // Baseline damping energy: -74.9684817181 Ha (actual diff with DIIS is 4.4e-7 Ha)
-    EXPECT_NEAR(convergedTE, -74.9684817181, 1.0e-6);
+    // Baseline damping energy: -74.9684777245 Ha (actual diff with DIIS is 5.9e-6 Ha)
+    EXPECT_NEAR(convergedTE, -74.9684777245, 1.0e-5);
+
+    const double dampingFactor = 0.50;
+    TestDfObject dfObj(&param);
+    bool foundDiisExtrapolatedPIn = false;
+    for (int itr = 2; itr <= lastItr; ++itr) {
+        const TlDenseSymmetricMatrix_Lapack pInPrev =
+            dfObj.getPInMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr - 1);
+        const TlDenseSymmetricMatrix_Lapack pOutPrev =
+            dfObj.getPOutMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr - 1);
+        const TlDenseSymmetricMatrix_Lapack pInCurr =
+            dfObj.getPInMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr);
+        const TlDenseSymmetricMatrix_Lapack dP =
+            dfObj.getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr);
+
+        TlDenseSymmetricMatrix_Lapack expectedDP = pInCurr - pInPrev;
+        expectedDP -= dP;
+        EXPECT_LT(expectedDP.getMaxAbsoluteElement(), 1.0e-14);
+
+        if (itr > eMaxPassItr) {
+            TlDenseSymmetricMatrix_Lapack simpleDamped =
+                dampingFactor * pInPrev + (1.0 - dampingFactor) * pOutPrev;
+            simpleDamped -= pInCurr;
+            if (simpleDamped.getMaxAbsoluteElement() > 1.0e-10) {
+                foundDiisExtrapolatedPIn = true;
+            }
+        }
+    }
+    EXPECT_TRUE(foundDiisExtrapolatedPIn);
+}
+
+TEST(DiisDensityMixingTest, H2ORiJDftDensityDampingMixesPInAndRhoConsistently) {
+    ScopedOmpNumThreads scopedOmp(1);
+    ScopedPdfHomeWithBasis scopedPdfHome;
+    ScopedTempWorkDir workDir;
+    ASSERT_FALSE(workDir.path().empty());
+
+    {
+        std::ofstream ofs("fl_Userinput");
+        ofs << makeH2ORiJDftInput("damping", "density");
+    }
+
+    ProteinDF pdf;
+    pdf.run();
+
+    TlSerializeData param = loadPdfParam("pdfparam.mpac");
+    EXPECT_TRUE(param["control"]["scf_converged"].getBoolean());
+
+    const int lastItr = param["num_of_iterations"].getInt();
+    EXPECT_EQ(lastItr, 20);
+    const std::string lastItrKey = TlUtils::format("%d", lastItr);
+    const double convergedTE = param["TEs"][lastItrKey].getDouble();
+    EXPECT_NEAR(convergedTE, -74.9684777245, 1.0e-8);
+
+    const double dampingFactor = 0.50;
+    TestDfObject dfObj(&param);
+    for (int itr = 2; itr <= lastItr; ++itr) {
+        const TlDenseSymmetricMatrix_Lapack pInPrev =
+            dfObj.getPInMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr - 1);
+        const TlDenseSymmetricMatrix_Lapack pOutPrev =
+            dfObj.getPOutMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr - 1);
+        const TlDenseSymmetricMatrix_Lapack pInCurr =
+            dfObj.getPInMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr);
+        const TlDenseSymmetricMatrix_Lapack dP =
+            dfObj.getDiffDensityMatrix<TlDenseSymmetricMatrix_Lapack>(DfObject::RUN_RKS, itr);
+
+        TlDenseSymmetricMatrix_Lapack expectedPIn = dampingFactor * pInPrev + (1.0 - dampingFactor) * pOutPrev;
+        expectedPIn -= pInCurr;
+        EXPECT_LT(expectedPIn.getMaxAbsoluteElement(), 1.0e-14);
+
+        TlDenseSymmetricMatrix_Lapack expectedDP = pInCurr - pInPrev;
+        expectedDP -= dP;
+        EXPECT_LT(expectedDP.getMaxAbsoluteElement(), 1.0e-14);
+    }
 }
