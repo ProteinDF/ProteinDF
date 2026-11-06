@@ -48,3 +48,7 @@ doc/api/*
 # generated data files
 /data/pdfkwd.mpac
 /data/alias.mpac
+
+# local instruction files (git-ignored)
+/CLAUDE.local.md
+/AGENTS.local.md
